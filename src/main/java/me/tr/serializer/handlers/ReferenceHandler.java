@@ -1,6 +1,8 @@
 package me.tr.serializer.handlers;
 
 import me.tr.serializer.processes.Process;
+import me.tr.serializer.processes.deserializer.Deserializer;
+import me.tr.serializer.processes.serializer.Serializer;
 import me.tr.serializer.types.GenericType;
 
 import java.lang.ref.PhantomReference;
@@ -17,13 +19,13 @@ public class ReferenceHandler implements TypeHandler {
 
     @Override
     public Object deserialize(Object obj, GenericType<?> type) {
-        return createReference(type.getClazz(), getProcess().process(obj, type.getActualTypeArguments()[0]));
+        return createReference(type.getClazz(), getDeserializer().deserialize(obj, type.getActualTypeArguments()[0]));
     }
 
     @Override
     public Object serialize(Object obj, GenericType<?> type) {
         if (obj instanceof Reference<?> ref)
-            return getProcess().process(ref.get(), type);
+            return getSerializer().serialize(ref.get());
         return null;
     }
 
@@ -47,5 +49,14 @@ public class ReferenceHandler implements TypeHandler {
 
     public void setProcess(Process process) {
         this.process = process;
+    }
+
+
+    private Deserializer getDeserializer() {
+        return (Deserializer) process;
+    }
+
+    private Serializer getSerializer() {
+        return (Serializer) process;
     }
 }

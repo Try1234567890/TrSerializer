@@ -55,7 +55,7 @@ public class GenericType<T> implements ParameterizedType {
     }
 
     public Class<?> getFirstType() {
-        Type type = typeArguments[0];
+        Type type = typeArguments.length > 0 ? typeArguments[0] : Object.class;
         return type instanceof ParameterizedType ? (Class<?>) ((ParameterizedType) type).getRawType() : (Class<?>) type;
     }
 

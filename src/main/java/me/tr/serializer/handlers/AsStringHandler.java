@@ -3,6 +3,8 @@ package me.tr.serializer.handlers;
 import me.tr.serializer.annotations.AsString;
 import me.tr.serializer.exceptions.TypeMissMatched;
 import me.tr.serializer.instancers.ProcessInstancer;
+import me.tr.serializer.processes.deserializer.Deserializer;
+import me.tr.serializer.processes.serializer.Serializer;
 import me.tr.serializer.types.GenericType;
 import me.tr.serializer.processes.Process;
 
@@ -11,7 +13,7 @@ import java.util.List;
 
 
 public class AsStringHandler implements TypeHandler {
-    private Process process;
+    private final Process process;
 
     public AsStringHandler(Process process) {
         this.process = process;
@@ -29,7 +31,7 @@ public class AsStringHandler implements TypeHandler {
             Field field = getField(paramName, clazz);
             if (field != null) {
                 Class<?> fieldType = field.getType();
-                Object value = getProcess().process(obj, fieldType);
+                Object value = getDeserializer().deserialize(obj, fieldType);
 
                 if (value != null && !fieldType.equals(value.getClass()))
                     throw new TypeMissMatched("The provided object type " + value.getClass() + " is not the expected one: " + fieldType);
@@ -54,7 +56,7 @@ public class AsStringHandler implements TypeHandler {
             Field field = getField(paramName, clazz);
             if (field != null) {
                 field.setAccessible(true);
-                Object value = getProcess().process(field.get(obj), type);
+                Object value = getSerializer().serialize(field.get(obj));
                 return value instanceof String str ? str : String.valueOf(value);
             } else
                 throw new NoSuchFieldException("Specify a valid field to retrieve the value from in @AsString annotation in " + clazz);
@@ -78,7 +80,12 @@ public class AsStringHandler implements TypeHandler {
         return process;
     }
 
-    public void setProcess(Process process) {
-        this.process = process;
+
+    protected Deserializer getDeserializer() {
+        return (Deserializer) process;
+    }
+
+    protected Serializer getSerializer() {
+        return (Serializer) process;
     }
 }

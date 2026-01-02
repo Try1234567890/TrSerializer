@@ -26,16 +26,6 @@ public abstract class Process {
     private final ProcessOptions options = new ProcessOptions(this);
     private final ProcessInstancer instancer = new ProcessInstancer(this);
 
-    public <T> T process(Object o, Type clazz) {
-        return process(o, new GenericType<>(clazz));
-    }
-
-    public <T> T process(Object o, Class<T> clazz) {
-        return process(o, new GenericType<>(clazz));
-    }
-
-    public abstract <T> T process(Object o, GenericType<T> type);
-
     /*
      * ===============================
      *      INSTANCER & OPTIONS

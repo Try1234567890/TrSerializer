@@ -4,6 +4,8 @@ import me.tr.serializer.annotations.AsNumber;
 import me.tr.serializer.converters.Converter;
 import me.tr.serializer.instancers.ProcessInstancer;
 import me.tr.serializer.processes.Process;
+import me.tr.serializer.processes.deserializer.Deserializer;
+import me.tr.serializer.processes.serializer.Serializer;
 import me.tr.serializer.registries.ConvertersRegistry;
 import me.tr.serializer.types.GenericType;
 
@@ -11,7 +13,6 @@ import java.lang.reflect.Field;
 
 
 public class AsNumberHandler extends AsStringHandler {
-
 
     public AsNumberHandler(Process process) {
         super(process);
@@ -32,7 +33,7 @@ public class AsNumberHandler extends AsStringHandler {
 
             if (field != null) {
                 Class<?> fieldType = resultType == Number.class ? field.getType() : resultType;
-                Object value = getProcess().process(obj, fieldType);
+                Object value = getDeserializer().deserialize(obj, fieldType);
 
                 if (value instanceof Number num
                         && !fieldType.isAssignableFrom(value.getClass())) {
@@ -62,7 +63,7 @@ public class AsNumberHandler extends AsStringHandler {
             Field field = getField(paramName, clazz);
             if (field != null) {
                 field.setAccessible(true);
-                Object value = getProcess().process(field.get(obj), type);
+                Object value = getSerializer().serialize(field.get(obj));
 
                 if (value instanceof Number num && !resultType.isAssignableFrom(value.getClass())) {
                     Converter<Number, ?> converter = ConvertersRegistry.getConverter(Number.class, resultType);

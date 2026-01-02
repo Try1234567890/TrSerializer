@@ -20,17 +20,12 @@ import java.util.Optional;
 @SuppressWarnings("unchecked")
 public class Deserializer extends Process {
     private final DeserializerOptions options = new DeserializerOptions(this);
+    private final DeserializerCache cache = new DeserializerCache(this);
 
 
     @Override
     public DeserializerOptions getOptions() {
         return options;
-    }
-
-
-    @Override
-    public <T> T process(Object o, GenericType<T> type) {
-        return deserialize(o, type);
     }
 
     public <T> T deserialize(Object obj, Type type) {
@@ -48,28 +43,44 @@ public class Deserializer extends Process {
         if (type == null)
             throw new NullPointerException("The type is null, cannot deserialize map.");
 
-        Optional<T> alternative = getAlternative(obj, type);
+        if (cache.has(obj)) {
+            return (T) cache.get(obj);
+        }
+
+        T instance = null;
+
+        Optional<T> alternative = alternative(obj, type);
         if (alternative.isPresent())
-            return alternative.get();
+            instance = alternative.get();
 
 
         Optional<T> handler = handlers(obj, type);
         if (handler.isPresent())
-            return handler.get();
+            instance = handler.get();
 
         Class<?> clazz = type.getClazz();
+
+        if (instance != null) {
+            cache.put(obj, instance);
+            return instance;
+        }
+
+        instance = (T) instance(clazz);
+
+        cache.put(obj, instance);
 
         if (!(obj instanceof Map<?, ?> map)) {
             if (clazz.isInstance(obj) || clazz.isPrimitive())
                 return (T) obj;
-            throw new RuntimeException("Expected Map for object deserialization, but got: " + obj.getClass().getName());
+            throw new TypeMissMatched("Expected Map for object deserialization, but got: " + obj.getClass().getName());
         }
 
         Class<?> keysType = Utility.getKeyType(map);
         if (!String.class.equals(keysType))
             throw new TypeMissMatched("The expected keys type for complex object map is String. Found: " + (keysType == null ? "null (is empty: " + map.isEmpty() + ")" : keysType.getName()));
 
-        T instance = (T) instance(clazz);
+
+
 
         deserialize((Map<String, Object>) map, instance);
 
@@ -92,11 +103,8 @@ public class Deserializer extends Process {
 
             try {
                 GenericType<?> fieldType = new GenericType<>(field);
-
                 Object value = deserialize(mapValue, fieldType);
-
                 field.setAccessible(true);
-
                 setField(instance, field, value);
             } catch (Exception e) {
                 throw new RuntimeException("Error assigning field " + fieldName + " in " + clazz.getSimpleName(), e);
@@ -159,7 +167,7 @@ public class Deserializer extends Process {
         return mapValue;
     }
 
-    private <T> Optional<T> getAlternative(Object obj, GenericType<T> type) {
+    private <T> Optional<T> alternative(Object obj, GenericType<T> type) {
         Class<?> clazz = type.getClazz();
 
         if (getOptions().hasAlternatives(clazz)) {

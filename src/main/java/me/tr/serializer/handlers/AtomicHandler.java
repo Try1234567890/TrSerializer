@@ -1,6 +1,8 @@
 package me.tr.serializer.handlers;
 
 import me.tr.serializer.processes.Process;
+import me.tr.serializer.processes.deserializer.Deserializer;
+import me.tr.serializer.processes.serializer.Serializer;
 import me.tr.serializer.types.GenericType;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -9,7 +11,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class AtomicHandler implements TypeHandler {
-    private Process process;
+    private final Process process;
 
     public AtomicHandler(Process process) {
         this.process = process;
@@ -21,7 +23,7 @@ public class AtomicHandler implements TypeHandler {
         Class<?> clazz = type.getClazz();
 
         if (clazz.equals(AtomicReference.class)) {
-            Object innerValue = getProcess().process(obj, type.getActualTypeArguments()[0]);
+            Object innerValue = getDeserializer().deserialize(obj, type.getActualTypeArguments()[0]);
             return new AtomicReference<>(innerValue);
         }
 
@@ -31,10 +33,10 @@ public class AtomicHandler implements TypeHandler {
     @Override
     public Object serialize(Object obj, GenericType<?> type) {
         return switch (obj) {
-            case AtomicReference<?> ref -> getProcess().process(ref.get(), type);
-            case AtomicInteger i -> getProcess().process(i.get(), type);
-            case AtomicLong l -> getProcess().process(l.get(), type);
-            case AtomicBoolean b -> getProcess().process(b.get(), type);
+            case AtomicReference<?> ref -> getSerializer().serialize(ref.get());
+            case AtomicInteger i -> getSerializer().serialize(i.get());
+            case AtomicLong l -> getSerializer().serialize(l.get());
+            case AtomicBoolean b -> getSerializer().serialize(b.get());
             case null, default -> null;
         };
     }
@@ -65,7 +67,12 @@ public class AtomicHandler implements TypeHandler {
         return process;
     }
 
-    public void setProcess(Process process) {
-        this.process = process;
+
+    private Deserializer getDeserializer() {
+        return (Deserializer) process;
+    }
+
+    private Serializer getSerializer() {
+        return (Serializer) process;
     }
 }

@@ -1,35 +1,40 @@
 package me.tr.serializer.processes.serializer;
 
-import me.tr.serializer.processes.ProcessCache;
-import me.tr.serializer.utility.Utility;
-
 import java.util.IdentityHashMap;
 
-public class SerializerCache extends ProcessCache<Object, Integer> {
+public class SerializerCache {
+    private final Serializer process;
+    private final IdentityHashMap<Object, Object> cache = new IdentityHashMap<>();
 
-    public SerializerCache(Serializer serializer) {
-        super(serializer, new IdentityHashMap<>());
+    public SerializerCache(Serializer process) {
+        this.process = process;
     }
 
-    public boolean isCachable(Object o) {
-        if (o == null) return false;
-        if (o instanceof String) return false;
-        if (o.getClass().isPrimitive()) return false;
-        if (Utility.isWrapper(o)) return false;
-
-        return true;
+    public Object get(Object key) {
+        return cache.get(key);
     }
 
-    public void cache(Object key) {
-        super.cache(key, nextID());
+    public void put(Object key, Object value) {
+        cache.put(key, value);
     }
 
-    @Override
+    public void remove(Object key) {
+        cache.remove(key);
+    }
+
+    public boolean has(Object key) {
+        return cache.containsKey(key);
+    }
+
+    public void clear() {
+        cache.clear();
+    }
+
     public Serializer getProcess() {
-        return (Serializer) super.getProcess();
+        return process;
     }
-
-    public Serializer getSerializer() {
-        return getProcess();
+    @Override
+    public String toString() {
+        return cache.toString();
     }
 }

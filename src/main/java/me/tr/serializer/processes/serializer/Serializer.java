@@ -21,39 +21,44 @@ public class Serializer extends Process {
         return options;
     }
 
-    @Override
-    public <T> T process(Object o, GenericType<T> type) {
-        return serialize(o, type);
+    public SerializerCache getCache() {
+        return cache;
     }
 
-    public <T> T serialize(Object obj, Type type) {
-        return serialize(obj, new GenericType<>(type));
-    }
 
-    public <T> T serialize(Object obj, Class<?> clazz) {
-        return serialize(obj, new GenericType<>(clazz));
-    }
-
-    public <T> T serialize(Object instance, GenericType<T> type) {
+    public Object serialize(Object instance) {
         if (instance == null)
             return null;
 
         if (!isValid(instance))
             return null;
 
-        Map<String, Object> result = new HashMap<>();
-
-        Optional<T> handler = handlers(instance, type);
-
-        if (handler.isPresent()) {
-            return handler.get();
+        if (getCache().has(instance)) {
+            return getCache().get(instance);
         }
 
-        serialize(result, instance);
+        Object result = null;
+
+        Optional<Object> handler = handlers(instance);
+
+        if (handler.isPresent())
+            result = handler.get();
+
+
+        if (result != null) {
+            getCache().put(instance, result);
+            return result;
+        }
+
+        result = new HashMap<>();
+
+        getCache().put(instance, result);
+
+        serialize((Map<String, Object>) result, instance);
 
         runEndMethods(instance, getOptions().getEndMethods());
 
-        return (T) result;
+        return result;
     }
 
     public Map<String, Object> serialize(Map<String, Object> result, Object instance) {
@@ -61,9 +66,8 @@ public class Serializer extends Process {
             try {
                 f.setAccessible(true);
 
-                Object fieldValue = f.get(instance);
+                Object value = serialize(f.get(instance));
 
-                Object value = serialize(fieldValue, f.getType());
                 result.put(getMapKey(f), value);
             } catch (IllegalAccessException e) {
                 throw new RuntimeException("Could not serialize field: " + f.getName(), e);
@@ -77,19 +81,21 @@ public class Serializer extends Process {
         Class<?> clazz = field.getDeclaringClass();
 
         return getOptions().getAliases().stream().filter(alias ->
-                        (alias.key() == null || alias.key().equals(clazz)) && alias.value().equalsIgnoreCase(fieldName))
+                        (alias.key() == null || alias.key().equals(clazz))
+                                && alias.value().equalsIgnoreCase(fieldName))
                 .map(Three::subValue)
                 .findFirst().orElse(fieldName);
     }
 
-    private <T> Optional<T> handlers(Object instance, GenericType<T> type) {
+    private Optional<Object> handlers(Object instance) {
         if (getOptions().isUseHandlers()) {
             TypeHandler handler = getHandler(instance);
 
+
             if (handler != null) {
-                Object serialized = handler.serialize(instance, type);
+                Object serialized = handler.serialize(instance, new GenericType<>(instance.getClass()));
                 if (serialized != null)
-                    return (Optional<T>) Optional.of(serialized);
+                    return Optional.of(serialized);
             }
         }
         return Optional.empty();

@@ -1,6 +1,8 @@
 package me.tr.serializer.handlers;
 
 import me.tr.serializer.processes.Process;
+import me.tr.serializer.processes.deserializer.Deserializer;
+import me.tr.serializer.processes.serializer.Serializer;
 import me.tr.serializer.types.GenericType;
 
 import java.lang.reflect.Field;
@@ -8,7 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class MapHandler implements TypeHandler {
-    private Process process;
+    private final Process process;
 
     public MapHandler(Process process) {
         this.process = process;
@@ -27,7 +29,7 @@ public class MapHandler implements TypeHandler {
 
                     Object value = field.get(obj);
 
-                    value = getProcess().process(value, value.getClass());
+                    value = getDeserializer().deserialize(value, value.getClass());
 
                     result.put(field.getName(), value);
                 } catch (IllegalAccessException e) {
@@ -47,7 +49,11 @@ public class MapHandler implements TypeHandler {
         return process;
     }
 
-    public void setProcess(Process process) {
-        this.process = process;
+    private Deserializer getDeserializer() {
+        return (Deserializer) process;
+    }
+
+    private Serializer getSerializer() {
+        return (Serializer) process;
     }
 }

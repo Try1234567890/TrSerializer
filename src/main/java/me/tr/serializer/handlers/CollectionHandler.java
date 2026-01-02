@@ -9,7 +9,7 @@ import java.lang.reflect.Array;
 import java.util.*;
 
 public class CollectionHandler implements TypeHandler {
-    private Process process;
+    private final Process process;
 
     public CollectionHandler(Process process) {
         this.process = process;
@@ -34,7 +34,7 @@ public class CollectionHandler implements TypeHandler {
         Collection<Object> result = createCollectionInstance(type.getClazz());
 
         for (Object item : source) {
-            Object value = getProcess().process(item, type.getFirstType());
+            Object value = getDeserializer().deserialize(item, type.getFirstType());
             result.add(value);
         }
 
@@ -46,7 +46,7 @@ public class CollectionHandler implements TypeHandler {
         List<Object> result = new ArrayList<>();
         if (obj instanceof Collection<?> coll) {
             for (Object item : coll) {
-                Object serializedItem = getProcess().process(item, type.getFirstType());
+                Object serializedItem = getSerializer().serialize(item);
                 result.add(serializedItem);
             }
         }
@@ -67,7 +67,11 @@ public class CollectionHandler implements TypeHandler {
         return process;
     }
 
-    public void setProcess(Process process) {
-        this.process = process;
+    private Deserializer getDeserializer() {
+        return (Deserializer) process;
+    }
+
+    private Serializer getSerializer() {
+        return (Serializer) process;
     }
 }

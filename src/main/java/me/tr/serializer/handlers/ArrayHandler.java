@@ -1,12 +1,14 @@
 package me.tr.serializer.handlers;
 
 import me.tr.serializer.processes.Process;
+import me.tr.serializer.processes.deserializer.Deserializer;
+import me.tr.serializer.processes.serializer.Serializer;
 import me.tr.serializer.types.GenericType;
 
 import java.lang.reflect.Array;
 
 public class ArrayHandler implements TypeHandler {
-    private Process process;
+    private final Process process;
 
     public ArrayHandler(Process process) {
         this.process = process;
@@ -26,7 +28,7 @@ public class ArrayHandler implements TypeHandler {
 
         for (int i = 0; i < length; i++) {
             Object rawValue = Array.get(obj, i);
-            Object value = getProcess().process(rawValue, component);
+            Object value = getDeserializer().deserialize(rawValue, component);
 
             if (value != null || !component.isPrimitive()) {
                 Array.set(resultArray, i, value);
@@ -44,7 +46,7 @@ public class ArrayHandler implements TypeHandler {
         for (int i = 0; i < length; i++) {
             Object rawValue = Array.get(obj, i);
 
-            Object value = getProcess().process(rawValue, type.getFirstType());
+            Object value = getSerializer().serialize(rawValue);
 
             Array.set(result, i, value);
         }
@@ -56,7 +58,12 @@ public class ArrayHandler implements TypeHandler {
         return process;
     }
 
-    public void setProcess(Process process) {
-        this.process = process;
+
+    private Deserializer getDeserializer() {
+        return (Deserializer) process;
+    }
+
+    private Serializer getSerializer() {
+        return (Serializer) process;
     }
 }

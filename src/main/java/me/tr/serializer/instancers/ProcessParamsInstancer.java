@@ -1,6 +1,8 @@
 package me.tr.serializer.instancers;
 
 import me.tr.serializer.processes.Process;
+import me.tr.serializer.processes.deserializer.Deserializer;
+import me.tr.serializer.processes.serializer.Serializer;
 import me.tr.serializer.utility.Utility;
 
 import java.lang.reflect.Constructor;
@@ -27,7 +29,7 @@ public class ProcessParamsInstancer extends ParamsInstancer {
         for (int i = 0; i < paramNames.length; i++) {
             String name = paramNames[i];
             Class<?> type = parameters[i].getType();
-            Object value = getProcess().process(getParams().get(name), type);
+            Object value = getDeserializer().deserialize(getParams().get(name), type);
 
             if (value == null)
                 value = Utility.DEFAULTS.get(type);
@@ -51,7 +53,7 @@ public class ProcessParamsInstancer extends ParamsInstancer {
             Class<?> type = param.getType();
             String paramName = param.getName();
 
-            Object value = getProcess().process(getParams().get(paramName), type);
+            Object value = getDeserializer().deserialize(getParams().get(paramName), type);
 
             if (value == null)
                 value = Utility.DEFAULTS.get(type);
@@ -64,5 +66,14 @@ public class ProcessParamsInstancer extends ParamsInstancer {
 
     public Process getProcess() {
         return process;
+    }
+
+
+    private Deserializer getDeserializer() {
+        return (Deserializer) process;
+    }
+
+    private Serializer getSerializer() {
+        return (Serializer) process;
     }
 }
