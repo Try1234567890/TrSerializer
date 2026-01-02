@@ -1,0 +1,73 @@
+package me.tr.serializer.handlers;
+
+import me.tr.serializer.processes.Process;
+import me.tr.serializer.processes.deserializer.Deserializer;
+import me.tr.serializer.processes.serializer.Serializer;
+import me.tr.serializer.types.GenericType;
+
+import java.lang.reflect.Array;
+import java.util.*;
+
+public class CollectionHandler implements TypeHandler {
+    private Process process;
+
+    public CollectionHandler(Process process) {
+        this.process = process;
+    }
+
+
+    @Override
+    public Object deserialize(Object obj, GenericType<?> type) {
+        Collection<?> source;
+        if (obj instanceof Collection) {
+            source = (Collection<?>) obj;
+        } else if (obj.getClass().isArray()) {
+            List<Object> temp = new ArrayList<>();
+            int len = Array.getLength(obj);
+            for (int i = 0; i < len; i++)
+                temp.add(Array.get(obj, i));
+            source = temp;
+        } else {
+            throw new IllegalArgumentException("Unsupported source for CollectionHandler: " + obj.getClass());
+        }
+
+        Collection<Object> result = createCollectionInstance(type.getClazz());
+
+        for (Object item : source) {
+            Object value = getProcess().process(item, type.getFirstType());
+            result.add(value);
+        }
+
+        return result;
+    }
+
+    @Override
+    public Object serialize(Object obj, GenericType<?> type) {
+        List<Object> result = new ArrayList<>();
+        if (obj instanceof Collection<?> coll) {
+            for (Object item : coll) {
+                Object serializedItem = getProcess().process(item, type.getFirstType());
+                result.add(serializedItem);
+            }
+        }
+
+        return result;
+    }
+
+    private Collection<Object> createCollectionInstance(Class<?> type) {
+        if (type.isInterface()) {
+            if (Set.class.isAssignableFrom(type)) return new HashSet<>();
+            if (Queue.class.isAssignableFrom(type)) return new LinkedList<>();
+            if (List.class.isAssignableFrom(type)) return new ArrayList<>();
+        }
+        return new ArrayList<>();
+    }
+
+    public Process getProcess() {
+        return process;
+    }
+
+    public void setProcess(Process process) {
+        this.process = process;
+    }
+}
