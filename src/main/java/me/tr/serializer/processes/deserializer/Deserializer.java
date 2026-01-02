@@ -1,8 +1,8 @@
 package me.tr.serializer.processes.deserializer;
 
 import me.tr.serializer.annotations.Essential;
-import me.tr.serializer.expections.TypeMissMatched;
-import me.tr.serializer.expections.ValueNotFoundInMap;
+import me.tr.serializer.exceptions.TypeMissMatched;
+import me.tr.serializer.exceptions.ValueNotFoundInMap;
 import me.tr.serializer.handlers.TypeHandler;
 import me.tr.serializer.processes.Process;
 import me.tr.serializer.registries.ConvertersRegistry;

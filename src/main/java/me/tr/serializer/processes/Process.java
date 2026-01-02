@@ -1,8 +1,8 @@
 package me.tr.serializer.processes;
 
 import me.tr.serializer.annotations.Ignore;
-import me.tr.serializer.expections.InstancerError;
-import me.tr.serializer.expections.NullsNotAccepted;
+import me.tr.serializer.exceptions.InstancerError;
+import me.tr.serializer.exceptions.NullsNotAccepted;
 import me.tr.serializer.handlers.TypeHandler;
 import me.tr.serializer.instancers.ProcessInstancer;
 import me.tr.serializer.registries.HandlersRegistry;

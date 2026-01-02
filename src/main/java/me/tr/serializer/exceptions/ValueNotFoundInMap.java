@@ -1,4 +1,4 @@
-package me.tr.serializer.expections;
+package me.tr.serializer.exceptions;
 
 public class ValueNotFoundInMap extends RuntimeException {
     public ValueNotFoundInMap(String message) {
