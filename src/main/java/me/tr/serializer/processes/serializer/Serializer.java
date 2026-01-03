@@ -6,7 +6,6 @@ import me.tr.serializer.types.GenericType;
 import me.tr.serializer.utility.Three;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -66,9 +65,9 @@ public class Serializer extends Process {
             try {
                 f.setAccessible(true);
 
-                Object value = serialize(f.get(instance));
+                Object value = f.get(instance);
 
-                result.put(getMapKey(f), value);
+                result.put(getMapKey(f), serialize(value));
             } catch (IllegalAccessException e) {
                 throw new RuntimeException("Could not serialize field: " + f.getName(), e);
             }

@@ -1,7 +1,4 @@
-.gradle
 .idea
 build
-gradle
 src/main/test
-target
-TrSerializer.iml
+src/main/resources

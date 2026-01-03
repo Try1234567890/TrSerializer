@@ -1,0 +1,16 @@
+//file:noinspection GroovyAssignabilityCheck
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+}
+
+group = 'me.tr'
+version = '2.0.1'
+
+publishing {
+    publications {
+        publishToMaven(MavenPublication) {
+            from components['java']
+        }
+    }
+}
