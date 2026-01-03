@@ -1,11 +1,9 @@
-package me.tr.serializer.handlers;
+package me.tr.serializer.handlers.annotation;
 
 import me.tr.serializer.annotations.AsNumber;
 import me.tr.serializer.converters.Converter;
 import me.tr.serializer.instancers.ProcessInstancer;
 import me.tr.serializer.processes.Process;
-import me.tr.serializer.processes.deserializer.Deserializer;
-import me.tr.serializer.processes.serializer.Serializer;
 import me.tr.serializer.registries.ConvertersRegistry;
 import me.tr.serializer.types.GenericType;
 

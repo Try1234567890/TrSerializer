@@ -1,6 +1,7 @@
-package me.tr.serializer.handlers;
+package me.tr.serializer.handlers.java;
 
 import me.tr.serializer.converters.Converter;
+import me.tr.serializer.handlers.TypeHandler;
 import me.tr.serializer.registries.ConvertersRegistry;
 import me.tr.serializer.types.GenericType;
 import me.tr.serializer.utility.Utility;

@@ -1,5 +1,6 @@
-package me.tr.serializer.handlers;
+package me.tr.serializer.handlers.java;
 
+import me.tr.serializer.handlers.TypeHandler;
 import me.tr.serializer.processes.Process;
 import me.tr.serializer.processes.deserializer.Deserializer;
 import me.tr.serializer.processes.serializer.Serializer;
