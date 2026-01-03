@@ -1,6 +1,7 @@
 package me.tr.serializer.handlers.collection;
 
 import me.tr.serializer.handlers.TypeHandler;
+import me.tr.serializer.logger.TrLogger;
 import me.tr.serializer.processes.Process;
 import me.tr.serializer.processes.deserializer.Deserializer;
 import me.tr.serializer.processes.serializer.Serializer;
@@ -24,17 +25,21 @@ public class MapHandler implements TypeHandler {
             return (Map<Object, Object>) obj;
         else {
             Map<Object, Object> result = new HashMap<>();
-            for (Field field : type.getClazz().getDeclaredFields()) {
+            for (Field field : getProcess().getFields(type.getTypeClass())) {
                 try {
                     field.setAccessible(true);
 
                     Object value = field.get(obj);
 
-                    value = getDeserializer().deserialize(value, value.getClass());
+                    if (value == null)
+                        continue;
 
-                    result.put(field.getName(), value);
+                    Object des = getDeserializer().deserialize(value, value.getClass());
+
+                    result.put(field.getName(), des);
                 } catch (IllegalAccessException e) {
-                    throw new RuntimeException("An error occurs while accessing the field " + field.getName());
+                    TrLogger.getInstance().exception(
+                            new RuntimeException("An error occurs while accessing the field " + field.getName()));
                 }
             }
             return result;

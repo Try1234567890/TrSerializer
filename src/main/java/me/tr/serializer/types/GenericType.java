@@ -5,48 +5,39 @@ import me.tr.serializer.utility.Utility;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.Arrays;
-import java.util.Collection;
 
+// The generic is used to specify return type while processing values.
 public class GenericType<T> implements ParameterizedType {
     private final Type rawType;
-    private final Class<?> clazz;
-    private Type[] typeArguments;
+    private final Class<?> typeClass;
+    private final Type[] typeArguments;
 
     public GenericType(Type rawType, Type... typeArguments) {
         this.rawType = rawType;
-        this.clazz = (Class<?>) rawType;
-        this.typeArguments = getTypeArguments(typeArguments);
+        this.typeClass = rawType instanceof Class<?> ? (Class<?>) rawType : asClass(rawType.getTypeName());
+        this.typeArguments = typeArguments;
     }
 
     public GenericType(Field field) {
         this.rawType = field.getType();
-        this.clazz = (Class<?>) rawType;
+        this.typeClass = (Class<?>) rawType;
         this.typeArguments = getTypeArguments(field);
     }
 
     private Type[] getTypeArguments(Field field) {
         Class<?> component = field.getType().getComponentType();
-        if (component != null)
+        if (component != null) // Is an array
             return new Type[]{component};
 
         Type generic = field.getGenericType();
+
+        // Is a collection, a Map, an AtomicReference
+        // or something that has generics.
         if (generic instanceof ParameterizedType par)
             return par.getActualTypeArguments();
 
-        return getTypeArguments(generic);
-    }
-
-    private Type[] getTypeArguments(Type... typeArguments) {
-        if (typeArguments == null || typeArguments.length == 0) {
-            if (clazz.isArray()) {
-                return new Type[]{clazz.getComponentType()};
-            }
-            if (Collection.class.isAssignableFrom(clazz)) {
-                return new Type[]{asClass(rawType.getTypeName())};
-            }
-        }
-        return typeArguments;
+        // Something else...
+        return new Type[]{generic};
     }
 
     @Override
@@ -54,7 +45,7 @@ public class GenericType<T> implements ParameterizedType {
         return typeArguments;
     }
 
-    public Class<?> getFirstType() {
+    public Class<?> getFirstArgumentType() {
         Type type = typeArguments.length > 0 ? typeArguments[0] : Object.class;
         return type instanceof ParameterizedType ? (Class<?>) ((ParameterizedType) type).getRawType() : (Class<?>) type;
     }
@@ -64,21 +55,15 @@ public class GenericType<T> implements ParameterizedType {
         return rawType;
     }
 
-    public Class<?>  getClazz() {
-        return clazz;
+    public Class<?> getTypeClass() {
+        return typeClass;
     }
 
     @Override
     public Type getOwnerType() {
-        return clazz;
+        return getTypeClass();
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (!(o instanceof ParameterizedType that)) return false;
-        return rawType.equals(that.getRawType()) &&
-                Arrays.equals(typeArguments, that.getActualTypeArguments());
-    }
 
     public static Class<?> asClass(String type) {
         try {

@@ -15,6 +15,14 @@ public class StringHandler implements TypeHandler {
             return new String(bytes);
         }
 
+        if (obj instanceof StringBuffer buff) {
+            return new String(buff);
+        }
+
+        if (obj instanceof StringBuilder build) {
+            return new String(build);
+        }
+
         return String.valueOf(obj);
     }
 

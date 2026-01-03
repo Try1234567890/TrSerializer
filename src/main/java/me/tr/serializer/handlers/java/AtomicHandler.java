@@ -1,6 +1,8 @@
 package me.tr.serializer.handlers.java;
 
+import me.tr.serializer.exceptions.TypeMissMatched;
 import me.tr.serializer.handlers.TypeHandler;
+import me.tr.serializer.logger.TrLogger;
 import me.tr.serializer.processes.Process;
 import me.tr.serializer.processes.deserializer.Deserializer;
 import me.tr.serializer.processes.serializer.Serializer;
@@ -21,14 +23,11 @@ public class AtomicHandler implements TypeHandler {
 
     @Override
     public Object deserialize(Object obj, GenericType<?> type) {
-        Class<?> clazz = type.getClazz();
+        Class<?> clazz = type.getTypeClass();
 
-        if (clazz.equals(AtomicReference.class)) {
-            Object innerValue = getDeserializer().deserialize(obj, type.getActualTypeArguments()[0]);
-            return new AtomicReference<>(innerValue);
-        }
+        Object innerValue = getDeserializer().deserialize(obj, type.getFirstArgumentType());
 
-        return createAtomicReference(clazz, obj);
+        return createAtomicReference(clazz, innerValue);
     }
 
     @Override
@@ -45,19 +44,34 @@ public class AtomicHandler implements TypeHandler {
     public Object createAtomicReference(Class<?> clazz, Object value) {
         if (value == null) return null;
 
-        if (clazz.equals(AtomicInteger.class)) {
-            return new AtomicInteger(value instanceof Number n ? n.intValue() : Integer.parseInt(value.toString()));
+        if (AtomicInteger.class.isAssignableFrom(clazz)) {
+            if (!(value instanceof Number num)) {
+                TrLogger.getInstance().exception(
+                        new TypeMissMatched("The provided value for AtomicInteger is not an number: " + value.getClass()));
+                return null;
+            }
+            return new AtomicInteger(num.intValue());
         }
 
-        if (clazz.equals(AtomicLong.class)) {
-            return new AtomicLong(value instanceof Number n ? n.longValue() : Long.parseLong(value.toString()));
+        if (AtomicLong.class.isAssignableFrom(clazz)) {
+            if (!(value instanceof Number num)) {
+                TrLogger.getInstance().exception(
+                        new TypeMissMatched("The provided value for AtomicLong is not an number: " + value.getClass()));
+                return null;
+            }
+            return new AtomicLong(num.longValue());
         }
 
-        if (clazz.equals(AtomicBoolean.class)) {
-            return new AtomicBoolean(value instanceof Boolean b ? b : Boolean.parseBoolean(value.toString()));
+        if (AtomicBoolean.class.isAssignableFrom(clazz)) {
+            if (!(value instanceof Boolean bool)) {
+                TrLogger.getInstance().exception(
+                        new TypeMissMatched("The provided value for AtomicBoolean is not a boolean: " + value.getClass()));
+                return null;
+            }
+            return new AtomicBoolean(bool);
         }
 
-        if (clazz.equals(AtomicReference.class)) {
+        if (AtomicReference.class.isAssignableFrom(clazz)) {
             return new AtomicReference<>(value);
         }
 

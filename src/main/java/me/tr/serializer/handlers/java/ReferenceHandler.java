@@ -1,6 +1,8 @@
 package me.tr.serializer.handlers.java;
 
+import me.tr.serializer.exceptions.TypeMissMatched;
 import me.tr.serializer.handlers.TypeHandler;
+import me.tr.serializer.logger.TrLogger;
 import me.tr.serializer.processes.Process;
 import me.tr.serializer.processes.deserializer.Deserializer;
 import me.tr.serializer.processes.serializer.Serializer;
@@ -19,14 +21,21 @@ public class ReferenceHandler implements TypeHandler {
     }
 
     @Override
-    public Object deserialize(Object obj, GenericType<?> type) {
-        return createReference(type.getClazz(), getDeserializer().deserialize(obj, type.getActualTypeArguments()[0]));
+    public Reference<?> deserialize(Object obj, GenericType<?> type) {
+        Object des = getDeserializer().deserialize(obj, type.getFirstArgumentType());
+
+        return createReference(type.getTypeClass(), des);
     }
 
     @Override
     public Object serialize(Object obj, GenericType<?> type) {
-        if (obj instanceof Reference<?> ref)
+        if (obj instanceof Reference<?> ref) {
             return getSerializer().serialize(ref.get());
+        }
+
+        TrLogger.getInstance().exception(
+                new TypeMissMatched("The provided object " + obj + " is not convertible to an Reference"));
+
         return null;
     }
 
@@ -38,7 +47,8 @@ public class ReferenceHandler implements TypeHandler {
         } else if (SoftReference.class.isAssignableFrom(clazz)) {
             return new SoftReference<>(value);
         } else if (PhantomReference.class.isAssignableFrom(clazz)) {
-            throw new UnsupportedOperationException("PhantomReference is not supported for automatic deserialization.");
+            TrLogger.getInstance().exception(
+                    new UnsupportedOperationException("PhantomReference is not supported for automatic deserialization."));
         }
 
         return new SoftReference<>(value);

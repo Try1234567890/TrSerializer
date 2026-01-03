@@ -1,10 +1,6 @@
 package me.tr.serializer.registries;
 
-import me.tr.serializer.annotations.AsNumber;
-import me.tr.serializer.annotations.AsString;
-import me.tr.serializer.handlers.*;
-import me.tr.serializer.handlers.annotation.AsNumberHandler;
-import me.tr.serializer.handlers.annotation.AsStringHandler;
+import me.tr.serializer.handlers.TypeHandler;
 import me.tr.serializer.handlers.collection.ArrayHandler;
 import me.tr.serializer.handlers.collection.CollectionHandler;
 import me.tr.serializer.handlers.collection.MapHandler;
@@ -37,20 +33,12 @@ public class HandlersRegistry extends Registry<Predicate<Class<?>>, Function<Pro
         return instance;
     }
 
-    /**
-     * Get the {@code Map<I, V>} that contains all the values of the registry.
-     *
-     * @return the {@code Map<I, V>} that contains all the values of the registry.
-     */
     @Override
     public Map<Predicate<Class<?>>, Function<Process, TypeHandler>> getRegistry() {
         return handlers;
     }
 
     private HandlersRegistry() {
-        handlers.put((c) -> c != null && c.isAnnotationPresent(AsNumber.class), AsNumberHandler::new);
-        handlers.put((c) -> c != null && c.isAnnotationPresent(AsString.class), AsStringHandler::new);
-
         handlers.put((c) -> c != null && (AtomicInteger.class.isAssignableFrom(c) ||
                 AtomicLong.class.isAssignableFrom(c) ||
                 AtomicBoolean.class.isAssignableFrom(c) ||
@@ -68,12 +56,15 @@ public class HandlersRegistry extends Registry<Predicate<Class<?>>, Function<Pro
     }
 
     public TypeHandler get(Class<?> clazz, Process process) {
-        return handlers.entrySet()
-                .stream()
-                .filter(entry -> entry.getKey().test(clazz))
-                .map(entry -> entry.getValue().apply(process))
-                .findFirst()
-                .orElse(null);
+
+        for (Map.Entry<Predicate<Class<?>>, Function<Process, TypeHandler>> entry
+                : getRegistry().entrySet()) {
+            if (entry.getKey().test(clazz)) {
+                return entry.getValue().apply(process);
+            }
+        }
+
+        return null;
 
     }
 }

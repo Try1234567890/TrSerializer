@@ -33,7 +33,7 @@ public class Utility {
             )
     );
 
-    private static final Map<Class<?>, Class<?>> WRAPPERS = Map.of(
+    private static final Map<Class<?>, Class<?>> WRAPPERS_PRIMITIVE = Map.of(
             Byte.class, byte.class,
             Character.class, char.class,
             Integer.class, int.class,
@@ -44,18 +44,19 @@ public class Utility {
             Boolean.class, boolean.class
     );
 
+    private static final Map<Class<?>, Class<?>> PRIMITIVE_WRAPPERS = Map.of(
+            byte.class, Byte.class,
+            char.class, Character.class,
+            int.class, Integer.class,
+            double.class, Double.class,
+            float.class, Float.class,
+            long.class, Long.class,
+            short.class, Short.class,
+            boolean.class, Boolean.class
+    );
+
     private Utility() throws InstantiationException {
         throw new InstantiationException("Cannot instantiate utility classes.");
-    }
-
-    /**
-     * Checks if the provided object is a wrapper class.
-     *
-     * @param obj The object to check.
-     * @return {@code true} if it is, otherwise {@code false}.
-     */
-    public static boolean isWrapper(Object obj) {
-        return obj != null && WRAPPERS.containsKey(obj.getClass());
     }
 
     /**
@@ -65,51 +66,14 @@ public class Utility {
      * @return {@code true} if it is, otherwise {@code false}.
      */
     public static boolean isWrapper(Class<?> clazz) {
-        return clazz != null && WRAPPERS.containsKey(clazz);
+        return clazz != null && WRAPPERS_PRIMITIVE.containsKey(clazz);
     }
 
-    /**
-     * Retrieve the primitive class of the provided wrapper.
-     *
-     * @param clazz The wrapper to get primitive class of.
-     * @return The primitive class if exists, otherwise {@code null}.
-     */
-    public static Class<?> getPrimitive(Class<?> clazz) {
-        if (clazz.isPrimitive())
-            return clazz;
-
-        return WRAPPERS.get(clazz);
-    }
-
-    /**
-     * Retrieve the wrapper of the provided primitive class.
-     *
-     * @param clazz The primitive class to get wrapper of.
-     * @return The wrapper class if exists, otherwise {@code null}.
-     */
     public static Class<?> getWrapper(Class<?> clazz) {
-        if (isWrapper(clazz))
-            return clazz;
-
-        return WRAPPERS.entrySet()
-                .stream()
-                .filter(entry -> entry.getValue().equals(clazz))
-                .findFirst()
-                .map(Map.Entry::getKey)
-                .orElse(null);
-    }
-
-
-    /**
-     * Retrieve the type of the list.
-     *
-     * @param coll The collection to get type of.
-     * @return The class of the first object found, if the list is null or empty {@code null}.
-     */
-    public static Class<?> getType(Collection<?> coll) {
-        if (coll == null || coll.isEmpty())
-            return Object.class;
-        return coll.iterator().next().getClass();
+        if (PRIMITIVE_WRAPPERS.containsKey(clazz)) {
+            return PRIMITIVE_WRAPPERS.get(clazz);
+        }
+        return clazz;
     }
 
     /**
@@ -125,61 +89,13 @@ public class Utility {
     }
 
     /**
-     * Get the generic of the provided field, if it has any.
-     *
-     * @param field The field to get generic from.
-     * @return The class of the generics if process ends successfully, otherwise {@code null}.
-     * @throws ClassNotFoundException if the class is not found.
-     */
-    public static Class<?> getGeneric(Field field) throws ClassNotFoundException {
-        if (field == null)
-            return null;
-
-        Type generic = field.getGenericType();
-
-        if (generic instanceof ParameterizedType par) {
-            String className = par.getTypeName();
-            if (hasGeneric(className))
-                className = retrieveGeneric(className);
-            return Class.forName(className, true, ClassLoader.getSystemClassLoader());
-        }
-
-        return null;
-    }
-
-    /**
-     * Get the generic of the provided field, if it has any.
-     *
-     * @param field The field to get generic from.
-     * @return The class of the generics if process ends successfully, otherwise {@code null}.
-     */
-    public static Class<?> getSafeGeneric(Field field) {
-        if (field == null)
-            return null;
-
-        Type generic = field.getGenericType();
-
-        if (generic instanceof ParameterizedType par) {
-            try {
-                String className = par.getTypeName();
-                if (hasGeneric(className))
-                    className = retrieveGeneric(className);
-                return Class.forName(className, true, ClassLoader.getSystemClassLoader());
-            } catch (ClassNotFoundException ignored) {
-            }
-        }
-
-        return null;
-    }
-
-    /**
      * Checks if the provided class name has generics.
      *
      * @param name The class name.
      * @return {@code true} if it has, otherwise {@code false}.
      */
     public static boolean hasGeneric(String name) {
-        return name.contains("<") && name.contains(">");
+        return name != null && name.contains("<") && name.contains(">");
     }
 
     public static String removeGeneric(String name) {

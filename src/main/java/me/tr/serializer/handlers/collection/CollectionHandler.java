@@ -32,10 +32,10 @@ public class CollectionHandler implements TypeHandler {
             throw new IllegalArgumentException("Unsupported source for CollectionHandler: " + obj.getClass());
         }
 
-        Collection<Object> result = createCollectionInstance(type.getClazz());
+        Collection<Object> result = createCollectionInstance(type.getTypeClass());
 
         for (Object item : source) {
-            Object value = getDeserializer().deserialize(item, type.getFirstType());
+            Object value = getDeserializer().deserialize(item, type.getFirstArgumentType());
             result.add(value);
         }
 

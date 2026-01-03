@@ -14,3 +14,18 @@ publishing {
         }
     }
 }
+
+repositories {
+    mavenLocal()
+}
+
+dependencies {
+    implementation('me.tr:logger:2.2.1')
+}
+
+test {
+    jvmArgs += [
+        '--add-opens', 'java.base/java.lang=ALL-UNNAMED',
+        '--add-opens', 'me.tr.serializer/me.tr.serializer=ALL-UNNAMED'
+    ]
+}

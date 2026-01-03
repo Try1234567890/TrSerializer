@@ -1,5 +1,6 @@
 package me.tr.serializer.processes.serializer;
 
+import me.tr.serializer.logger.TrLogger;
 import me.tr.serializer.processes.ProcessOptions;
 import me.tr.serializer.processes.options.Option;
 import me.tr.serializer.processes.options.Options;
@@ -69,6 +70,10 @@ public class SerializerOptions extends ProcessOptions {
      * @return {@code true} if it has, otherwise {@code false}.
      */
     public boolean hasAliases(Class<?> clazz) {
+        if (clazz == null) {
+            return false;
+        }
+
         return getAliases().stream().anyMatch(alias -> alias.key().equals(clazz));
     }
 
@@ -90,6 +95,10 @@ public class SerializerOptions extends ProcessOptions {
      * @return {@code true} if it has, otherwise {@code false}.
      */
     public boolean hasAliases(Field field) {
+        if (field == null) {
+            return false;
+        }
+
         return hasAliases(field.getDeclaringClass(), field.getName());
     }
 
@@ -108,10 +117,19 @@ public class SerializerOptions extends ProcessOptions {
     }
 
     public boolean hasEndMethods(Class<?> clazz) {
+        if (clazz == null)
+            return false;
+
         return getEndMethods().containsKey(clazz);
     }
 
     public String[] getEndMethodNamesFor(Class<?> clazz) {
+        if (clazz == null) {
+            TrLogger.getInstance().exception(
+                    new NullPointerException("The class is null."));
+            return new String[0];
+        }
+
         return getEndMethods().get(clazz);
     }
 
