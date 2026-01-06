@@ -1,7 +1,7 @@
 package me.tr.trserializer.processes.process;
 
 import me.tr.trserializer.instancers.ProcessInstancer;
-import me.tr.trserializer.processes.process.addons.ProcessAddon;
+import me.tr.trserializer.processes.process.addons.PAddon;
 
 import java.util.*;
 
@@ -9,14 +9,14 @@ public class ProcessContext {
     private final Process process;
     private final ProcessOptions options;
     private final ProcessCache cache;
-    private final SortedSet<ProcessAddon> addons;
+    private final SortedSet<PAddon> addons;
 
 
     public ProcessContext(Process process, ProcessCache cache, ProcessOptions options) {
         this.process = process;
         this.options = options;
         this.cache = cache;
-        this.addons = new TreeSet<>(Comparator.comparingInt(ProcessAddon::getPriorityCode));
+        this.addons = new TreeSet<>(Comparator.comparingInt(PAddon::getPriorityCode));
     }
 
     public Process getProcess() {
@@ -35,7 +35,7 @@ public class ProcessContext {
         return new ProcessInstancer(process, params);
     }
 
-    public SortedSet<ProcessAddon> getAddons() {
+    public SortedSet<PAddon> getAddons() {
         return addons;
     }
 }

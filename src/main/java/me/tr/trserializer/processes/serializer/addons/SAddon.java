@@ -1,14 +1,14 @@
 package me.tr.trserializer.processes.serializer.addons;
 
 import me.tr.trserializer.processes.process.Process;
-import me.tr.trserializer.processes.process.addons.ProcessAddon;
+import me.tr.trserializer.processes.process.addons.PAddon;
 import me.tr.trserializer.processes.serializer.Serializer;
 import me.tr.trserializer.types.GenericType;
 
 import java.lang.reflect.Field;
 import java.util.Optional;
 
-public abstract class SAddon extends ProcessAddon {
+public abstract class SAddon extends PAddon {
 
     public SAddon(String name) {
         super(name);

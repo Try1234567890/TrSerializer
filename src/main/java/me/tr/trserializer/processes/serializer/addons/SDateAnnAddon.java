@@ -1,10 +1,10 @@
 package me.tr.trserializer.processes.serializer.addons;
 
 import me.tr.trserializer.handlers.dates.DateHandlerContainer;
-import me.tr.trserializer.processes.process.addons.ProcessDateAnnotationAddon;
+import me.tr.trserializer.processes.process.addons.PDateAnnAddon;
 import me.tr.trserializer.types.GenericType;
 
-public class SDateAnnAddon extends ProcessDateAnnotationAddon {
+public class SDateAnnAddon extends PDateAnnAddon {
 
     @Override
     protected Object execute(DateHandlerContainer handler, Object obj, GenericType<?> type) {

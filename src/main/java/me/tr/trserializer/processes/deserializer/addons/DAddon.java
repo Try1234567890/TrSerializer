@@ -3,13 +3,13 @@ package me.tr.trserializer.processes.deserializer.addons;
 import me.tr.trserializer.processes.deserializer.Deserializer;
 import me.tr.trserializer.processes.process.Process;
 import me.tr.trserializer.processes.process.addons.Priority;
-import me.tr.trserializer.processes.process.addons.ProcessAddon;
+import me.tr.trserializer.processes.process.addons.PAddon;
 import me.tr.trserializer.types.GenericType;
 
 import java.lang.reflect.Field;
 import java.util.Optional;
 
-public abstract class DAddon extends ProcessAddon {
+public abstract class DAddon extends PAddon {
 
     public DAddon(String name, Priority priority) {
         super(name, priority);

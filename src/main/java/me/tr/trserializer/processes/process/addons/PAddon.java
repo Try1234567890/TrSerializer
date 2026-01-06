@@ -6,16 +6,16 @@ import me.tr.trserializer.types.GenericType;
 import java.lang.reflect.Field;
 import java.util.Optional;
 
-public abstract class ProcessAddon {
+public abstract class PAddon {
     private final String name;
     private final Priority priority;
 
-    public ProcessAddon(String name, Priority priority) {
+    public PAddon(String name, Priority priority) {
         this.name = name;
         this.priority = priority;
     }
 
-    public ProcessAddon(String name) {
+    public PAddon(String name) {
         this.name = name;
         this.priority = Priority.NORMAL;
     }

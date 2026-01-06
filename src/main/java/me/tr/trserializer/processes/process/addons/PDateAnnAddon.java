@@ -10,10 +10,10 @@ import me.tr.trserializer.types.GenericType;
 import java.lang.reflect.Field;
 import java.util.Optional;
 
-public abstract class ProcessDateAnnotationAddon extends ProcessAddon {
+public abstract class PDateAnnAddon extends PAddon {
 
 
-    public ProcessDateAnnotationAddon() {
+    public PDateAnnAddon() {
         super("DateAnnotation", Priority.NORMAL_PLUS);
     }
 

@@ -5,20 +5,16 @@ import me.tr.trserializer.annotations.includeIf.IncludeIf;
 import me.tr.trserializer.annotations.includeIf.IncludeStrategy;
 import me.tr.trserializer.annotations.naming.Naming;
 import me.tr.trserializer.annotations.naming.NamingStrategy;
-import me.tr.trserializer.converters.Converter;
 import me.tr.trserializer.exceptions.InstancerError;
 import me.tr.trserializer.exceptions.TypeMissMatched;
 import me.tr.trserializer.handlers.TypeHandler;
 import me.tr.trserializer.instancers.ProcessInstancer;
 import me.tr.trserializer.logger.TrLogger;
-import me.tr.trserializer.processes.process.addons.ProcessAddon;
-import me.tr.trserializer.registries.ConvertersRegistry;
+import me.tr.trserializer.processes.process.addons.PAddon;
 import me.tr.trserializer.registries.HandlersRegistry;
 import me.tr.trserializer.types.GenericType;
 import me.tr.trserializer.utility.Utility;
 
-import java.lang.annotation.Annotation;
-import java.lang.ref.Reference;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -74,7 +70,7 @@ public abstract class Process {
      */
 
     protected <T> Optional<T> processAddons(Object obj, GenericType<T> type, Field field) {
-        for (ProcessAddon addon : getContext().getAddons()) {
+        for (PAddon addon : getContext().getAddons()) {
             String addonName = addon.getName();
             try {
                 TrLogger.dbg("Executing " + addonName);
