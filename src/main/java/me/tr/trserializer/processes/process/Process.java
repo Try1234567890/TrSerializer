@@ -3,6 +3,8 @@ package me.tr.trserializer.processes.process;
 import me.tr.trserializer.annotations.Ignore;
 import me.tr.trserializer.annotations.includeIf.IncludeIf;
 import me.tr.trserializer.annotations.includeIf.IncludeStrategy;
+import me.tr.trserializer.annotations.naming.Naming;
+import me.tr.trserializer.annotations.naming.NamingStrategy;
 import me.tr.trserializer.converters.Converter;
 import me.tr.trserializer.exceptions.InstancerError;
 import me.tr.trserializer.exceptions.TypeMissMatched;
@@ -15,6 +17,7 @@ import me.tr.trserializer.registries.HandlersRegistry;
 import me.tr.trserializer.types.GenericType;
 import me.tr.trserializer.utility.Utility;
 
+import java.lang.annotation.Annotation;
 import java.lang.ref.Reference;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -293,6 +296,47 @@ public abstract class Process {
         return instance;
     }
 
+    protected String applyNamingStrategy(Field field) {
+        String fieldName = field.getName();
+        Optional<Naming> annotation = getNamingAnn(field);
+
+        if (annotation.isPresent())
+            return applyNamingStrategy(fieldName, annotation.get());
+
+        return fieldName;
+    }
+
+    private Optional<Naming> getNamingAnn(Field field) {
+        if (field.isAnnotationPresent(Naming.class)) {
+            return Optional.of(field.getAnnotation(Naming.class));
+        }
+
+        Class<?> declaring = field.getDeclaringClass();
+        if (declaring.isAnnotationPresent(Naming.class)) {
+            return Optional.of(declaring.getAnnotation(Naming.class));
+        }
+
+        return Optional.empty();
+    }
+
+    public String applyNamingStrategy(String name, Naming ann) {
+        NamingStrategy strategy = ann.strategy();
+
+        NamingStrategy from = ann.from();
+
+        if (strategy == NamingStrategy.NOTHING) {
+            TrLogger.warning("The strategy of @Naming on " + name + " is null. Ignoring it.");
+            return name;
+        }
+
+
+        if (from == NamingStrategy.NOTHING)
+            return strategy.format(name);
+
+        return strategy.format(name, from.getFormat());
+    }
+
+
     /**
      * Retrieve the fields from the provided class
      * and all super classes until reaches {@link Object},
@@ -348,6 +392,7 @@ public abstract class Process {
      * @return {@code true} if it is, otherwise {@code false}.
      * @throws NullPointerException if the object is null and nulls is not accepted.
      */
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     protected boolean isValid(Object obj, GenericType<?> type) {
         if (type == null) {
             TrLogger.exception(new NullPointerException("Object or type is null!"));

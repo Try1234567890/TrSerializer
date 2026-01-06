@@ -1,6 +1,7 @@
 package me.tr.trserializer.instancers;
 
 import me.tr.trserializer.annotations.Initialize;
+import me.tr.trserializer.annotations.naming.Naming;
 import me.tr.trserializer.exceptions.TypeMissMatched;
 import me.tr.trserializer.logger.TrLogger;
 import me.tr.trserializer.processes.deserializer.Deserializer;
@@ -91,10 +92,11 @@ public class ProcessInstancer implements Instancer {
             return resolveParamsByParametersNames(parameters);
         } else if (parameters.length == 1) {
             Parameter parameter = parameters[0];
-            return new Object[]{getFromProvidedParams(parameter.getName(), parameter.getType())};
+            return new Object[]{getFromProvidedParams(parameter.getName(), getNamingAnn(parameter), parameter.getType())};
         } else {
             return resolveParamsWithDefaultValues(parameters);
         }
+
     }
 
     private Object[] resolveParamsByParametersNames(Parameter[] parameters) {
@@ -113,7 +115,7 @@ public class ProcessInstancer implements Instancer {
             Parameter parameter = parameters[i];
             String name = paramNames[i];
 
-            Object param = getFromProvidedParams(name, parameter.getType());
+            Object param = getFromProvidedParams(name, getNamingAnn(parameter), parameter.getType());
 
             params[i] = param;
         }
@@ -184,19 +186,20 @@ public class ProcessInstancer implements Instancer {
         return Optional.empty();
     }
 
-    private Object getFromProvidedParams(String name, Class<?> expected) {
+    private Object getFromProvidedParams(String name, Naming ann, Class<?> expected) {
+        String newName = ann != null ? getProcess().applyNamingStrategy(name, ann) : name;
         Object result = null;
 
         if (getParams().size() == 1) {
             result = getParams().values().iterator().next();
 
-        } else if (getParams().containsKey(name)) {
-            result = getParams().get(name);
+        } else if (getParams().containsKey(newName)) {
+            result = getParams().get(newName);
 
         } else {
             for (Map.Entry<String, Object> entry : getParams().entrySet()) {
                 String key = entry.getKey();
-                if (key.equals(name)) {
+                if (key.equals(newName)) {
                     result = entry.getValue();
                 }
             }
@@ -207,6 +210,26 @@ public class ProcessInstancer implements Instancer {
         }
 
         return getDeserializer().deserialize(result, expected);
+    }
+
+    private Naming getNamingAnn(Parameter parameter) {
+        if (parameter.isAnnotationPresent(Naming.class)) {
+            return parameter.getAnnotation(Naming.class);
+        }
+
+        Executable executable = parameter.getDeclaringExecutable();
+
+        if (executable.isAnnotationPresent(Naming.class)) {
+            return executable.getAnnotation(Naming.class);
+        }
+
+        Class<?> declaring = executable.getDeclaringClass();
+
+        if (declaring.isAnnotationPresent(Naming.class)) {
+            return declaring.getAnnotation(Naming.class);
+        }
+
+        return null;
     }
 
     public Process getProcess() {

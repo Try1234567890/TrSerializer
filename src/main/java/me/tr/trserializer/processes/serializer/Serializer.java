@@ -1,5 +1,7 @@
 package me.tr.trserializer.processes.serializer;
 
+import me.tr.trserializer.annotations.naming.Naming;
+import me.tr.trserializer.annotations.naming.NamingStrategy;
 import me.tr.trserializer.logger.TrLogger;
 import me.tr.trserializer.processes.process.Process;
 import me.tr.trserializer.types.GenericType;
@@ -121,11 +123,11 @@ public class Serializer extends Process {
         for (Three<Class<?>, String, String> three : getOptions().getAliases()) {
             if (three.key().equals(declaringClass) &&
                     three.value().equals(fieldName)) {
-                return three.subValue();
+                fieldName = three.subValue();
             }
         }
 
-        return fieldName;
+        return applyNamingStrategy(field);
     }
 
     @Override

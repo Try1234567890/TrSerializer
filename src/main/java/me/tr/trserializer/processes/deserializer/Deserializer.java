@@ -136,7 +136,7 @@ public class Deserializer extends Process {
     }
 
     private Object getMapValue(Field field, Map<String, Object> map) {
-        String fieldName = field.getName();
+        String fieldName = applyNamingStrategy(field);
 
         if (map.containsKey(fieldName)) {
             return map.get(fieldName);
@@ -146,8 +146,7 @@ public class Deserializer extends Process {
 
         for (Map.Entry<String, Object> entry : map.entrySet()) {
             String key = entry.getKey();
-            if (compare(key, fieldName)
-                    || aliases.contains(key)) {
+            if (compare(fieldName, key) || aliases.contains(key)) {
                 return entry.getValue();
             }
         }
@@ -157,12 +156,11 @@ public class Deserializer extends Process {
 
     private Set<String> getAliases(Field field) {
         Class<?> declaringClass = field.getDeclaringClass();
-        String fieldName = field.getName();
-
+        String fieldName = applyNamingStrategy(field);
 
         for (Three<Class<?>, String, String[]> aliases : getOptions().getAliases()) {
             if (aliases.key().equals(declaringClass) &&
-                    compare(aliases.value(), fieldName)) {
+                    compare(fieldName, aliases.value())) {
                 return Arrays.stream(aliases.subValue()).collect(Collectors.toSet());
             }
         }
