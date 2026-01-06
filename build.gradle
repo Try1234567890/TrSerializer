@@ -22,8 +22,9 @@ repositories {
 
 dependencies {
     implementation('me.tr:logger:2.2.1')
+    implementation('me.tr:formatter:2.0.0')
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testRuntimeOnly('org.junit.platform:junit-platform-launcher')
 }
 
 test {
