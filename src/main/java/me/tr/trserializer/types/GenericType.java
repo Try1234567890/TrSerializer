@@ -24,6 +24,10 @@ public class GenericType<T> implements ParameterizedType {
         this.typeArguments = getTypeArguments(field);
     }
 
+    public static <T> GenericType<T> of(Class<T> clazz) {
+        return new GenericType<>(clazz);
+    }
+
     protected Type getRawType(Field field) {
         return field.getType();
     }
