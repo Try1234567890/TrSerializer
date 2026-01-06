@@ -1,6 +1,8 @@
 package me.tr.trserializer.processes.process;
 
 import me.tr.trserializer.annotations.Ignore;
+import me.tr.trserializer.annotations.includeIf.IncludeIf;
+import me.tr.trserializer.annotations.includeIf.IncludeStrategy;
 import me.tr.trserializer.converters.Converter;
 import me.tr.trserializer.exceptions.InstancerError;
 import me.tr.trserializer.exceptions.TypeMissMatched;
@@ -295,7 +297,7 @@ public abstract class Process {
      * Retrieve the fields from the provided class
      * and all super classes until reaches {@link Object},
      * according to each field validation
-     * (see: {@link #isValid(Field)})
+     * (see: {@link #isValid(Field, Object)})
      *
      * @param clazz The class to get fields from.
      * @return a set with all retrieved fields.
@@ -410,10 +412,23 @@ public abstract class Process {
      * @return {@code true} if it is, otherwise {@code false}.
      * @throws NullPointerException if the field is null
      */
-    protected boolean isValid(Field field) {
+    protected boolean isValid(Field field, Object value) {
         if (field == null) {
             TrLogger.exception(new NullPointerException("The field to validate is null."));
             return false;
+        }
+
+        if (field.isAnnotationPresent(IncludeIf.class)) {
+            IncludeIf ann = field.getAnnotation(IncludeIf.class);
+            IncludeStrategy strategy = ann.strategy();
+
+            if (strategy == null) {
+                TrLogger.warning("The strategy of @IncludeIf on " + field.getName() + " in class " + field.getDeclaringClass().getName() + " is null. Ignoring it.");
+                return true;
+            }
+
+            if (!strategy.isValid(value))
+                return false;
         }
 
         int mod = field.getModifiers();

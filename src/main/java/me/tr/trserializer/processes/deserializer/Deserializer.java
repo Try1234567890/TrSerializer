@@ -97,14 +97,21 @@ public class Deserializer extends Process {
             field.setAccessible(true);
 
             try {
+                String fieldName = field.getName();
+                Object fieldValue = field.get(instance);
+
                 // Skip fields already set by @Initialize entry point.
-                if (field.get(instance) != null)
+                if (fieldValue != null) {
+                    TrLogger.dbg("Field " + fieldName + " in class " + clazz + " is already set " + fieldValue);
                     continue;
+                }
 
                 GenericType<?> type = new GenericType<>(field);
                 Object valueFromMap = getMapValue(field, map);
+
+
                 Object deserialized = null;
-                
+
                 if (valueFromMap != null) {
                     Optional<?> addons = processAddons(valueFromMap, type, field);
 
@@ -117,7 +124,7 @@ public class Deserializer extends Process {
                         && !isValid(deserialized)) {
                     TrLogger.exception(new NullPointerException("The value for field " + field.getName() + " in class " + clazz + " is null and the field is annotated with @Essential."));
                 }
-                
+
                 field.set(instance, deserialized);
             } catch (IllegalAccessException e) {
                 TrLogger.exception(new RuntimeException(

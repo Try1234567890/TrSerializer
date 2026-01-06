@@ -88,6 +88,12 @@ public class Serializer extends Process {
             String name = getMapKey(field);
             try {
                 Object value = field.get(obj);
+
+                if (!isValid(field, value)) {
+                    TrLogger.dbg("The @IncludeIf validation failed. Skipping field " + name + " in class" + clazz);
+                    continue;
+                }
+
                 GenericType<?> valueType = new SerializerGenericType<>(field);
 
                 Optional<?> addons = processAddons(value, valueType, field);
