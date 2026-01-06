@@ -8,9 +8,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
-public class AlternativesAddon extends DeserializerAddon {
+public class DAlternativesAddon extends DAddon {
 
-    public AlternativesAddon() {
+    public DAlternativesAddon() {
         super("Alternatives", Priority.VERY_HIGH);
     }
 

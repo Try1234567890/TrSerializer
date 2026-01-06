@@ -9,13 +9,13 @@ import me.tr.trserializer.types.GenericType;
 import java.lang.reflect.Field;
 import java.util.Optional;
 
-public abstract class DeserializerAddon extends ProcessAddon {
+public abstract class DAddon extends ProcessAddon {
 
-    public DeserializerAddon(String name, Priority priority) {
+    public DAddon(String name, Priority priority) {
         super(name, priority);
     }
 
-    public DeserializerAddon(String name) {
+    public DAddon(String name) {
         super(name);
     }
 

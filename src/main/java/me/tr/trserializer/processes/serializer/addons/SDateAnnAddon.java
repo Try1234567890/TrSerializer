@@ -1,13 +1,13 @@
 package me.tr.trserializer.processes.serializer.addons;
 
-import me.tr.trserializer.handlers.TypeHandler;
-import me.tr.trserializer.processes.process.addons.ProcessHandlerAddon;
+import me.tr.trserializer.handlers.dates.DateHandlerContainer;
+import me.tr.trserializer.processes.process.addons.ProcessDateAnnotationAddon;
 import me.tr.trserializer.types.GenericType;
 
-public class SerializerHandlerAddon extends ProcessHandlerAddon {
+public class SDateAnnAddon extends ProcessDateAnnotationAddon {
 
     @Override
-    protected Object execute(TypeHandler handler, Object obj, GenericType<?> type) {
+    protected Object execute(DateHandlerContainer handler, Object obj, GenericType<?> type) {
         return handler.serialize(obj, type);
     }
 
@@ -16,3 +16,24 @@ public class SerializerHandlerAddon extends ProcessHandlerAddon {
         return obj == null ? Object.class : obj.getClass();
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -8,9 +8,9 @@ import me.tr.trserializer.types.GenericType;
 import java.lang.reflect.Field;
 import java.util.Optional;
 
-public abstract class SerializerAddon extends ProcessAddon {
+public abstract class SAddon extends ProcessAddon {
 
-    public SerializerAddon(String name) {
+    public SAddon(String name) {
         super(name);
     }
 

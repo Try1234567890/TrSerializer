@@ -92,7 +92,7 @@ public class Serializer extends Process {
                 Object value = field.get(obj);
 
                 if (!isValid(field, value)) {
-                    TrLogger.dbg("The @IncludeIf validation failed. Skipping field " + name + " in class" + clazz);
+                    TrLogger.dbg("The validation for field " + name + " in class" + clazz + " failed. Skipping it...");
                     continue;
                 }
 
