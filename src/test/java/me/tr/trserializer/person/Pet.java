@@ -74,10 +74,10 @@ public class Pet {
     @Override
     public String toString() {
         return "Pet{" +
-                "generalities=" + generalities +
-                ", gender=" + gender +
-                ", age=" + age +
-                ", type='" + type + '\'' +
+                "Generalities=" + generalities +
+                ", Gender=" + gender +
+                ", Age=" + age +
+                ", Type='" + type + '\'' +
                 '}';
     }
 }

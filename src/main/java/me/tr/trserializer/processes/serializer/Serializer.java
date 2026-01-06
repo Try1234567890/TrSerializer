@@ -1,9 +1,11 @@
 package me.tr.trserializer.processes.serializer;
 
-import me.tr.trserializer.handlers.TypeHandler;
+import me.tr.trserializer.annotations.SerializeAs;
 import me.tr.trserializer.logger.TrLogger;
-import me.tr.trserializer.processes.Process;
+import me.tr.trserializer.processes.process.Process;
+import me.tr.trserializer.processes.process.addons.ProcessAddon;
 import me.tr.trserializer.types.GenericType;
+import me.tr.trserializer.types.SerializerGenericType;
 import me.tr.trserializer.utility.Three;
 
 import java.lang.reflect.Field;
@@ -11,110 +13,122 @@ import java.util.*;
 
 @SuppressWarnings("unchecked")
 public class Serializer extends Process {
-    private final SerializerOptions options = new SerializerOptions(this);
-    private final SerializerCache cache = new SerializerCache(this);
 
-    @Override
+    public Serializer() {
+        setContext(new SerializerContext(this));
+    }
+
+    public SerializerContext getContext() {
+        return (SerializerContext) super.getContext();
+    }
+
     public SerializerOptions getOptions() {
-        return options;
+        return getContext().getOptions();
     }
 
     public SerializerCache getCache() {
-        return cache;
+        return getContext().getCache();
     }
 
 
-    public Object serialize(Object instance) {
-        return serialize(instance, Object.class);
+    public Object serialize(Object obj) {
+        return serialize(obj, Object.class);
     }
 
-    public <T> T serialize(Object instance, T type) {
-        return serialize(instance, new GenericType<>(type == null ? Object.class : type.getClass()));
+    public <T> T serialize(Object obj, T type) {
+        if (type == null) {
+            TrLogger.exception(new NullPointerException("Object or type is null!"));
+            return null;
+        }
+        return (T) serialize(obj, type.getClass());
     }
 
-    public <T> T serialize(Object instance, Class<T> type) {
-        return serialize(instance, new GenericType<>(type));
+    public <T> T serialize(Object obj, Class<T> type) {
+        if (type == null) {
+            TrLogger.exception(new NullPointerException("Object or type is null!"));
+            return null;
+        }
+        return serialize(obj, new GenericType<>(type));
     }
 
-    public <T> T serialize(Object instance, GenericType<T> type) {
-        if (instance == null)
+    public <T> T serialize(Object obj, GenericType<T> type) {
+        if (!isValid(obj, type))
             return null;
 
-        if (!isValid(instance))
-            return null;
-
-        if (getCache().has(instance)) {
-            return checkReturn(getCache().get(instance), type);
+        if (getCache().has(obj)) {
+            TrLogger.dbg("Object (" + obj.getClass().getName() + ") found in cache, reusing it.");
+            return makeReturn(getCache().get(obj), obj, type);
         }
 
-        Object result = null;
+        Optional<T> addons = processAddons(obj, type);
 
-        Optional<Object> handler = handlers(instance);
-
-        if (handler.isPresent())
-            result = handler.get();
-
-
-        if (result != null) {
-            getCache().put(instance, result);
-            return checkReturn(result, type);
-        }
-
-        result = new HashMap<>();
-
-        getCache().put(instance, result);
-
-        serialize((Map<String, Object>) result, instance);
-
-        runEndMethods(instance, getOptions().getEndMethods());
-
-        return checkReturn(result, type);
+        return addons.orElseGet(() -> makeReturn(serializeAsMap(obj), obj, type));
     }
 
-    public Map<String, Object> serializeComplex(Object instance) {
+
+    public Map<String, Object> serializeAsMap(Object obj) {
         Map<String, Object> result = new HashMap<>();
-        serialize(result, instance);
+
+        if (obj == null) {
+            TrLogger.exception(new NullPointerException("Object is null!"));
+            return result;
+        }
+
+        getCache().put(obj, result);
+
+        Class<?> clazz = obj.getClass();
+
+        Set<Field> fields = getFields(clazz);
+
+        for (Field field : fields) {
+            field.setAccessible(true);
+            String name = getMapKey(field);
+            try {
+                Object value = field.get(obj);
+
+                result.put(name, serialize(value, new SerializerGenericType<>(field)));
+            } catch (Exception e) {
+                TrLogger.exception(new RuntimeException("An error occurs while retrieving value from " + name + " in class " + clazz.getName(), e));
+            }
+        }
+
+
         return result;
     }
 
-    private void serialize(Map<String, Object> result,
-                           Object instance) {
-        for (Field f : getFields(instance.getClass())) {
-            try {
-                f.setAccessible(true);
-
-                Object value = f.get(instance);
-
-                result.put(getMapKey(f), serialize(value));
-            } catch (IllegalAccessException e) {
-                TrLogger.getInstance().exception(
-                        new RuntimeException("Could not serialize field: " + f.getName(), e));
-            }
-        }
-    }
-
     private String getMapKey(Field field) {
+        Class<?> declaringClass = field.getDeclaringClass();
         String fieldName = field.getName();
-        Class<?> clazz = field.getDeclaringClass();
 
-        return getOptions().getAliases().stream().filter(alias ->
-                        (alias.key() == null || alias.key().equals(clazz))
-                                && alias.value().equalsIgnoreCase(fieldName))
-                .map(Three::subValue)
-                .findFirst().orElse(fieldName);
-    }
-
-    private Optional<Object> handlers(Object instance) {
-        if (getOptions().isUseHandlers()) {
-            TypeHandler handler = getHandler(instance);
-
-            if (handler != null) {
-                Object serialized = handler.serialize(instance, new GenericType<>(instance.getClass()));
-                if (serialized != null)
-                    return Optional.of(serialized);
+        for (Three<Class<?>, String, String> three : getOptions().getAliases()) {
+            if (three.key().equals(declaringClass) &&
+                    three.value().equals(fieldName)) {
+                return three.subValue();
             }
         }
 
-        return Optional.empty();
+        return fieldName;
+    }
+
+    @Override
+    protected Map<Class<?>, String[]> getMethods() {
+        return getOptions().getEndMethods();
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,221 +1,161 @@
 package me.tr.trserializer.processes.deserializer;
 
-import me.tr.trserializer.annotations.Essential;
 import me.tr.trserializer.exceptions.TypeMissMatched;
-import me.tr.trserializer.handlers.TypeHandler;
 import me.tr.trserializer.logger.TrLogger;
-import me.tr.trserializer.processes.Process;
-import me.tr.trserializer.registries.ConvertersRegistry;
+import me.tr.trserializer.processes.process.Process;
+import me.tr.trserializer.processes.process.addons.ProcessAddon;
 import me.tr.trserializer.types.GenericType;
 import me.tr.trserializer.utility.Three;
 import me.tr.trserializer.utility.Utility;
 
 import java.lang.reflect.Field;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.function.Function;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @SuppressWarnings("unchecked")
 public class Deserializer extends Process {
-    private final DeserializerOptions options = new DeserializerOptions(this);
-    private final DeserializerCache cache = new DeserializerCache(this);
 
+    public Deserializer() {
+        setContext(new DeserializerContext(this));
+    }
+
+    @Override
+    public DeserializerCache getCache() {
+        return (DeserializerCache) super.getCache();
+    }
+
+    @Override
+    public DeserializerContext getContext() {
+        return (DeserializerContext) super.getContext();
+    }
 
     @Override
     public DeserializerOptions getOptions() {
-        return options;
+        return (DeserializerOptions) super.getOptions();
     }
 
-    public DeserializerCache getCache() {
-        return cache;
+    public <T> T deserialize(Object obj, T type) {
+        if (type == null) {
+            TrLogger.exception(new NullPointerException("Object or type is null!"));
+            return null;
+        }
+        return (T) deserialize(obj, type.getClass());
     }
 
-    public <T> T deserialize(Object instance, T type) {
-        return deserialize(instance, new GenericType<>(type == null ? Object.class : type.getClass()));
-    }
 
-    public <T> T deserialize(Object obj, Class<T> clazz) {
-        return deserialize(obj, new GenericType<>(clazz));
+    public <T> T deserialize(Object obj, Class<T> type) {
+        if (type == null) {
+            TrLogger.exception(new NullPointerException("Object or type is null!"));
+            return null;
+        }
+        return deserialize(obj, new GenericType<>(type));
     }
 
     public <T> T deserialize(Object obj, GenericType<T> type) {
-        if (!isValid(obj)) {
-            TrLogger.getInstance().error("The object is invalid.");
+        if (!isValid(obj, type))
             return null;
-        }
-
-        if (type == null) {
-            TrLogger.getInstance().exception(
-                    new NullPointerException("The type is null, cannot deserialize map."));
-            return null;
-        }
 
         if (getCache().has(obj)) {
-            return checkReturn(getCache().get(obj), type);
-        }
-
-        T instance = null;
-
-        Optional<T> alternative = alternative(obj, type);
-        if (alternative.isPresent()) {
-            instance = alternative.get();
+            TrLogger.dbg("Object (" + obj.getClass() + "#" + obj.hashCode() + ") found in cache, reusing it.");
+            return makeReturn(getCache().get(obj), obj, type);
         }
 
 
-        Optional<T> handler = handlers(obj, type);
-        if (handler.isPresent()) {
-            instance = handler.get();
-        }
+        Optional<T> addons = processAddons(obj, type);
+
+        return addons.orElseGet(() -> {
+            if (obj instanceof Map<?, ?> map) {
+                if (!String.class.equals(Utility.getKeyType(map))) {
+                    TrLogger.exception(new TypeMissMatched("The keys type of the provided map is not String.class"));
+                    return null;
+                }
+
+                Map<String, Object> checkedMap = (Map<String, Object>) map;
+
+                Object instance = instance(type.getTypeClass(), checkedMap);
+
+                Object deserializedInstance = deserializeFromMap(instance, checkedMap);
+
+                return makeReturn(deserializedInstance, obj, type);
+            }
+
+            return makeReturn(instance(type.getTypeClass()), obj, type);
+        });
+    }
 
 
-        Class<?> clazz = type.getTypeClass();
-        if (instance != null) {
-            getCache().put(obj, instance);
-            return instance;
-        }
-
-        instance = (T) instance(clazz);
-
-        getCache().put(obj, instance);
-
-        if (!(obj instanceof Map<?, ?> map)) {
-            if (clazz.isInstance(obj) || clazz.isPrimitive())
-                return (T) obj;
-            TrLogger.getInstance().exception(new TypeMissMatched("Expected Map for object deserialization, but got: " + obj.getClass().getName()));
+    private Object deserializeFromMap(Object instance, Map<String, Object> map) {
+        if (instance == null || map == null) {
+            TrLogger.exception(new NullPointerException("Instance or Map is null!"));
             return null;
         }
 
-        Class<?> keysType = Utility.getKeyType(map);
-        if (!String.class.equals(keysType)) {
-            TrLogger.getInstance().exception(
-                    new TypeMissMatched("The expected keys type for complex object map is String. Found: " + (keysType == null ? "null (is empty: " + map.isEmpty() + ")" : keysType.getName())));
-            return null;
+        Class<?> clazz = instance.getClass();
+        Set<Field> fields = getFields(clazz);
+
+        for (Field field : fields) {
+            field.setAccessible(true);
+
+            try {
+                // Skip fields already set by @Initialize method.
+                if (field.get(instance) != null)
+                    continue;
+
+
+                Object valueFromMap = getMapValue(field, map);
+                Object deserialized = deserialize(valueFromMap, new GenericType<>(field));
+
+                field.set(instance, deserialized);
+            } catch (IllegalAccessException e) {
+                TrLogger.exception(new RuntimeException(
+                        "An error occurs while setting value for " + field.getName() + " in class " + clazz, e));
+            }
         }
-
-        deserialize((Map<String, Object>) map, instance);
-
-        runEndMethods(instance, getOptions().getEndMethods());
 
         return instance;
     }
 
-    private void deserialize(Map<String, Object> map, Object instance) {
-        Class<?> clazz = instance.getClass();
-
-        for (Field field : getFields(clazz)) {
-            String fieldName = field.getName();
-            Object mapValue = getMapValue(map, field);
-
-            if (mapValue == null) {
-                if (field.isAnnotationPresent(Essential.class)) {
-                    TrLogger.getInstance().exception(
-                            new NullPointerException("The value " + fieldName + " is essential but missing."));
-                }
-                continue;
-            }
-
-            try {
-                GenericType<?> fieldType = new GenericType<>(field);
-
-                Object value = deserialize(mapValue, fieldType);
-
-                field.setAccessible(true);
-                setField(instance, field, value);
-            } catch (Exception e) {
-                TrLogger.getInstance().exception(
-                        new RuntimeException("Error assigning field " + fieldName + " in " + clazz.getSimpleName(), e));
-            }
-        }
-    }
-
-    private void setField(Object instance, Field field, Object value) throws IllegalAccessException {
-        Class<?> type = field.getType();
-
-        value = checkReturn(value, new GenericType<>(type));
-
-        if (value == null) {
-            if (type.isPrimitive()) return;
-            field.set(instance, null);
-            return;
-        }
-
-        if (getOptions().isUseNumericBoolean()
-                && Number.class.isAssignableFrom(value.getClass())
-                && Boolean.class.isAssignableFrom(type)) {
-            field.set(instance, ConvertersRegistry.getBooleanConverter().complex(((Number) value).byteValue()));
-            return;
-        }
-
-        if (getOptions().isUseNumericCharacter()
-                && Number.class.isAssignableFrom(value.getClass())
-                && Character.class.isAssignableFrom(type)) {
-            field.set(instance, ConvertersRegistry.getCharacterConverter().complex(((Number) value).intValue()));
-            return;
-        }
-
-        field.set(instance, value);
-    }
-
-    private <T> Optional<T> alternative(Object obj, GenericType<T> type) {
-        Class<?> clazz = type.getTypeClass();
-
-        if (getOptions().hasAlternatives(clazz)) {
-            Function<Object, Class<?>> alternative = getOptions().getAlternatives(clazz);
-
-            if (alternative != null
-                    && !alternative.apply(obj).equals(clazz))
-                return Optional.ofNullable(checkReturn(deserialize(obj, alternative), type));
-
-        }
-
-        return Optional.empty();
-    }
-
-    private <T> Optional<T> handlers(Object obj, GenericType<T> type) {
-        Class<?> clazz = type.getTypeClass();
-
-        if (getOptions().isUseHandlers()) {
-            TypeHandler handler = getHandler(clazz);
-
-            if (handler != null)
-                return Optional.ofNullable(checkReturn(handler.deserialize(obj, type), type));
-        }
-
-        return Optional.empty();
-    }
-
-    private Object getMapValue(Map<?, ?> map, Field field) {
+    private Object getMapValue(Field field, Map<String, Object> map) {
         String fieldName = field.getName();
-        Class<?> clazz = field.getDeclaringClass();
 
-        Object mapValue = map.get(fieldName);
-
-        if (mapValue == null) {
-            List<String> aliases = List.of(getOptions().getAliases()
-                    .stream()
-                    .filter(alias -> (alias.key() == null || alias.key().equals(clazz)) && compare(alias.value(), fieldName))
-                    .map(Three::subValue)
-                    .findFirst()
-                    .orElse(new String[0]));
-
-            mapValue = map.entrySet()
-                    .stream()
-                    .filter(entry -> {
-                        String key = String.valueOf(entry.getKey());
-                        return compare(key, fieldName) || aliases.contains(key);
-                    })
-                    .map(Map.Entry::getValue)
-                    .filter(Objects::nonNull)
-                    .findFirst()
-                    .orElse(null);
+        if (map.containsKey(fieldName)) {
+            return map.get(fieldName);
         }
 
-        return mapValue;
+        Set<String> aliases = getAliases(field);
+
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            String key = entry.getKey();
+            if (compare(key, fieldName)
+                    || aliases.contains(key)) {
+                return entry.getValue();
+            }
+        }
+
+        return null;
     }
 
-    private boolean compare(String first, String second) {
-        return getOptions().isIgnoreCase() ? first.equalsIgnoreCase(second) : first.equals(second);
+    private Set<String> getAliases(Field field) {
+        Class<?> declaringClass = field.getDeclaringClass();
+        String fieldName = field.getName();
+
+
+        for (Three<Class<?>, String, String[]> aliases : getOptions().getAliases()) {
+            if (aliases.key().equals(declaringClass) &&
+                    compare(aliases.value(), fieldName)) {
+                return Arrays.stream(aliases.subValue()).collect(Collectors.toSet());
+            }
+        }
+
+        return new HashSet<>();
+    }
+
+    private boolean compare(String s, String s2) {
+        return getOptions().isIgnoreCase() ? s.equalsIgnoreCase(s2) : s.equals(s2);
+    }
+
+    @Override
+    protected Map<Class<?>, String[]> getMethods() {
+        return getOptions().getEndMethods();
     }
 }

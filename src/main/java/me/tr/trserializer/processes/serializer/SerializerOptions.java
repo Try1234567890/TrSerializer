@@ -1,7 +1,7 @@
 package me.tr.trserializer.processes.serializer;
 
 import me.tr.trserializer.logger.TrLogger;
-import me.tr.trserializer.processes.ProcessOptions;
+import me.tr.trserializer.processes.process.ProcessOptions;
 import me.tr.trserializer.processes.options.Option;
 import me.tr.trserializer.processes.options.Options;
 import me.tr.trserializer.utility.Three;
@@ -125,7 +125,7 @@ public class SerializerOptions extends ProcessOptions {
 
     public String[] getEndMethodNamesFor(Class<?> clazz) {
         if (clazz == null) {
-            TrLogger.getInstance().exception(
+            TrLogger.exception(
                     new NullPointerException("The class is null."));
             return new String[0];
         }

@@ -6,14 +6,18 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 
 public class TrLogger extends TrConsoleLogger {
-    public static final TrLogger INSTANCE = new TrLogger();
+    private static final TrLogger INSTANCE = new TrLogger();
 
     public static TrLogger getInstance() {
         return INSTANCE;
     }
 
-    public void exception(Throwable e) {
-        error(getStackTraceAsString(e));
+    public static void exception(Throwable e) {
+        getInstance().error(getStackTraceAsString(e));
+    }
+
+    public static void dbg(String message) {
+        getInstance().debug(message);
     }
 
     public static String getStackTraceAsString(Throwable throwable) {

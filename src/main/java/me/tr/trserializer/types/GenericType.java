@@ -6,7 +6,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
-// The generic is used to specify return type while processing values.
 public class GenericType<T> implements ParameterizedType {
     private final Type rawType;
     private final Class<?> typeClass;
@@ -14,17 +13,22 @@ public class GenericType<T> implements ParameterizedType {
 
     public GenericType(Type rawType, Type... typeArguments) {
         this.rawType = rawType;
-        this.typeClass = rawType instanceof Class<?> ? (Class<?>) rawType : asClass(rawType.getTypeName());
+        this.typeClass = rawType instanceof Class<?> ?
+                (Class<?>) rawType : asClass(rawType.getTypeName());
         this.typeArguments = typeArguments;
     }
 
     public GenericType(Field field) {
-        this.rawType = field.getType();
+        this.rawType = getRawType(field);
         this.typeClass = (Class<?>) rawType;
         this.typeArguments = getTypeArguments(field);
     }
 
-    private Type[] getTypeArguments(Field field) {
+    protected Type getRawType(Field field) {
+        return field.getType();
+    }
+
+    protected Type[] getTypeArguments(Field field) {
         Class<?> component = field.getType().getComponentType();
         if (component != null) // Is an array
             return new Type[]{component};
@@ -33,8 +37,9 @@ public class GenericType<T> implements ParameterizedType {
 
         // Is a collection, a Map, an AtomicReference
         // or something that has generics.
-        if (generic instanceof ParameterizedType par)
+        if (generic instanceof ParameterizedType par) {
             return par.getActualTypeArguments();
+        }
 
         // Something else...
         return new Type[]{generic};
@@ -64,6 +69,10 @@ public class GenericType<T> implements ParameterizedType {
         return getTypeClass();
     }
 
+    @Override
+    public String toString() {
+        return getTypeClass().getName();
+    }
 
     public static Class<?> asClass(String type) {
         try {

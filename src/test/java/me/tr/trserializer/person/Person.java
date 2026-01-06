@@ -1,9 +1,9 @@
 package me.tr.trserializer.person;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import me.tr.trserializer.annotations.Initialize;
+import me.tr.trserializer.annotations.SerializeAs;
+
+import java.util.*;
 
 public class Person {
     private Generalities generalities;
@@ -22,13 +22,21 @@ public class Person {
         this.friends = new ArrayList<>();
     }
 
-    public Person(Generalities generalities, int age, Gender gender, String[] hobbies, List<Pet> pets, List<Person> friends) {
+    public Person(Generalities generalities, int age, Gender gender, String[] hobbies, List<Pet> pets,
+                  List<Person> friends) {
         this.generalities = generalities;
         this.age = age;
         this.gender = gender;
         this.hobbies = hobbies;
         this.pets = pets;
         this.friends = friends;
+    }
+
+    @Initialize(paramNames = {"generalities", "age", "gender"})
+    public Person(Generalities generalities, int age, Gender gender) {
+        this.generalities = generalities;
+        this.age = age;
+        this.gender = gender;
     }
 
     public Generalities getGeneralities() {

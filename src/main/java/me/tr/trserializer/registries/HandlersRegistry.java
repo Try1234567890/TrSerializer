@@ -1,11 +1,15 @@
 package me.tr.trserializer.registries;
 
+import me.tr.trserializer.annotations.AsNumber;
+import me.tr.trserializer.annotations.AsString;
 import me.tr.trserializer.handlers.TypeHandler;
+import me.tr.trserializer.handlers.annotation.AsNumberHandler;
+import me.tr.trserializer.handlers.annotation.AsStringHandler;
 import me.tr.trserializer.handlers.collection.ArrayHandler;
 import me.tr.trserializer.handlers.collection.CollectionHandler;
 import me.tr.trserializer.handlers.collection.MapHandler;
 import me.tr.trserializer.handlers.java.*;
-import me.tr.trserializer.processes.Process;
+import me.tr.trserializer.processes.process.Process;
 import me.tr.trserializer.utility.Utility;
 
 import java.util.*;
@@ -39,32 +43,36 @@ public class HandlersRegistry extends Registry<Predicate<Class<?>>, Function<Pro
     }
 
     private HandlersRegistry() {
-        handlers.put((c) -> c != null && (AtomicInteger.class.isAssignableFrom(c) ||
+        handlers.put((c) -> c.isAnnotationPresent(AsString.class), AsStringHandler::new);
+        handlers.put((c) -> c.isAnnotationPresent(AsNumber.class), AsNumberHandler::new);
+
+        handlers.put((c) -> (AtomicInteger.class.isAssignableFrom(c) ||
                 AtomicLong.class.isAssignableFrom(c) ||
                 AtomicBoolean.class.isAssignableFrom(c) ||
                 AtomicReference.class.isAssignableFrom(c)), AtomicHandler::new);
 
-        handlers.put((c) -> c != null && UUID.class.isAssignableFrom(c), (p) -> UUID_HANDLER);
-        handlers.put((c) -> c != null && Collection.class.isAssignableFrom(c), CollectionHandler::new);
-        handlers.put((c) -> c != null && Map.class.isAssignableFrom(c), MapHandler::new);
-        handlers.put((c) -> c != null && Optional.class.isAssignableFrom(c), (p) -> OPTIONAL_HANDLER);
-        handlers.put((c) -> c != null && String.class.isAssignableFrom(c), (p) -> STRING_HANDLER);
-        handlers.put((c) -> c != null && c.isRecord(), RecordHandler::new);
-        handlers.put((c) -> c != null && c.isArray(), ArrayHandler::new);
-        handlers.put((c) -> c != null && c.isEnum(), (p) -> ENUM_HANDLER);
-        handlers.put((c) -> c != null && c.isPrimitive() || Utility.isWrapper(c), (p) -> PRIMITIVE_HANDLER);
+        handlers.put(UUID.class::isAssignableFrom, (p) -> UUID_HANDLER);
+        handlers.put(Collection.class::isAssignableFrom, CollectionHandler::new);
+        handlers.put(Map.class::isAssignableFrom, MapHandler::new);
+        handlers.put(Optional.class::isAssignableFrom, (p) -> OPTIONAL_HANDLER);
+        handlers.put(String.class::isAssignableFrom, (p) -> STRING_HANDLER);
+        handlers.put(Class::isRecord, RecordHandler::new);
+        handlers.put(Class::isArray, ArrayHandler::new);
+        handlers.put(Class::isEnum, (p) -> ENUM_HANDLER);
+        handlers.put((c) -> c.isPrimitive() || Utility.isWrapper(c), (p) -> PRIMITIVE_HANDLER);
     }
 
-    public TypeHandler get(Class<?> clazz, Process process) {
+    public Optional<TypeHandler> get(Class<?> clazz, Process process) {
 
         for (Map.Entry<Predicate<Class<?>>, Function<Process, TypeHandler>> entry
                 : getRegistry().entrySet()) {
-            if (entry.getKey().test(clazz)) {
-                return entry.getValue().apply(process);
+            if (clazz != null &&
+                    entry.getKey().test(clazz)) {
+                return Optional.ofNullable(entry.getValue().apply(process));
             }
         }
 
-        return null;
+        return Optional.empty();
 
     }
 }

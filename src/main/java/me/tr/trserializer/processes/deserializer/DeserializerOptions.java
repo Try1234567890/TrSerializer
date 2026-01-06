@@ -1,16 +1,13 @@
 package me.tr.trserializer.processes.deserializer;
 
 import me.tr.trserializer.logger.TrLogger;
-import me.tr.trserializer.processes.ProcessOptions;
+import me.tr.trserializer.processes.process.ProcessOptions;
 import me.tr.trserializer.processes.options.Option;
 import me.tr.trserializer.processes.options.Options;
 import me.tr.trserializer.utility.Three;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 
 public class DeserializerOptions extends ProcessOptions {
@@ -19,7 +16,7 @@ public class DeserializerOptions extends ProcessOptions {
     private final Option<Map<Class<?>, String[]>> endMethods = new Option<>(Options.DES_END_METHODS, new HashMap<>());
     // If a class is inside this map as key, while processing it if
     // the function returns a different type, this one will be used.
-    private final Option<Map<Class<?>, Function<Object, Class<?>>>> alternatives = new Option<>(Options.TYPE_ALTERNATIVES, new HashMap<>());
+    private final Option<Map<Class<?>, Function<Object, Optional<Class<?>>>>> alternatives = new Option<>(Options.TYPE_ALTERNATIVES, new HashMap<>());
 
     public DeserializerOptions(Deserializer process) {
         super(process);
@@ -30,11 +27,11 @@ public class DeserializerOptions extends ProcessOptions {
      * =---------------------=
      */
 
-    public Option<Map<Class<?>, Function<Object, Class<?>>>> getAlternativesOptions() {
+    public Option<Map<Class<?>, Function<Object, Optional<Class<?>>>>> getAlternativesOptions() {
         return alternatives;
     }
 
-    public Map<Class<?>, Function<Object, Class<?>>> getAlternatives() {
+    public Map<Class<?>, Function<Object, Optional<Class<?>>>> getAlternatives() {
         return getAlternativesOptions().getValue();
     }
 
@@ -50,9 +47,9 @@ public class DeserializerOptions extends ProcessOptions {
      * @return The alternative if it has any, otherwise {@code null}.
      * @throws NullPointerException if the class is null
      */
-    public Function<Object, Class<?>> getAlternatives(Class<?> clazz) {
+    public Function<Object, Optional<Class<?>>> getAlternatives(Class<?> clazz) {
         if (clazz == null) {
-            TrLogger.getInstance().exception(
+            TrLogger.exception(
                     new NullPointerException("The class is null."));
             return null;
         }
@@ -65,7 +62,7 @@ public class DeserializerOptions extends ProcessOptions {
      * @param clazz The class to add alternative to.
      * @param function The function that contains logic to determinate which alternative use.
      */
-    public DeserializerOptions addAlternatives(Class<?> clazz, Function<Object, Class<?>> function) {
+    public DeserializerOptions addAlternatives(Class<?> clazz, Function<Object, Optional<Class<?>>> function) {
         if (clazz != null && function != null)
             getAlternatives().put(clazz, function);
         return this;
@@ -113,7 +110,7 @@ public class DeserializerOptions extends ProcessOptions {
      */
     public String[] getEndMethodNamesFor(Class<?> clazz) {
         if (clazz == null) {
-            TrLogger.getInstance().exception(
+            TrLogger.exception(
                     new NullPointerException("The class is null.")
             );
             return null;

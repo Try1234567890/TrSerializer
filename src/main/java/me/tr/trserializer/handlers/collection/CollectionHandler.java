@@ -1,7 +1,7 @@
 package me.tr.trserializer.handlers.collection;
 
 import me.tr.trserializer.handlers.TypeHandler;
-import me.tr.trserializer.processes.Process;
+import me.tr.trserializer.processes.process.Process;
 import me.tr.trserializer.processes.deserializer.Deserializer;
 import me.tr.trserializer.processes.serializer.Serializer;
 import me.tr.trserializer.types.GenericType;
@@ -47,7 +47,7 @@ public class CollectionHandler implements TypeHandler {
         List<Object> result = new ArrayList<>();
         if (obj instanceof Collection<?> coll) {
             for (Object item : coll) {
-                Object serializedItem = getSerializer().serialize(item);
+                Object serializedItem = getSerializer().serialize(item, type.getFirstArgumentType());
                 result.add(serializedItem);
             }
         }

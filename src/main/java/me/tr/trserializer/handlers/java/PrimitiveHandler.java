@@ -43,8 +43,7 @@ public class PrimitiveHandler implements TypeHandler {
 
         }
 
-        TrLogger.getInstance().exception(
-                new TypeMissMatched("The provided object (" + clazz + ") is not a primitive type"));
+        TrLogger.exception(new TypeMissMatched("The provided object (" + clazz + ") is not a primitive type"));
         return null;
     }
 }
