@@ -1,5 +1,6 @@
 package me.tr.trserializer.processes.deserializer;
 
+import me.tr.trserializer.annotations.Aliases;
 import me.tr.trserializer.annotations.Essential;
 import me.tr.trserializer.annotations.Unwrapped;
 import me.tr.trserializer.exceptions.TypeMissMatched;
@@ -179,17 +180,24 @@ public class Deserializer extends Process {
     }
 
     private Set<String> getAliases(Field field) {
+        Set<String> result = new HashSet<>();
         Class<?> declaringClass = field.getDeclaringClass();
         String fieldName = applyNamingStrategy(field);
 
         for (Three<Class<?>, String, String[]> aliases : getOptions().getAliases()) {
             if (aliases.key().equals(declaringClass) &&
                     compare(fieldName, aliases.value())) {
-                return Arrays.stream(aliases.subValue()).collect(Collectors.toSet());
+                result.addAll(List.of(aliases.subValue()));
+                break;
             }
         }
 
-        return new HashSet<>();
+        if (field.isAnnotationPresent(Aliases.class)) {
+            Aliases ann = field.getAnnotation(Aliases.class);
+            result.addAll(List.of(ann.aliases()));
+        }
+
+        return result;
     }
 
     private boolean compare(String s, String s2) {

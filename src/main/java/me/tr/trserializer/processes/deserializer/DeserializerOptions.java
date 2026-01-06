@@ -59,7 +59,7 @@ public class DeserializerOptions extends ProcessOptions {
     /**
      * Add an alternatives for the class.
      *
-     * @param clazz The class to add alternative to.
+     * @param clazz    The class to add alternative to.
      * @param function The function that contains logic to determinate which alternative use.
      */
     public DeserializerOptions addAlternatives(Class<?> clazz, Function<Object, Optional<Class<?>>> function) {
@@ -135,6 +135,11 @@ public class DeserializerOptions extends ProcessOptions {
      *   ALIASES OPTION
      * =----------------=
      */
+
+    /**
+     * @see me.tr.trserializer.annotations.Aliases
+     */
+    @Deprecated(forRemoval = true)
     public Option<List<Three<Class<?>, String, String[]>>> getAliasesOption() {
         return aliases;
     }
@@ -143,7 +148,9 @@ public class DeserializerOptions extends ProcessOptions {
      * Retrieve all aliases registered in this deserializer.
      *
      * @return all known aliases.
+     * @see me.tr.trserializer.annotations.Aliases
      */
+    @Deprecated(forRemoval = true)
     public List<Three<Class<?>, String, String[]>> getAliases() {
         return getAliasesOption().getValue();
     }
@@ -154,7 +161,9 @@ public class DeserializerOptions extends ProcessOptions {
      * @param declaringClazz The class that contains the field. (all classes if {@code null})
      * @param fieldName      The field name to register alias to.
      * @param aliases        The aliases to register.
+     * @see me.tr.trserializer.annotations.Aliases
      */
+    @Deprecated(forRemoval = true)
     public DeserializerOptions addAlias(Class<?> declaringClazz, String fieldName, String... aliases) {
         if (fieldName != null && (aliases != null && aliases.length != 0)) {
             getAliasesOption().getValue().add(new Three<>(declaringClazz, fieldName, aliases));
@@ -167,7 +176,9 @@ public class DeserializerOptions extends ProcessOptions {
      *
      * @param alias A tree object containing all information for alias.
      * @see #addAlias(Class, String, String...)
+     * @see me.tr.trserializer.annotations.Aliases
      */
+    @Deprecated(forRemoval = true)
     public DeserializerOptions addAlias(Three<Class<?>, String, String[]> alias) {
         if (alias != null)
             getAliasesOption().getValue().add(alias);
@@ -179,7 +190,9 @@ public class DeserializerOptions extends ProcessOptions {
      *
      * @param clazz The class to check for.
      * @return {@code true} if it has, otherwise {@code false}.
+     * @see me.tr.trserializer.annotations.Aliases
      */
+    @Deprecated(forRemoval = true)
     public boolean hasAliases(Class<?> clazz) {
         if (clazz == null)
             return false;
@@ -193,7 +206,9 @@ public class DeserializerOptions extends ProcessOptions {
      * @param clazz     The class that contains the field.
      * @param fieldName The field name to check for.
      * @return {@code true} if it has, otherwise {@code false}.
+     * @see me.tr.trserializer.annotations.Aliases
      */
+    @Deprecated(forRemoval = true)
     public boolean hasAliases(Class<?> clazz, String fieldName) {
         if (clazz == null || (fieldName == null || fieldName.isEmpty()))
             return false;
@@ -206,7 +221,9 @@ public class DeserializerOptions extends ProcessOptions {
      *
      * @param field The field name to check for.
      * @return {@code true} if it has, otherwise {@code false}.
+     * @see me.tr.trserializer.annotations.Aliases
      */
+    @Deprecated(forRemoval = true)
     public boolean hasAliases(Field field) {
         if (field == null)
             return false;
