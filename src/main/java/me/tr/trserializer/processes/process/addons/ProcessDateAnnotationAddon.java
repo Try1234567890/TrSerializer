@@ -14,7 +14,7 @@ public abstract class ProcessDateAnnotationAddon extends ProcessAddon {
 
 
     public ProcessDateAnnotationAddon() {
-        super("DateAnnotation", Priority.HIGH);
+        super("DateAnnotation", Priority.NORMAL_PLUS);
     }
 
     @Override
