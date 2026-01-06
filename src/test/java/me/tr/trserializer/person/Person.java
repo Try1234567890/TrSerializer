@@ -2,9 +2,13 @@ package me.tr.trserializer.person;
 
 import me.tr.trserializer.annotations.Initialize;
 import me.tr.trserializer.annotations.SerializeAs;
+import me.tr.trserializer.annotations.naming.Naming;
+import me.tr.trserializer.annotations.naming.NamingStrategy;
 
 import java.util.*;
 
+
+@Naming(strategy = NamingStrategy.PASCAL_CASE)
 public class Person {
     private Generalities generalities;
     private Gender gender;

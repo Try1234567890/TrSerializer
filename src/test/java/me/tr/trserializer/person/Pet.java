@@ -1,9 +1,12 @@
 package me.tr.trserializer.person;
 
 import me.tr.trserializer.annotations.Initialize;
+import me.tr.trserializer.annotations.naming.Naming;
+import me.tr.trserializer.annotations.naming.NamingStrategy;
 
 import java.util.Objects;
 
+@Naming(strategy = NamingStrategy.PASCAL_CASE)
 public class Pet {
     private Generalities generalities;
     private Gender gender;
