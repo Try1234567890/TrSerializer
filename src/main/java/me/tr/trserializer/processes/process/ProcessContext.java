@@ -9,14 +9,14 @@ public class ProcessContext {
     private final Process process;
     private final ProcessOptions options;
     private final ProcessCache cache;
-    private final SortedSet<PAddon> addons;
+    private final PriorityQueue<PAddon> addons;
 
 
     public ProcessContext(Process process, ProcessCache cache, ProcessOptions options) {
         this.process = process;
         this.options = options;
         this.cache = cache;
-        this.addons = new TreeSet<>(Comparator.comparingInt(PAddon::getPriorityCode));
+        this.addons = new PriorityQueue<>(Comparator.comparingInt(PAddon::getPriorityCode));
     }
 
     public Process getProcess() {
@@ -35,7 +35,7 @@ public class ProcessContext {
         return new ProcessInstancer(process, params);
     }
 
-    public SortedSet<PAddon> getAddons() {
+    public PriorityQueue<PAddon> getAddons() {
         return addons;
     }
 }

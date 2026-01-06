@@ -1,12 +1,14 @@
 package me.tr.trserializer.processes.serializer;
 
-import me.tr.trserializer.annotations.naming.Naming;
-import me.tr.trserializer.annotations.naming.NamingStrategy;
+import me.tr.trserializer.exceptions.TypeMissMatched;
 import me.tr.trserializer.logger.TrLogger;
 import me.tr.trserializer.processes.process.Process;
+import me.tr.trserializer.processes.process.insert.InsertMethod;
+import me.tr.trserializer.processes.process.addons.PAddon;
 import me.tr.trserializer.types.GenericType;
 import me.tr.trserializer.types.SerializerGenericType;
 import me.tr.trserializer.utility.Three;
+import me.tr.trserializer.utility.Utility;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
@@ -63,11 +65,15 @@ public class Serializer extends Process {
             return (T) getCache().get(obj);
         }
 
-        Optional<T> addons = processAddons(obj, type, null);
+        Optional<Map.Entry<PAddon, ?>> addons = processAddons(obj, type, null);
 
         // Already made returns in processAddon()
         // if one of available addons is valid.
-        return addons.orElseGet(() -> makeReturn(obj, serializeAsMap(obj), type));
+        if (addons.isPresent()) {
+            return (T) addons.get().getValue();
+        }
+
+        return makeReturn(obj, serializeAsMap(obj), type);
 
     }
 
@@ -86,29 +92,45 @@ public class Serializer extends Process {
         Set<Field> fields = getFields(clazz);
 
         for (Field field : fields) {
-            field.setAccessible(true);
-            String name = getMapKey(field);
-            try {
-                Object value = field.get(obj);
-
-                if (!isValid(field, value)) {
-                    TrLogger.dbg("The validation for field " + name + " in class" + clazz + " failed. Skipping it...");
-                    continue;
-                }
-
-                GenericType<?> valueType = new SerializerGenericType<>(field);
-
-                Optional<?> addons = processAddons(value, valueType, field);
-
-                if (addons.isPresent()) {
-                    result.put(name, addons.get());
-                } else result.put(name, serialize(value, valueType));
-            } catch (Exception e) {
-                TrLogger.exception(new RuntimeException("An error occurs while retrieving value from " + name + " in class " + clazz.getName(), e));
-            }
+            serializeField(field, obj, result);
         }
 
         return result;
+    }
+
+    public void serializeField(Field field, Object instance, Map<String, Object> result) {
+        Class<?> clazz = instance.getClass();
+        field.setAccessible(true);
+        String name = getMapKey(field);
+
+        try {
+            Object value = field.get(instance);
+
+            if (!isValid(field, value)) {
+                TrLogger.dbg("The validation for field " + name + " in class" + clazz + " failed. Skipping it...");
+                return;
+            }
+
+            GenericType<?> valueType = new SerializerGenericType<>(field);
+
+            Optional<Map.Entry<PAddon, ?>> addons = processAddons(value, valueType, field);
+
+            if (addons.isPresent()) {
+                Map.Entry<PAddon, ?> entry = addons.get();
+                Object addonResult = entry.getValue();
+
+                cache(value, addonResult);
+
+                entry.getKey()
+                        .getInsert()
+                        .insert(name, addonResult, result);
+                return;
+            }
+
+            result.put(name, serialize(value, valueType));
+        } catch (Exception e) {
+            TrLogger.exception(new RuntimeException("An error occurs while retrieving value from " + name + " in class " + clazz.getName(), e));
+        }
     }
 
     @Override

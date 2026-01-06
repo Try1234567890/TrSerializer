@@ -4,6 +4,7 @@ import me.tr.trserializer.processes.deserializer.Deserializer;
 import me.tr.trserializer.processes.process.addons.Priority;
 import me.tr.trserializer.types.GenericType;
 
+import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -16,7 +17,7 @@ public class DAlternativesAddon extends DAddon {
 
     @Override
     public Optional<Object> process(Deserializer deserializer, Object obj,
-                                    GenericType<?> type) throws Exception {
+                                    GenericType<?> type, Field field) throws Exception {
 
         Map<Class<?>, Function<Object, Optional<Class<?>>>> alternatives =
                 deserializer.getOptions().getAlternatives();

@@ -1,9 +1,11 @@
 package me.tr.trserializer.processes.deserializer;
 
 import me.tr.trserializer.annotations.Essential;
+import me.tr.trserializer.annotations.Unwrapped;
 import me.tr.trserializer.exceptions.TypeMissMatched;
 import me.tr.trserializer.logger.TrLogger;
 import me.tr.trserializer.processes.process.Process;
+import me.tr.trserializer.processes.process.addons.PAddon;
 import me.tr.trserializer.types.GenericType;
 import me.tr.trserializer.utility.Three;
 import me.tr.trserializer.utility.Utility;
@@ -61,10 +63,14 @@ public class Deserializer extends Process {
         }
 
 
-        Optional<T> addons = processAddons(obj, type, null);
+        Optional<Map.Entry<PAddon, ?>> addons = processAddons(obj, type, null);
 
-        if (addons.isPresent())
-            return makeReturn(obj, addons.get(), type);
+
+        // Already made returns in processAddon()
+        // if one of available addons is valid.
+        if (addons.isPresent()) {
+            return (T) addons.get().getValue();
+        }
 
         if (obj instanceof Map<?, ?> map) {
             if (!String.class.equals(Utility.getKeyType(map))) {
@@ -94,45 +100,63 @@ public class Deserializer extends Process {
         Set<Field> fields = getFields(clazz);
 
         for (Field field : fields) {
-            field.setAccessible(true);
-
-            try {
-                String fieldName = field.getName();
-                Object fieldValue = field.get(instance);
-
-                // Skip fields already set by @Initialize entry point.
-                if (fieldValue != null) {
-                    TrLogger.dbg("Field " + fieldName + " in class " + clazz + " is already set " + fieldValue);
-                    continue;
-                }
-
-                GenericType<?> type = new GenericType<>(field);
-                Object valueFromMap = getMapValue(field, map);
-
-
-                Object deserialized = null;
-
-                if (valueFromMap != null) {
-                    Optional<?> addons = processAddons(valueFromMap, type, field);
-
-                    if (addons.isPresent()) {
-                        deserialized = addons.get();
-                    } else deserialized = deserialize(valueFromMap, type);
-                }
-
-                if (field.isAnnotationPresent(Essential.class)
-                        && !isValid(deserialized)) {
-                    TrLogger.exception(new NullPointerException("The value for field " + field.getName() + " in class " + clazz + " is null and the field is annotated with @Essential."));
-                }
-
-                field.set(instance, deserialized);
-            } catch (IllegalAccessException e) {
-                TrLogger.exception(new RuntimeException(
-                        "An error occurs while setting value for " + field.getName() + " in class " + clazz, e));
-            }
+            deserializeField(field, instance, map);
         }
 
         return instance;
+    }
+
+
+    public void deserializeField(Field field, Object instance, Map<String, Object> map) {
+        Class<?> clazz = instance.getClass();
+        field.setAccessible(true);
+
+
+        try {
+            String fieldName = field.getName();
+            Object fieldValue = field.get(instance);
+
+            // Skip fields already set by @Initialize entry point.
+            if (fieldValue != null) {
+                TrLogger.dbg("Field " + fieldName + " in class " + clazz + " is already set " + fieldValue);
+                return;
+            }
+
+            GenericType<?> type = new GenericType<>(field);
+            Object valueFromMap = getMapValue(field, map);
+
+
+            Optional<Map.Entry<PAddon, ?>> addons = Optional.empty();
+            if (valueFromMap == null &&
+                    field.isAnnotationPresent(Unwrapped.class)) {
+                addons = processAddons(map, type, field);
+
+            } else if (valueFromMap != null) {
+                addons = processAddons(valueFromMap, type, field);
+            }
+
+            if (addons.isPresent()) {
+                Object addResult = addons.get().getValue();
+                setField(field, instance, addResult);
+                return;
+            }
+
+            Object deserialized = deserialize(valueFromMap, type);
+            setField(field, instance, deserialized);
+        } catch (IllegalAccessException e) {
+            TrLogger.exception(new RuntimeException(
+                    "An error occurs while setting value for " + field.getName() + " in class " + clazz, e));
+        }
+    }
+
+    private void setField(Field field, Object instance, Object value) throws IllegalAccessException {
+        Class<?> clazz = instance.getClass();
+        if (field.isAnnotationPresent(Essential.class)
+                && !isValid(value)) {
+            TrLogger.exception(new NullPointerException("The value for field " + field.getName() + " in class " + clazz + " is null and the field is annotated with @Essential."));
+        }
+
+        field.set(instance, value);
     }
 
     private Object getMapValue(Field field, Map<String, Object> map) {

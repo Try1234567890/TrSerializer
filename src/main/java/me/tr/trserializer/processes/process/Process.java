@@ -69,7 +69,7 @@ public abstract class Process {
      * ===============================
      */
 
-    protected <T> Optional<T> processAddons(Object obj, GenericType<T> type, Field field) {
+    protected Optional<Map.Entry<PAddon, ?>> processAddons(Object obj, GenericType<?> type, Field field) {
         for (PAddon addon : getContext().getAddons()) {
             String addonName = addon.getName();
             try {
@@ -82,7 +82,7 @@ public abstract class Process {
                     continue;
                 }
 
-                return Optional.ofNullable(makeReturn(obj, result.get(), type));
+                return Optional.of(Map.entry(addon, makeReturn(obj, result.get(), type)));
             } catch (Exception e) {
                 TrLogger.exception(new RuntimeException("The addon " + addon.getName() + " thrown an exception.", e));
             }
@@ -284,7 +284,8 @@ public abstract class Process {
         Object instance = instancer.instance(clazz);
 
         if (instance == null) {
-            TrLogger.exception(new InstancerError("An error occurs while instancing " + clazz + ": " + instancer.getReason()));
+            TrLogger.exception(
+                    new InstancerError("An error occurs while instancing " + clazz, instancer.getReason()));
             instancer.reset();
             return null;
         }

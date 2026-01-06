@@ -138,7 +138,7 @@ public class ProcessInstancer implements Instancer {
     }
 
     private Optional<Constructor<?>> getConstrByAnnotation(Class<?> clazz) {
-        for (Constructor<?> constructor : clazz.getConstructors()) {
+        for (Constructor<?> constructor : clazz.getDeclaredConstructors()) {
             if (constructor.isAnnotationPresent(Initialize.class)) {
                 return Optional.of(constructor);
             }
@@ -147,7 +147,7 @@ public class ProcessInstancer implements Instancer {
     }
 
     private Optional<Constructor<?>> getEmptyConstr(Class<?> clazz) {
-        for (Constructor<?> constructor : clazz.getConstructors()) {
+        for (Constructor<?> constructor : clazz.getDeclaredConstructors()) {
             if (constructor.getParameterCount() == 0) {
                 return Optional.of(constructor);
             }

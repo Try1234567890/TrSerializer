@@ -2,6 +2,7 @@ package me.tr.trserializer.person;
 
 import me.tr.trserializer.annotations.Format;
 import me.tr.trserializer.annotations.Initialize;
+import me.tr.trserializer.annotations.Unwrap;
 import me.tr.trserializer.annotations.naming.Naming;
 import me.tr.trserializer.annotations.naming.NamingStrategy;
 
@@ -9,6 +10,7 @@ import java.time.LocalDate;
 
 @Naming(strategy = NamingStrategy.PASCAL_CASE)
 public class Birthday {
+    @Unwrap
     @Format(format = "dd.MM.yyyy")
     private LocalDate date;
     private int age;
@@ -22,6 +24,7 @@ public class Birthday {
     public LocalDate getDate() {
         return date;
     }
+
     public void setDate(LocalDate date) {
         this.date = date;
     }

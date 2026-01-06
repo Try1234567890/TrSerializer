@@ -1,6 +1,8 @@
 package me.tr.trserializer.person;
 
 import me.tr.trserializer.annotations.Initialize;
+import me.tr.trserializer.annotations.Unwrap;
+import me.tr.trserializer.annotations.Unwrapped;
 import me.tr.trserializer.annotations.naming.Naming;
 import me.tr.trserializer.annotations.naming.NamingStrategy;
 
@@ -8,8 +10,10 @@ import java.util.Objects;
 
 @Naming(strategy = NamingStrategy.PASCAL_CASE)
 public class Pet {
+    @Unwrapped(fields = {"name", "surname"})
     private Generalities generalities;
     private Gender gender;
+    @Unwrapped
     private Birthday birthday;
     private String type;
 
