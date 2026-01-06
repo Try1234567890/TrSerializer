@@ -50,8 +50,9 @@ public class ArrayHandler implements TypeHandler {
         for (int i = 0; i < length; i++) {
             Object rawValue = Array.get(obj, i);
 
-            Object value = getSerializer().serialize(rawValue);
-
+            Object value = rawValue != null ?
+                    getSerializer().serialize(rawValue, rawValue.getClass()) : null;
+            
             if (!checked) {
                 component = value == null ? Object.class : value.getClass();
                 result = Array.newInstance(component, length);
