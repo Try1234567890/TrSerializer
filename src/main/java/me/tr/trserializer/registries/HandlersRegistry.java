@@ -1,8 +1,10 @@
 package me.tr.trserializer.registries;
 
+import me.tr.trserializer.annotations.AsBoolean;
 import me.tr.trserializer.annotations.AsNumber;
 import me.tr.trserializer.annotations.AsString;
 import me.tr.trserializer.handlers.TypeHandler;
+import me.tr.trserializer.handlers.annotation.AsBooleanHandler;
 import me.tr.trserializer.handlers.annotation.AsNumberHandler;
 import me.tr.trserializer.handlers.annotation.AsStringHandler;
 import me.tr.trserializer.handlers.collection.ArrayHandler;
@@ -37,6 +39,7 @@ public class HandlersRegistry extends Registry<Predicate<Class<?>>, Function<Pro
     public static final UUIDHandler UUID_HANDLER = new UUIDHandler();
     public static final OptionalHandler OPTIONAL_HANDLER = new OptionalHandler();
     public static final StringHandler STRING_HANDLER = new StringHandler();
+    public static final BooleanHandler BOOLEAN_HANDLER = new BooleanHandler();
     public static final EnumHandler ENUM_HANDLER = new EnumHandler();
     public static final PrimitiveHandler PRIMITIVE_HANDLER = new PrimitiveHandler();
 
@@ -53,6 +56,7 @@ public class HandlersRegistry extends Registry<Predicate<Class<?>>, Function<Pro
     }
 
     private HandlersRegistry() {
+        handlers.put((c) -> c.isAnnotationPresent(AsBoolean.class), AsBooleanHandler::new);
         handlers.put((c) -> c.isAnnotationPresent(AsString.class), AsStringHandler::new);
         handlers.put((c) -> c.isAnnotationPresent(AsNumber.class), AsNumberHandler::new);
 
@@ -69,6 +73,7 @@ public class HandlersRegistry extends Registry<Predicate<Class<?>>, Function<Pro
         handlers.put(Collection.class::isAssignableFrom, CollectionHandler::new);
         handlers.put(Map.class::isAssignableFrom, MapHandler::new);
         handlers.put(Optional.class::isAssignableFrom, (p) -> OPTIONAL_HANDLER);
+        handlers.put(Boolean.class::isAssignableFrom, (p) -> BOOLEAN_HANDLER);
         handlers.put(String.class::isAssignableFrom, (p) -> STRING_HANDLER);
         handlers.put(Class::isRecord, RecordHandler::new);
         handlers.put(Class::isArray, ArrayHandler::new);

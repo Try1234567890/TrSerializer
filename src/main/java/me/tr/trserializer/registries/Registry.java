@@ -20,9 +20,13 @@ public abstract class Registry<K, V> {
      * @return If the identifier is found, return its value, otherwise null.
      */
     public V get(K name) {
-        for (Map.Entry<K, V> entry : getRegistry().entrySet()) {
-            if (name.equals(entry.getKey())) {
-                return entry.getValue();
+        if (has(name)) {
+            return getRegistry().get(name);
+        } else {
+            for (Map.Entry<K, V> entry : getRegistry().entrySet()) {
+                if (equals(name, entry.getKey())) {
+                    return entry.getValue();
+                }
             }
         }
         return null;
@@ -71,12 +75,20 @@ public abstract class Registry<K, V> {
         register(newID, to);
     }
 
+    public boolean has(K identifier) {
+        return getRegistry().containsKey(identifier);
+    }
+
     public Stream<V> values() {
         return getRegistry().values().stream();
     }
 
     public Stream<K> keys() {
         return getRegistry().keySet().stream();
+    }
+
+    public boolean equals(K k1, K k2) {
+        return k1.equals(k2);
     }
 
     @Override

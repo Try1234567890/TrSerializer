@@ -9,9 +9,10 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 
-public class ConvertersRegistry {
+public class ConvertersRegistry extends Registry<Map.Entry<Class<?>, Class<?>>, Converter<?, ?>> {
     private static ConvertersRegistry instance = new ConvertersRegistry();
     private final Map<Map.Entry<Class<?>, Class<?>>, Converter<?, ?>> converters = new LinkedHashMap<>();
+
 
     public static ConvertersRegistry getInstance() {
         if (instance == null) {
@@ -21,74 +22,82 @@ public class ConvertersRegistry {
     }
 
     private ConvertersRegistry() {
-        converters.put(Map.entry(Number.class, Byte.class), new ByteConverter());
-        converters.put(Map.entry(Number.class, byte.class), new ByteConverter());
-        converters.put(Map.entry(Number.class, Integer.class), new IntegerConverter());
-        converters.put(Map.entry(Number.class, int.class), new IntegerConverter());
-        converters.put(Map.entry(Number.class, Long.class), new LongConverter());
-        converters.put(Map.entry(Number.class, long.class), new LongConverter());
-        converters.put(Map.entry(Number.class, Double.class), new DoubleConverter());
-        converters.put(Map.entry(Number.class, double.class), new DoubleConverter());
-        converters.put(Map.entry(Number.class, Float.class), new FloatConverter());
-        converters.put(Map.entry(Number.class, float.class), new FloatConverter());
-        converters.put(Map.entry(Number.class, Short.class), new ShortConverter());
-        converters.put(Map.entry(Number.class, short.class), new ShortConverter());
-        converters.put(Map.entry(Boolean.class, Byte.class), new BooleanConverter());
-        converters.put(Map.entry(boolean.class, Byte.class), new BooleanConverter());
-        converters.put(Map.entry(Character.class, Integer.class), new CharacterConverter());
-        converters.put(Map.entry(char.class, Integer.class), new CharacterConverter());
+        ByteConverter BYTE_CONVERTER = new ByteConverter();
+        IntegerConverter INTEGER_CONVERTER = new IntegerConverter();
+        LongConverter LONG_CONVERTER = new LongConverter();
+        DoubleConverter DOUBLE_CONVERTER = new DoubleConverter();
+        FloatConverter FLOAT_CONVERTER = new FloatConverter();
+        ShortConverter SHORT_CONVERTER = new ShortConverter();
+        BooleanConverter BOOLEAN_CONVERTER = new BooleanConverter();
+        CharacterConverter CHARACTER_CONVERTER = new CharacterConverter();
+
+        register(Map.entry(Number.class, Byte.class), BYTE_CONVERTER);
+        register(Map.entry(Byte.class, Number.class), BYTE_CONVERTER);
+
+        register(Map.entry(Number.class, Integer.class), INTEGER_CONVERTER);
+        register(Map.entry(Integer.class, Number.class), INTEGER_CONVERTER);
+
+        register(Map.entry(Number.class, Long.class), LONG_CONVERTER);
+        register(Map.entry(Long.class, Number.class), LONG_CONVERTER);
+
+        register(Map.entry(Number.class, Double.class), DOUBLE_CONVERTER);
+        register(Map.entry(Double.class, Number.class), DOUBLE_CONVERTER);
+
+        register(Map.entry(Number.class, Float.class), FLOAT_CONVERTER);
+        register(Map.entry(Float.class, Number.class), FLOAT_CONVERTER);
+
+        register(Map.entry(Number.class, Short.class), SHORT_CONVERTER);
+        register(Map.entry(Short.class, Number.class), SHORT_CONVERTER);
+
+        register(Map.entry(Boolean.class, Number.class), BOOLEAN_CONVERTER);
+        register(Map.entry(Number.class, Boolean.class), BOOLEAN_CONVERTER);
+
+        register(Map.entry(Character.class, Number.class), CHARACTER_CONVERTER);
+        register(Map.entry(Number.class, Character.class), CHARACTER_CONVERTER);
+    }
+
+    @Override
+    public Converter<?, ?> get(Map.Entry<Class<?>, Class<?>> name) {
+        Converter<?, ?> bySimpleGet = super.get(name);
+        if (bySimpleGet != null) {
+            return bySimpleGet;
+
+        } else {
+            Class<?> searchedKey = name.getKey();
+            Class<?> searchedValue = name.getValue();
+
+            for (Map.Entry<Map.Entry<Class<?>, Class<?>>, Converter<?, ?>> entry
+                    : getRegistry().entrySet()) {
+
+                Map.Entry<Class<?>, Class<?>> subEntry = entry.getKey();
+
+                if (subEntry.getKey().isAssignableFrom(searchedKey) &&
+                        subEntry.getValue().isAssignableFrom(searchedValue)) {
+                    return entry.getValue();
+                }
+
+            }
+        }
+        return null;
     }
 
     @SuppressWarnings("unchecked")
     public <C, P> Converter<C, P> get(Class<C> from, Class<P> to) {
-        Converter<?, ?> exactMatch = converters.get(Map.entry(from, to));
-        if (exactMatch != null) return (Converter<C, P>) exactMatch;
-
-        for (Map.Entry<Map.Entry<Class<?>, Class<?>>, Converter<?, ?>> entry : converters.entrySet()) {
-            Class<?> registeredFrom = entry.getKey().getKey();
-            Class<?> registeredTo = entry.getKey().getValue();
-
-            if (registeredFrom.isAssignableFrom(from) && registeredTo.equals(to)) {
-                return (Converter<C, P>) entry.getValue();
-            }
-        }
-
-        return null;
+        return (Converter<C, P>) get(Map.entry(from, to));
     }
 
     public static <C, P> Converter<C, P> getConverter(Class<C> from, Class<P> to) {
         return getInstance().get(from, to);
     }
 
-    public static ByteConverter getByteConverter() {
-        return (ByteConverter) getConverter(Number.class, Byte.class);
+    @Override
+    public boolean equals(Map.Entry<Class<?>, Class<?>> k1, Map.Entry<Class<?>, Class<?>> k2) {
+        return k1.getKey().equals(k2.getKey()) &&
+                k1.getValue().equals(k2.getValue());
     }
 
-    public static IntegerConverter getIntegerConverter() {
-        return (IntegerConverter) getConverter(Number.class, Integer.class);
-    }
-
-    public static LongConverter getLongConverter() {
-        return (LongConverter) getConverter(Number.class, Long.class);
-    }
-
-    public static DoubleConverter getDoubleConverter() {
-        return (DoubleConverter) getConverter(Number.class, Double.class);
-    }
-
-    public static FloatConverter getFloatConverter() {
-        return (FloatConverter) getConverter(Number.class, Float.class);
-    }
-
-    public static ShortConverter getShortConverter() {
-        return (ShortConverter) getConverter(Number.class, Short.class);
-    }
-
-    public static Converter<Boolean, Byte> getBooleanConverter() {
-        return getConverter(Boolean.class, Byte.class);
-    }
-
-    public static Converter<Character, Integer> getCharacterConverter() {
-        return getConverter(Character.class, Integer.class);
+    @Override
+    public Map<Map.Entry<Class<?>, Class<?>>, Converter<?, ?>> getRegistry() {
+        return converters;
     }
 }

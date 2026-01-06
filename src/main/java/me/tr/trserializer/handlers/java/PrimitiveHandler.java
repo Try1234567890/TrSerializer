@@ -29,13 +29,10 @@ public class PrimitiveHandler implements TypeHandler {
     public Object serialize(Object obj, GenericType<?> type) {
         Class<?> clazz = type.getTypeClass();
 
-        if (clazz.isPrimitive()) {
+        if (clazz.isPrimitive())
             return obj;
-        }
 
-
-        if (obj instanceof Number num &&
-                Utility.isWrapper(clazz)) {
+        if (obj instanceof Number num && Utility.isWrapper(clazz)) {
 
             Converter<Number, ?> converter = ConvertersRegistry.getConverter(Number.class, clazz);
             if (converter != null)
@@ -43,7 +40,7 @@ public class PrimitiveHandler implements TypeHandler {
 
         }
 
-        TrLogger.exception(new TypeMissMatched("The provided object (" + clazz + ") is not a primitive type"));
+        TrLogger.exception(new TypeMissMatched("The provided object (" + clazz + ") is not a primitive type or a wrapper"));
         return null;
     }
 }
