@@ -1,5 +1,6 @@
 package me.tr.trserializer.processes.deserializer;
 
+import me.tr.trserializer.annotations.Essential;
 import me.tr.trserializer.exceptions.TypeMissMatched;
 import me.tr.trserializer.logger.TrLogger;
 import me.tr.trserializer.processes.process.Process;
@@ -104,6 +105,11 @@ public class Deserializer extends Process {
 
                 Object valueFromMap = getMapValue(field, map);
                 Object deserialized = deserialize(valueFromMap, new GenericType<>(field));
+
+                if (field.isAnnotationPresent(Essential.class)
+                        && !isValid(deserialized)) {
+                    TrLogger.exception(new NullPointerException("The value for field " + field.getName() + " in class " + clazz + " is null and the field is annotated with @Essential."));
+                }
 
                 field.set(instance, deserialized);
             } catch (IllegalAccessException e) {

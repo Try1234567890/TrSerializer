@@ -363,7 +363,6 @@ public abstract class Process {
         if (obj == null) {
             if (!getOptions().isAcceptNulls())
                 TrLogger.exception(new NullPointerException("The provided object is null and the process not accept null values."));
-
             return false;
         }
 
@@ -410,8 +409,7 @@ public abstract class Process {
      */
     protected boolean isValid(Field field) {
         if (field == null) {
-            TrLogger
-                    .exception(new NullPointerException("The field to validate is null."));
+            TrLogger.exception(new NullPointerException("The field to validate is null."));
             return false;
         }
 
