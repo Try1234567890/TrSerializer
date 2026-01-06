@@ -192,7 +192,16 @@ class ProcessInstancerTest {
 
         Object obj = instancer.instance(WrongReturnTypeMethod.class);
 
-        assertNotNull(obj);
+        System.out.println("!! ERROR EXCEPTED BUT OBJECT MUST NOT BE NULL !!");
+        System.out.println("!! ERROR EXCEPTED BUT OBJECT MUST NOT BE NULL !!");
+        System.out.println("!! ERROR EXCEPTED BUT OBJECT MUST NOT BE NULL !!");
+        System.out.println("!! ERROR EXCEPTED BUT OBJECT MUST NOT BE NULL !!");
+        System.out.println("!! ERROR EXCEPTED BUT OBJECT MUST NOT BE NULL !!");
+
+        System.out.println("Object is null ? " + (obj == null));
+        System.out.println("Object is instance of WrongReturnTypeMethod ? " + (obj instanceof WrongReturnTypeMethod));
+
+        assertInstanceOf(WrongReturnTypeMethod.class, obj);
     }
 }
 

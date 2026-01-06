@@ -13,6 +13,7 @@ import me.tr.trserializer.registries.HandlersRegistry;
 import me.tr.trserializer.types.GenericType;
 import me.tr.trserializer.utility.Utility;
 
+import java.lang.ref.Reference;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -67,79 +68,81 @@ public abstract class Process {
      * ===============================
      */
 
-    protected <T> Optional<T> processAddons(Object obj, GenericType<T> type) {
+    protected <T> Optional<T> processAddons(Object obj, GenericType<T> type, Field field) {
         for (ProcessAddon addon : getContext().getAddons()) {
             String addonName = addon.getName();
             try {
                 TrLogger.dbg("Executing " + addonName);
-                Optional<Object> resultOpt = addon.process(this, obj, type);
-                if (resultOpt.isPresent()) {
-                    Object result = resultOpt.get();
 
-                    getCache().put(obj, result);
+                Optional<?> result = addon.process(this, obj, type, field);
 
-                    TrLogger.dbg("The addon " + addonName + " returns a valid result. Returning: " + result);
-
-                    return Optional.ofNullable(makeReturn(result, obj, type));
+                if (result.isEmpty()) {
+                    TrLogger.dbg("Process " + addonName + " returned empty");
+                    continue;
                 }
+
+                return Optional.ofNullable(makeReturn(obj, result.get(), type));
             } catch (Exception e) {
                 TrLogger.exception(new RuntimeException("The addon " + addon.getName() + " thrown an exception.", e));
-
             }
         }
 
         return Optional.empty();
     }
 
+
+    /**
+     * Make the returns for processes.
+     * <p>
+     * This method checks if the produced value from process is valid according to the
+     * type provided.
+     * <p>
+     * If it is, cache it, and then returns; otherwise thrown an error.
+     *
+     * @param object The original object provided to the process.
+     * @param result The result produced by the process.
+     * @param type   The expected type.
+     * @param <T>    The expected type.
+     * @return An instance of {@code T} if is possible, otherwise {@code null} and {@code an error}.
+     */
     @SuppressWarnings("unchecked")
-    protected <T> T makeReturn(Object object, Object instance, GenericType<T> type) {
-        if (object == null)
+    protected <T> T makeReturn(Object object, Object result, GenericType<T> type) {
+        if (!isValid(result)) {
+            TrLogger.dbg("The result " + result + " is not valid");
             return null;
-
-        /*
-         * Get wrapper returns the wrapper of primitive
-         * if provided class is primitive, otherwise
-         * returns the provided class.
-         */
-        Class<?> expected = Utility.getWrapper(type.getTypeClass());
-        Class<?> objClass = Utility.getWrapper(object.getClass());
-
-        T result = null;
-
-
-        if (Object.class.equals(expected)
-                || expected.isAssignableFrom(objClass)) {
-            result = (T) object;
         }
 
-        if (!(object instanceof List<?>)
-                && List.class.isAssignableFrom(expected)) {
-            result = (T) new ArrayList<>(List.of(object));
+        if (getCache().isCachable(object, result) &&
+                !getCache().has(object)) {
+            cache(object, result);
         }
 
-        if (!(object instanceof String)
-                && String.class.isAssignableFrom(expected)) {
-            result = (T) String.valueOf(object);
+        Class<?> expectedClass = Utility.getWrapper(type.getTypeClass());
+        Class<?> resultClass = Utility.getWrapper(result.getClass());
+
+        if (Object.class.isAssignableFrom(expectedClass)
+                || resultClass.isAssignableFrom(expectedClass)) {
+            return (T) result;
         }
 
-        if (object instanceof Number num
-                && Number.class.isAssignableFrom(expected)) {
-            Converter<Number, ?> converter = ConvertersRegistry.getConverter(Number.class, expected);
-            if (converter != null) {
-                result = (T) converter.primitive(num);
-            }
+        if (Optional.class.isAssignableFrom(resultClass)) {
+            return (T) Optional.of(result);
         }
 
-        if (result == null) {
-            TrLogger.exception(new TypeMissMatched(
-                    "The result of " + this.getClass().getSimpleName() + " process (" + objClass + ") cannot be converted to " + expected));
+        if (Collection.class.isAssignableFrom(resultClass)) {
+            return (T) new ArrayList<>(List.of(result));
         }
 
-        runEndMethods(instance);
+        if (Map.class.isAssignableFrom(resultClass)) {
+            return (T) new HashMap<>(Map.of("", (T) result));
+        }
 
-        return result;
+        TrLogger.exception(
+                new TypeMissMatched("The result " + result + " is not assignable from " + expectedClass));
+        return null;
     }
 
+    protected abstract void cache(Object object, Object result);
 
     protected void runEndMethods(Object instance) {
         if (instance == null) {
@@ -249,7 +252,7 @@ public abstract class Process {
      * process options help.
      *
      * @param clazz The class to instance.
-     * @param map The params to provide to initialize method.
+     * @param map   The params to provide to initialize method.
      * @return A new instance of the class.
      * @throws InstancerError if the instancer fail.
      */

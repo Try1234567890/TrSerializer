@@ -1,15 +1,16 @@
 package me.tr.trserializer.processes.serializer;
 
-import me.tr.trserializer.annotations.SerializeAs;
 import me.tr.trserializer.logger.TrLogger;
 import me.tr.trserializer.processes.process.Process;
-import me.tr.trserializer.processes.process.addons.ProcessAddon;
 import me.tr.trserializer.types.GenericType;
 import me.tr.trserializer.types.SerializerGenericType;
 import me.tr.trserializer.utility.Three;
 
 import java.lang.reflect.Field;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 @SuppressWarnings("unchecked")
 public class Serializer extends Process {
@@ -57,12 +58,15 @@ public class Serializer extends Process {
 
         if (getCache().has(obj)) {
             TrLogger.dbg("Object (" + obj.getClass().getName() + ") found in cache, reusing it.");
-            return makeReturn(getCache().get(obj), obj, type);
+            return (T) getCache().get(obj);
         }
 
-        Optional<T> addons = processAddons(obj, type);
+        Optional<T> addons = processAddons(obj, type, null);
 
-        return addons.orElseGet(() -> makeReturn(serializeAsMap(obj), obj, type));
+        // Already made returns in processAddon()
+        // if one of available addons is valid.
+        return addons.orElseGet(() -> makeReturn(obj, serializeAsMap(obj), type));
+
     }
 
 
@@ -74,10 +78,9 @@ public class Serializer extends Process {
             return result;
         }
 
-        getCache().put(obj, result);
+        cache(obj, result);
 
         Class<?> clazz = obj.getClass();
-
         Set<Field> fields = getFields(clazz);
 
         for (Field field : fields) {
@@ -85,15 +88,24 @@ public class Serializer extends Process {
             String name = getMapKey(field);
             try {
                 Object value = field.get(obj);
+                GenericType<?> valueType = new SerializerGenericType<>(field);
 
-                result.put(name, serialize(value, new SerializerGenericType<>(field)));
+                Optional<?> addons = processAddons(value, valueType, field);
+
+                if (addons.isPresent()) {
+                    result.put(name, addons.get());
+                } else result.put(name, serialize(value, valueType));
             } catch (Exception e) {
                 TrLogger.exception(new RuntimeException("An error occurs while retrieving value from " + name + " in class " + clazz.getName(), e));
             }
         }
 
-
         return result;
+    }
+
+    @Override
+    protected void cache(Object object, Object result) {
+        getCache().put(object, result);
     }
 
     private String getMapKey(Field field) {

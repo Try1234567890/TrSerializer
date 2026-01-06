@@ -1,7 +1,6 @@
 package me.tr.trserializer.processes.deserializer.addons;
 
 import me.tr.trserializer.processes.deserializer.Deserializer;
-import me.tr.trserializer.processes.process.Process;
 import me.tr.trserializer.processes.process.addons.Priority;
 import me.tr.trserializer.types.GenericType;
 
@@ -12,7 +11,7 @@ import java.util.function.Function;
 public class AlternativesAddon extends DeserializerAddon {
 
     public AlternativesAddon() {
-        super("Alternatives", Priority.HIGH);
+        super("Alternatives", Priority.VERY_HIGH);
     }
 
     @Override
@@ -22,8 +21,9 @@ public class AlternativesAddon extends DeserializerAddon {
         Map<Class<?>, Function<Object, Optional<Class<?>>>> alternatives =
                 deserializer.getOptions().getAlternatives();
 
-        if (alternatives.containsKey(type.getTypeClass())) {
-            Optional<Class<?>> alternative = alternatives.get(type.getTypeClass()).apply(obj);
+        Class<?> clazz = type.getTypeClass();
+        if (alternatives.containsKey(clazz)) {
+            Optional<Class<?>> alternative = alternatives.get(clazz).apply(obj);
 
             return alternative.map(aClass -> deserializer.deserialize(obj, aClass));
         }

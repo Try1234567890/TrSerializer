@@ -1,18 +1,24 @@
 package me.tr.trserializer.person;
 
+import me.tr.trserializer.annotations.Initialize;
+
 import java.util.Objects;
 
 public class Pet {
     private Generalities generalities;
     private Gender gender;
-    private int age;
+    private Birthday birthday;
     private String type;
 
+    @Initialize
+    private Pet() {
 
-    public Pet(Generalities generalities, int age, Gender gender, String type) {
+    }
+
+    public Pet(Generalities generalities, Gender gender, Birthday birthday, String type) {
         this.generalities = generalities;
-        this.age = age;
         this.gender = gender;
+        this.birthday = birthday;
         this.type = type;
     }
 
@@ -25,12 +31,12 @@ public class Pet {
         return this;
     }
 
-    public int getAge() {
-        return age;
+    public Birthday getBirthday() {
+        return birthday;
     }
 
-    public Pet setAge(int age) {
-        this.age = age;
+    public Pet setBirthday(Birthday birthday) {
+        this.birthday = birthday;
         return this;
     }
 
@@ -57,7 +63,7 @@ public class Pet {
         if (o == this) return true;
 
         if (o instanceof Pet pet) {
-            return getAge() == pet.getAge() &&
+            return getBirthday() == pet.getBirthday() &&
                     Objects.equals(getGeneralities(), pet.getGeneralities()) &&
                     getGender() == pet.getGender() &&
                     Objects.equals(getType(), pet.getType());
@@ -68,7 +74,7 @@ public class Pet {
 
     @Override
     public int hashCode() {
-        return Objects.hash(getGeneralities(), getGender(), getAge(), getType());
+        return Objects.hash(getGeneralities(), getGender(), getBirthday(), getType());
     }
 
     @Override
@@ -76,7 +82,7 @@ public class Pet {
         return "Pet{" +
                 "Generalities=" + generalities +
                 ", Gender=" + gender +
-                ", Age=" + age +
+                ", Birthday=" + birthday +
                 ", Type='" + type + '\'' +
                 '}';
     }

@@ -1,13 +1,18 @@
 package me.tr.trserializer.processes.deserializer;
 
+import me.tr.trserializer.processes.deserializer.addons.DeserializerDateAnnotationAddon;
 import me.tr.trserializer.processes.deserializer.addons.DeserializerHandlerAddon;
 import me.tr.trserializer.processes.process.ProcessContext;
+
+import java.util.List;
 
 public class DeserializerContext extends ProcessContext {
 
     public DeserializerContext(Deserializer serializer) {
         super(serializer, new DeserializerCache(serializer), new DeserializerOptions(serializer));
-        getAddons().add(new DeserializerHandlerAddon());
+        getAddons().addAll(List.of(
+                        new DeserializerHandlerAddon(),
+                        new DeserializerDateAnnotationAddon()));
     }
 
     @Override

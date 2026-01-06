@@ -2,12 +2,12 @@ package me.tr.trserializer.processes.process.addons;
 
 public enum Priority {
 
-    VERY_LOW(0),
-    LOW(1),
-    NORMAL(2),
-    HIGH(3),
-    VERY_HIGH(4),
-    INFINITE(-1);
+    VERY_LOW(5),
+    LOW(4),
+    NORMAL(3),
+    HIGH(2),
+    VERY_HIGH(1),
+    MAX_PRIORITY(0);
 
     private final int code;
 

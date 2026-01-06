@@ -7,35 +7,35 @@ import java.util.*;
 
 public class Person {
     private Generalities generalities;
-    private int age;
     private Gender gender;
+    private Birthday birthday;
     private String[] hobbies;
     private List<Pet> pets;
     private List<Person> friends;
 
-    public Person(Generalities generalities, int age, Gender gender, String[] hobbies, List<Pet> pets) {
+    public Person(Generalities generalities, Birthday birthday, Gender gender, String[] hobbies, List<Pet> pets) {
         this.generalities = generalities;
-        this.age = age;
+        this.birthday = birthday;
         this.gender = gender;
         this.hobbies = hobbies;
         this.pets = pets;
         this.friends = new ArrayList<>();
     }
 
-    public Person(Generalities generalities, int age, Gender gender, String[] hobbies, List<Pet> pets,
+    public Person(Generalities generalities, Birthday birthday, Gender gender, String[] hobbies, List<Pet> pets,
                   List<Person> friends) {
         this.generalities = generalities;
-        this.age = age;
+        this.birthday = birthday;
         this.gender = gender;
         this.hobbies = hobbies;
         this.pets = pets;
         this.friends = friends;
     }
 
-    @Initialize(paramNames = {"generalities", "age", "gender"})
-    public Person(Generalities generalities, int age, Gender gender) {
+    @Initialize(paramNames = {"generalities", "birthday", "gender"})
+    public Person(Generalities generalities, Birthday birthday, Gender gender) {
         this.generalities = generalities;
-        this.age = age;
+        this.birthday = birthday;
         this.gender = gender;
     }
 
@@ -48,12 +48,12 @@ public class Person {
         return this;
     }
 
-    public int getAge() {
-        return age;
+    public Birthday getBirthday() {
+        return birthday;
     }
 
-    public Person setAge(int age) {
-        this.age = age;
+    public Person setBirthday(Birthday birthday) {
+        this.birthday = birthday;
         return this;
     }
 
@@ -98,7 +98,7 @@ public class Person {
         if (o == this) return true;
 
         if (o instanceof Person person) {
-            return getAge() == person.getAge() &&
+            return getBirthday() == person.getBirthday() &&
                     Objects.equals(getGeneralities(), person.getGeneralities()) &&
                     getGender() == person.getGender() &&
                     Objects.deepEquals(getHobbies(), person.getHobbies()) &&
@@ -112,7 +112,7 @@ public class Person {
     @Override
     public int hashCode() {
         return Objects.hash(getGeneralities(),
-                getAge(),
+                getBirthday(),
                 getGender(),
                 Arrays.hashCode(getHobbies()),
                 getPets(),
@@ -124,7 +124,7 @@ public class Person {
     public String toString() {
         return "Person{" +
                 "generalities=" + generalities +
-                ", age=" + age +
+                ", birthday=" + birthday +
                 ", gender=" + gender +
                 ", hobbies=" + Arrays.toString(hobbies) +
                 ", pets=" + pets +

@@ -1,15 +1,14 @@
 package me.tr.trserializer;
 
 import me.tr.trserializer.nodes.Node;
-import me.tr.trserializer.person.Gender;
-import me.tr.trserializer.person.Generalities;
-import me.tr.trserializer.person.Person;
-import me.tr.trserializer.person.Pet;
+import me.tr.trserializer.person.*;
 import me.tr.trserializer.processes.deserializer.Deserializer;
 import me.tr.trserializer.processes.serializer.Serializer;
 import me.tr.trserializer.types.GenericType;
 import org.junit.jupiter.api.Test;
 
+import java.time.LocalDate;
+import java.time.Month;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -26,10 +25,10 @@ public class AdvancedTest {
     @Test
     public void testObjectIdentity() {
         System.out.println("\n===----------=== OBJECT IDENTITY TEST ===----------===");
-        Pet sharedPet = new Pet(new Generalities("Shared", "Pet"), 5, Gender.MALE, "parrot");
+        Pet sharedPet = new Pet(new Generalities("Shared", "Pet"), Gender.MALE, new Birthday(LocalDate.of(2019, Month.AUGUST, 12)), "parrot");
 
-        Person p1 = new Person(new Generalities("User", "One"), 20, Gender.MALE, new String[]{}, List.of(sharedPet));
-        Person p2 = new Person(new Generalities("User", "Two"), 25, Gender.FEMALE, new String[]{}, List.of(sharedPet));
+        Person p1 = new Person(new Generalities("User", "One"), new Birthday(LocalDate.of(2006, Month.APRIL, 3)), Gender.MALE, new String[]{}, List.of(sharedPet));
+        Person p2 = new Person(new Generalities("User", "Two"), new Birthday(LocalDate.of(2001, Month.MARCH, 20)), Gender.FEMALE, new String[]{}, List.of(sharedPet));
 
         List<Person> group = List.of(p1, p2);
         List<Map<String, Object>> s =
@@ -53,7 +52,7 @@ public class AdvancedTest {
     public void testNullAndEmptyFields() {
         System.out.println("\n===----------=== NULL & EMPTY FIELDS TEST ===----------===");
         try {
-            Person p = new Person(null, 30, Gender.MALE, null, new ArrayList<>());
+            Person p = new Person(null, new Birthday(LocalDate.of(1996, Month.FEBRUARY, 1)), Gender.MALE, null, new ArrayList<>());
 
             Map<String, Object> s = new Serializer().serialize(p, new GenericType<>(Map.class, String.class));
             Person d = new Deserializer().deserialize(s, Person.class);
@@ -67,7 +66,7 @@ public class AdvancedTest {
     @Test
     public void testInheritanceAndPolymorphism() {
         System.out.println("\n===----------=== INHERITANCE TEST ===----------===");
-        Pet p = new Pet(new Generalities("Rex", "Dog"), 3, Gender.MALE, "canine");
+        Pet p = new Pet(new Generalities("Rex", "Dog"), Gender.MALE, new Birthday(LocalDate.of(2023, Month.SEPTEMBER, 26)), "canine");
 
         Map<String, Object> s = new Serializer().serialize(p, new GenericType<>(Map.class, String.class));
         Pet d = new Deserializer().deserialize(s, Pet.class);

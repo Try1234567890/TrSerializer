@@ -4,7 +4,6 @@ import me.tr.trserializer.annotations.Essential;
 import me.tr.trserializer.exceptions.TypeMissMatched;
 import me.tr.trserializer.logger.TrLogger;
 import me.tr.trserializer.processes.process.Process;
-import me.tr.trserializer.processes.process.addons.ProcessAddon;
 import me.tr.trserializer.types.GenericType;
 import me.tr.trserializer.utility.Three;
 import me.tr.trserializer.utility.Utility;
@@ -58,30 +57,30 @@ public class Deserializer extends Process {
 
         if (getCache().has(obj)) {
             TrLogger.dbg("Object (" + obj.getClass() + "#" + obj.hashCode() + ") found in cache, reusing it.");
-            return makeReturn(getCache().get(obj), obj, type);
+            return (T) getCache().get(obj);
         }
 
 
-        Optional<T> addons = processAddons(obj, type);
+        Optional<T> addons = processAddons(obj, type, null);
 
-        return addons.orElseGet(() -> {
-            if (obj instanceof Map<?, ?> map) {
-                if (!String.class.equals(Utility.getKeyType(map))) {
-                    TrLogger.exception(new TypeMissMatched("The keys type of the provided map is not String.class"));
-                    return null;
-                }
+        if (addons.isPresent())
+            return makeReturn(obj, addons.get(), type);
 
-                Map<String, Object> checkedMap = (Map<String, Object>) map;
-
-                Object instance = instance(type.getTypeClass(), checkedMap);
-
-                Object deserializedInstance = deserializeFromMap(instance, checkedMap);
-
-                return makeReturn(deserializedInstance, obj, type);
+        if (obj instanceof Map<?, ?> map) {
+            if (!String.class.equals(Utility.getKeyType(map))) {
+                TrLogger.exception(new TypeMissMatched("The keys type of the provided map is not String.class"));
+                return null;
             }
 
-            return makeReturn(instance(type.getTypeClass()), obj, type);
-        });
+            Map<String, Object> checkedMap = (Map<String, Object>) map;
+            Object instance = instance(type.getTypeClass(), checkedMap);
+
+            cache(obj, instance);
+
+            return makeReturn(obj, deserializeFromMap(instance, checkedMap), type);
+        }
+
+        return makeReturn(obj, instance(type.getTypeClass()), type);
     }
 
 
@@ -98,19 +97,27 @@ public class Deserializer extends Process {
             field.setAccessible(true);
 
             try {
-                // Skip fields already set by @Initialize method.
+                // Skip fields already set by @Initialize entry point.
                 if (field.get(instance) != null)
                     continue;
 
-
+                GenericType<?> type = new GenericType<>(field);
                 Object valueFromMap = getMapValue(field, map);
-                Object deserialized = deserialize(valueFromMap, new GenericType<>(field));
+                Object deserialized = null;
+                
+                if (valueFromMap != null) {
+                    Optional<?> addons = processAddons(valueFromMap, type, field);
+
+                    if (addons.isPresent()) {
+                        deserialized = addons.get();
+                    } else deserialized = deserialize(valueFromMap, type);
+                }
 
                 if (field.isAnnotationPresent(Essential.class)
                         && !isValid(deserialized)) {
                     TrLogger.exception(new NullPointerException("The value for field " + field.getName() + " in class " + clazz + " is null and the field is annotated with @Essential."));
                 }
-
+                
                 field.set(instance, deserialized);
             } catch (IllegalAccessException e) {
                 TrLogger.exception(new RuntimeException(
@@ -163,5 +170,10 @@ public class Deserializer extends Process {
     @Override
     protected Map<Class<?>, String[]> getMethods() {
         return getOptions().getEndMethods();
+    }
+
+    @Override
+    protected void cache(Object object, Object result) {
+        getCache().put(object, result);
     }
 }

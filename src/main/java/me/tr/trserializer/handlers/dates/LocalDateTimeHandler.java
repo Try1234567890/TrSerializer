@@ -1,0 +1,50 @@
+package me.tr.trserializer.handlers.dates;
+
+import me.tr.trserializer.exceptions.TypeMissMatched;
+import me.tr.trserializer.logger.TrLogger;
+import me.tr.trserializer.types.GenericType;
+
+import java.sql.Timestamp;
+import java.time.*;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+
+public class LocalDateTimeHandler extends DateHandlerContainer {
+
+    @Override
+    public LocalDateTime deserialize(Object obj, GenericType<?> type) {
+        if ((isTimestamp() || Number.class.isAssignableFrom(type.getTypeClass()))
+                && obj instanceof Number num) {
+            return Instant
+                    .ofEpochMilli(num.longValue())
+                    .atZone(ZoneOffset.UTC)
+                    .toLocalDateTime();
+        }
+
+        if (obj instanceof String date) {
+            try {
+                return LocalDateTime.parse(date, DateTimeFormatter.ofPattern(getFormat()));
+            } catch (DateTimeParseException e) {
+                TrLogger.exception(new DateTimeException("An error occurs while parsing " + date + " with format " + getFormat(), e));
+                return null;
+            }
+        }
+
+        TrLogger.exception(new TypeMissMatched("The provided object (" + obj.getClass().getName() + ") is not a valid type to deserialize it as LocalDateTime."));
+        return null;
+    }
+
+    @Override
+    public Object serialize(Object obj, GenericType<?> type) {
+        if (obj instanceof LocalDateTime date) {
+            if (isTimestamp()) {
+                return Timestamp.from(date
+                        .atZone(ZoneOffset.UTC)
+                        .toInstant()
+                );
+            }
+            return date.format(DateTimeFormatter.ofPattern(getFormat()));
+        }
+        return obj;
+    }
+}

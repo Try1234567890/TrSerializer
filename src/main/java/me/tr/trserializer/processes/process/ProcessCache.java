@@ -32,6 +32,12 @@ public class ProcessCache {
         cache.clear();
     }
 
+    public boolean isCachable(Object original, Object result) {
+        return (original != null && result != null) &&
+                original != result &&
+                !original.getClass().isPrimitive() ;
+    }
+
     public Process getProcess() {
         return process;
     }

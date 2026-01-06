@@ -1,15 +1,14 @@
 package me.tr.trserializer;
 
 import me.tr.trserializer.logger.TrLogger;
-import me.tr.trserializer.person.Gender;
-import me.tr.trserializer.person.Generalities;
-import me.tr.trserializer.person.Person;
-import me.tr.trserializer.person.Pet;
+import me.tr.trserializer.person.*;
 import me.tr.trserializer.processes.deserializer.Deserializer;
 import me.tr.trserializer.processes.serializer.Serializer;
 import me.tr.trserializer.types.GenericType;
 import org.junit.jupiter.api.Test;
 
+import java.time.LocalDate;
+import java.time.Month;
 import java.util.*;
 
 public class SerializerTest {
@@ -37,7 +36,7 @@ public class SerializerTest {
 
         List<Person> largeList = new ArrayList<>();
         for (int i = 0; i < 10000; i++) {
-            largeList.add(new Person(new Generalities("Name" + i, "Surname"), i, Gender.MALE, new String[]{"h1"}, new ArrayList<>()));
+            largeList.add(new Person(new Generalities("Name" + i, "Surname"), new Birthday(LocalDate.of(1900 + (i % 126), ((i % 12) + 1), ((i % 28) + 1))), Gender.MALE, new String[]{"h1"}, new ArrayList<>()));
         }
 
         long start = System.currentTimeMillis();
@@ -72,10 +71,10 @@ public class SerializerTest {
     public void testObjectIdentity() {
         System.out.println("\n===----------=== OBJECT IDENTITY TEST ===----------===");
 
-        Pet sharedPet = new Pet(new Generalities("Common", "Pet"), 5, Gender.MALE, "parrot");
+        Pet sharedPet = new Pet(new Generalities("Common", "Pet"), Gender.MALE, new Birthday(LocalDate.of(2023, Month.SEPTEMBER, 26)), "parrot");
 
-        Person p1 = new Person(new Generalities("User", "One"), 20, Gender.MALE, new String[0], List.of(sharedPet));
-        Person p2 = new Person(new Generalities("User", "Two"), 25, Gender.FEMALE, new String[0], List.of(sharedPet));
+        Person p1 = new Person(new Generalities("User", "One"), new Birthday(LocalDate.of(2023, Month.SEPTEMBER, 26)), Gender.MALE, new String[0], List.of(sharedPet));
+        Person p2 = new Person(new Generalities("User", "Two"), new Birthday(LocalDate.of(2023, Month.SEPTEMBER, 26)), Gender.FEMALE, new String[0], List.of(sharedPet));
 
         List<Person> group = List.of(p1, p2);
 
@@ -104,29 +103,29 @@ public class SerializerTest {
 
         Person person = new Person(
                 new Generalities("Mario", "Rossi"),
-                28,
+                new Birthday(LocalDate.of(2023, Month.SEPTEMBER, 26)),
                 Gender.MALE,
                 new String[]{"sport", "football"},
                 List.of(
-                        new Pet(new Generalities("Black", "Rossi"), 12, Gender.MALE, "cat"),
-                        new Pet(new Generalities("White", "Rossi"), 12, Gender.FEMALE, "cat")
+                        new Pet(new Generalities("Black", "Rossi"), Gender.MALE, new Birthday(LocalDate.of(2023, Month.SEPTEMBER, 26)), "cat"),
+                        new Pet(new Generalities("White", "Rossi"), Gender.FEMALE, new Birthday(LocalDate.of(2023, Month.SEPTEMBER, 26)), "cat")
                 ),
                 List.of(
                         new Person(
                                 new Generalities("White", "Red"),
-                                10,
+                                new Birthday(LocalDate.of(2023, Month.SEPTEMBER, 26)),
                                 Gender.FEMALE,
                                 new String[]{"dolls"},
                                 new ArrayList<>()
                         ),
                         new Person(
                                 new Generalities("Red", "Blue"),
-                                29,
+                                new Birthday(LocalDate.of(2023, Month.SEPTEMBER, 26)),
                                 Gender.MALE,
                                 new String[]{"basket"},
                                 List.of(
-                                        new Pet(new Generalities("Black", "Rossi"), 12, Gender.MALE, "cat"),
-                                        new Pet(new Generalities("White", "Rossi"), 12, Gender.FEMALE, "cat")
+                                        new Pet(new Generalities("Black", "Rossi"), Gender.MALE, new Birthday(LocalDate.of(2023, Month.SEPTEMBER, 26)), "cat"),
+                                        new Pet(new Generalities("White", "Rossi"), Gender.FEMALE, new Birthday(LocalDate.of(2023, Month.SEPTEMBER, 26)), "cat")
                                 )
                         )
                 )
