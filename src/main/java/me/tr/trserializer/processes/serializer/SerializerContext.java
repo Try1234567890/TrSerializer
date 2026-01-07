@@ -4,6 +4,7 @@ import me.tr.trserializer.processes.process.ProcessContext;
 import me.tr.trserializer.processes.serializer.addons.SDateAnnAddon;
 import me.tr.trserializer.processes.serializer.addons.SHandlerAddon;
 import me.tr.trserializer.processes.serializer.addons.SUnwrapAddon;
+import me.tr.trserializer.processes.serializer.addons.SWrapAddon;
 
 import java.util.List;
 
@@ -11,7 +12,7 @@ public class SerializerContext extends ProcessContext {
 
     public SerializerContext(Serializer serializer) {
         super(serializer, new SerializerCache(serializer), new SerializerOptions(serializer));
-        getAddons().addAll(List.of(new SUnwrapAddon(), new SDateAnnAddon(), new SHandlerAddon()));
+        getAddons().addAll(List.of(new SUnwrapAddon(), new SWrapAddon(), new SDateAnnAddon(), new SHandlerAddon()));
     }
 
     @Override

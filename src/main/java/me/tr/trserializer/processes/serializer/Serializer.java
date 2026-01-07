@@ -1,14 +1,11 @@
 package me.tr.trserializer.processes.serializer;
 
-import me.tr.trserializer.exceptions.TypeMissMatched;
 import me.tr.trserializer.logger.TrLogger;
 import me.tr.trserializer.processes.process.Process;
-import me.tr.trserializer.processes.process.insert.InsertMethod;
 import me.tr.trserializer.processes.process.addons.PAddon;
 import me.tr.trserializer.types.GenericType;
 import me.tr.trserializer.types.SerializerGenericType;
 import me.tr.trserializer.utility.Three;
-import me.tr.trserializer.utility.Utility;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
@@ -134,7 +131,7 @@ public class Serializer extends Process {
     }
 
     @Override
-    protected void cache(Object object, Object result) {
+    protected void _cache(Object object, Object result) {
         getCache().put(object, result);
     }
 

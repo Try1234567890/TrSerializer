@@ -2,7 +2,7 @@ package me.tr.trserializer.person;
 
 import me.tr.trserializer.annotations.Format;
 import me.tr.trserializer.annotations.Initialize;
-import me.tr.trserializer.annotations.Unwrap;
+import me.tr.trserializer.annotations.unwrap.Unwrap;
 import me.tr.trserializer.annotations.naming.Naming;
 import me.tr.trserializer.annotations.naming.NamingStrategy;
 

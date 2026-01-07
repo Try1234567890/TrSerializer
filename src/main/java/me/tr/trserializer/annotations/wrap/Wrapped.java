@@ -1,5 +1,4 @@
-package me.tr.trserializer.annotations;
-
+package me.tr.trserializer.annotations.wrap;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -7,6 +6,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.FIELD})
-public @interface Unwrap {
+@Target(ElementType.FIELD)
+public @interface Wrapped {
+
+    String key();
+
 }

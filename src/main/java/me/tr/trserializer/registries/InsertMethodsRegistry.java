@@ -3,6 +3,7 @@ package me.tr.trserializer.registries;
 import me.tr.trserializer.processes.process.insert.BaseInsert;
 import me.tr.trserializer.processes.process.insert.InsertMethod;
 import me.tr.trserializer.processes.process.insert.UnwrapInsert;
+import me.tr.trserializer.processes.process.insert.WrapInsert;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -23,6 +24,7 @@ public class InsertMethodsRegistry extends Registry<Class<? extends InsertMethod
     private InsertMethodsRegistry() {
         register(BaseInsert.class, new BaseInsert());
         register(UnwrapInsert.class, new UnwrapInsert());
+        register(WrapInsert.class, new WrapInsert());
     }
 
     public static InsertMethod getMethod(Class<? extends InsertMethod> clazz) {

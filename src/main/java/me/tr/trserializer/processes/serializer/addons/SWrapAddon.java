@@ -1,27 +1,30 @@
 package me.tr.trserializer.processes.serializer.addons;
 
-import me.tr.trserializer.annotations.unwrap.Unwrapped;
-import me.tr.trserializer.handlers.annotation.UnwrappedHandler;
+import me.tr.trserializer.annotations.wrap.Wrapped;
+import me.tr.trserializer.handlers.annotation.WrappedHandler;
 import me.tr.trserializer.processes.process.Process;
-import me.tr.trserializer.processes.process.addons.PUnwrapAddon;
+import me.tr.trserializer.processes.process.addons.PWrapAddon;
 import me.tr.trserializer.processes.serializer.Serializer;
 import me.tr.trserializer.types.GenericType;
 
 import java.lang.reflect.Field;
+import java.util.HashSet;
 import java.util.Optional;
 
-public class SUnwrapAddon extends PUnwrapAddon {
+public class SWrapAddon extends PWrapAddon {
 
     public Optional<Object> process(Serializer serializer, Object obj, GenericType<?> type, Field field)
             throws Exception {
         if (field == null)
             return Optional.empty();
 
-        if (field.isAnnotationPresent(Unwrapped.class)) {
-            Unwrapped unwrapped = field.getAnnotation(Unwrapped.class);
+        if (field.isAnnotationPresent(Wrapped.class)) {
+            Wrapped unwrapped = field.getAnnotation(Wrapped.class);
 
-            return Optional.ofNullable(new UnwrappedHandler(serializer, getFields(serializer, unwrapped, obj), obj)
-                    .serialize(obj, type));
+            return Optional.ofNullable(
+                    new WrappedHandler(serializer, unwrapped.key(), new HashSet<>(), obj)
+                            .serialize(obj, type)
+            );
         }
 
         return Optional.empty();

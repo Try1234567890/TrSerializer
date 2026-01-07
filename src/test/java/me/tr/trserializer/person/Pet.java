@@ -1,16 +1,16 @@
 package me.tr.trserializer.person;
 
 import me.tr.trserializer.annotations.Initialize;
-import me.tr.trserializer.annotations.Unwrap;
-import me.tr.trserializer.annotations.Unwrapped;
+import me.tr.trserializer.annotations.unwrap.Unwrapped;
 import me.tr.trserializer.annotations.naming.Naming;
 import me.tr.trserializer.annotations.naming.NamingStrategy;
+import me.tr.trserializer.annotations.wrap.Wrapped;
 
 import java.util.Objects;
 
 @Naming(strategy = NamingStrategy.PASCAL_CASE)
 public class Pet {
-    @Unwrapped(fields = {"name", "surname"})
+    @Wrapped(key = "Others")
     private Generalities generalities;
     private Gender gender;
     @Unwrapped

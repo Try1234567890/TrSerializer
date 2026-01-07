@@ -1,7 +1,7 @@
 package me.tr.trserializer.processes.process.addons;
 
-import me.tr.trserializer.annotations.Unwrap;
-import me.tr.trserializer.annotations.Unwrapped;
+import me.tr.trserializer.annotations.unwrap.Unwrap;
+import me.tr.trserializer.annotations.unwrap.Unwrapped;
 import me.tr.trserializer.processes.process.Process;
 import me.tr.trserializer.processes.process.insert.UnwrapInsert;
 import me.tr.trserializer.registries.InsertMethodsRegistry;
@@ -13,8 +13,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public abstract class PUnwrapAddon extends PAddon {
+
     public PUnwrapAddon() {
-        super("Unwrap", InsertMethodsRegistry.getMethod(UnwrapInsert.class));
+        super("Unwrap", Priority.HIGH, InsertMethodsRegistry.getMethod(UnwrapInsert.class));
     }
 
 

@@ -2,8 +2,8 @@ package me.tr.trserializer.processes.deserializer;
 
 import me.tr.trserializer.annotations.Aliases;
 import me.tr.trserializer.annotations.Essential;
-import me.tr.trserializer.annotations.Unwrapped;
-import me.tr.trserializer.exceptions.TypeMissMatched;
+import me.tr.trserializer.annotations.unwrap.Unwrapped;
+import me.tr.trserializer.annotations.wrap.Wrapped;
 import me.tr.trserializer.logger.TrLogger;
 import me.tr.trserializer.processes.process.Process;
 import me.tr.trserializer.processes.process.addons.PAddon;
@@ -13,7 +13,6 @@ import me.tr.trserializer.utility.Utility;
 
 import java.lang.reflect.Field;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @SuppressWarnings("unchecked")
 public class Deserializer extends Process {
@@ -73,21 +72,17 @@ public class Deserializer extends Process {
             return (T) addons.get().getValue();
         }
 
-        if (obj instanceof Map<?, ?> map) {
-            if (!String.class.equals(Utility.getKeyType(map))) {
-                TrLogger.exception(new TypeMissMatched("The keys type of the provided map is not String.class"));
-                return null;
-            }
-
-            Map<String, Object> checkedMap = (Map<String, Object>) map;
-            Object instance = instance(type.getTypeClass(), checkedMap);
-
-            cache(obj, instance);
-
-            return makeReturn(obj, deserializeFromMap(instance, checkedMap), type);
+        if (!Utility.isAMapWithStringKeys(obj)) {
+            TrLogger.dbg("The provided object is not a map.");
+            return makeReturn(obj, instance(type.getTypeClass()), type);
         }
 
-        return makeReturn(obj, instance(type.getTypeClass()), type);
+        Map<String, Object> checkedMap = (Map<String, Object>) obj;
+        Object instance = instance(type.getTypeClass(), checkedMap);
+
+        cache(obj, instance);
+
+        return makeReturn(obj, deserializeFromMap(instance, checkedMap), type);
     }
 
 
@@ -129,7 +124,8 @@ public class Deserializer extends Process {
 
             Optional<Map.Entry<PAddon, ?>> addons = Optional.empty();
             if (valueFromMap == null &&
-                    field.isAnnotationPresent(Unwrapped.class)) {
+                    (field.isAnnotationPresent(Unwrapped.class) ||
+                            field.isAnnotationPresent(Wrapped.class))) {
                 addons = processAddons(map, type, field);
 
             } else if (valueFromMap != null) {
@@ -160,7 +156,7 @@ public class Deserializer extends Process {
         field.set(instance, value);
     }
 
-    private Object getMapValue(Field field, Map<String, Object> map) {
+    public Object getMapValue(Field field, Map<String, Object> map) {
         String fieldName = applyNamingStrategy(field);
 
         if (map.containsKey(fieldName)) {
@@ -210,7 +206,7 @@ public class Deserializer extends Process {
     }
 
     @Override
-    protected void cache(Object object, Object result) {
+    protected void _cache(Object object, Object result) {
         getCache().put(object, result);
     }
 }

@@ -1,5 +1,8 @@
 package me.tr.trserializer.utility;
 
+import me.tr.trserializer.exceptions.TypeMissMatched;
+import me.tr.trserializer.logger.TrLogger;
+
 import java.lang.reflect.Array;
 import java.util.*;
 
@@ -71,6 +74,23 @@ public class Utility {
             return PRIMITIVE_WRAPPERS.get(clazz);
         }
         return clazz;
+    }
+
+
+    public static boolean isAMapWithStringKeys(Object obj) {
+        if (!(obj instanceof Map<?, ?> unsafeSubMap)) {
+            TrLogger.exception(
+                    new TypeMissMatched("The provided object is not a map but " + (obj == null ? "null" : obj.getClass())));
+            return false;
+        }
+
+        if (!String.class.isAssignableFrom(Utility.getKeyType(unsafeSubMap))) {
+            TrLogger.exception(
+                    new TypeMissMatched("The provided map keys type is not String.class"));
+            return false;
+        }
+
+        return true;
     }
 
     /**

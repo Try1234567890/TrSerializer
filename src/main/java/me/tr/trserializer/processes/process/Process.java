@@ -113,10 +113,7 @@ public abstract class Process {
             return null;
         }
 
-        if (getCache().isCachable(object, result) &&
-                !getCache().has(object)) {
-            cache(object, result);
-        }
+        cache(object, result);
 
         Class<?> expectedClass = Utility.getWrapper(type.getTypeClass());
         Class<?> resultClass = Utility.getWrapper(result.getClass());
@@ -143,7 +140,14 @@ public abstract class Process {
         return null;
     }
 
-    protected abstract void cache(Object object, Object result);
+    protected abstract void _cache(Object object, Object result);
+
+    protected void cache(Object object, Object result) {
+        if (getCache().isCachable(object, result) &&
+                !getCache().has(object)) {
+            _cache(object, result);
+        }
+    }
 
     protected void runEndMethods(Object instance) {
         if (instance == null) {

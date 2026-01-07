@@ -33,9 +33,13 @@ public class ProcessCache {
     }
 
     public boolean isCachable(Object original, Object result) {
-        return (original != null && result != null) &&
-                original != result &&
-                !original.getClass().isPrimitive() ;
+        return isCacheable(original) && isCacheable(result);
+    }
+
+    private boolean isCacheable(Object obj) {
+        return obj != null &&
+                !obj.getClass().isPrimitive() &&
+                !(obj instanceof String);
     }
 
     public Process getProcess() {

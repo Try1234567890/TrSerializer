@@ -21,16 +21,14 @@ public class RecordHandler implements TypeHandler {
     @SuppressWarnings("unchecked")
     @Override
     public Object deserialize(Object obj, GenericType<?> type) {
-        if (obj instanceof Map<?, ?> map) {
-            if (!String.class.isAssignableFrom(Utility.getKeyType(map))) {
-                TrLogger.exception(
-                        new TypeMissMatched("The map keys type is not String.class"));
-                return null;
-            }
-
-            return new ProcessInstancer(getProcess(), (Map<String, Object>) map).instance(type.getTypeClass());
+        if (!Utility.isAMapWithStringKeys(obj)) {
+            TrLogger.exception(
+                    new TypeMissMatched("The provided object for record deserialization is not a map with canonical constructors key."));
+            return null;
         }
-        return obj;
+
+
+        return new ProcessInstancer(getProcess(), (Map<String, Object>) obj).instance(type.getTypeClass());
     }
 
     @Override
