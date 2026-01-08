@@ -1,5 +1,8 @@
 package me.tr.trserializer.processes.serializer;
 
+import me.tr.trformatter.strings.format.formats.CamelCase;
+import me.tr.trformatter.strings.format.formats.PascalCase;
+import me.tr.trserializer.annotations.Getter;
 import me.tr.trserializer.exceptions.TypeMissMatched;
 import me.tr.trserializer.logger.TrLogger;
 import me.tr.trserializer.processes.process.Process;
@@ -11,6 +14,8 @@ import me.tr.trserializer.utility.Three;
 import me.tr.trserializer.utility.Utility;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.*;
 
 @SuppressWarnings("unchecked")
@@ -99,7 +104,7 @@ public class Serializer extends Process {
             return makeReturn(obj, serializeAsMap(obj, new HashMap<>(), tasks), type);
         }
         executeEndMethods(obj);
-        return simpleResult.get();
+        return makeReturn(obj, simpleResult.get(), type);
     }
 
     protected Map<String, Object> serializeAsMap(Object obj, Map<String, Object> result, Deque<ProcessTaskContainer> tasks) {
@@ -127,7 +132,7 @@ public class Serializer extends Process {
         TrLogger.dbg("Serializing field " + fieldName + " of " + Utility.getClassName(clazz));
 
         try {
-            Object value = field.get(instance);
+            Object value = getValueOf(field, instance);
 
             if (!isValid(field, value).isSuccess()) {
                 return;
@@ -177,6 +182,32 @@ public class Serializer extends Process {
             return Optional.empty();
         }
         return Optional.of(new RSerResult(this, str, obj[1], type, (Map<String, Object>) uncheckedResultMap));
+    }
+
+    protected Object getValueOf(Field field, Object instance) throws IllegalAccessException, InvocationTargetException {
+        if (field.isAnnotationPresent(Getter.class)) {
+            Class<?> instanceClass = instance.getClass();
+            Getter ann = field.getAnnotation(Getter.class);
+            String fieldName = field.getName();
+            String[] methodNames = {
+                    ann.name(),
+                    "get" + new PascalCase(fieldName).toCaseFrom(CamelCase.class).getResult(),
+                    fieldName
+            };
+
+            for (String methodName : methodNames) {
+                if (methodName == null || methodName.isEmpty()) continue;
+                try {
+                    Method method = instanceClass.getDeclaredMethod(methodName);
+                    method.setAccessible(true);
+                    return method.invoke(instance);
+                } catch (NoSuchMethodException ignore) {
+                }
+            }
+            TrLogger.exception(new NoSuchMethodException("No methods found in class " + Utility.getClassName(instanceClass) + " with names " + Arrays.toString(methodNames) + ". Retrieving value from the field directly..."));
+        }
+
+        return field.get(instance);
     }
 
     protected String getMapKey(Field field) {
