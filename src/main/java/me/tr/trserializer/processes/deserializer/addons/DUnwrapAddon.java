@@ -33,7 +33,7 @@ public class DUnwrapAddon extends PUnwrapAddon {
 
             Object instance = deserializer.instance(type.getTypeClass(), values);
 
-            return Optional.ofNullable(new UnwrappedHandler(deserializer, getFields(deserializer, unwrapped, obj), instance)
+            return Optional.ofNullable(new UnwrappedHandler(deserializer, getFields(deserializer, unwrapped, instance), instance)
                     .deserialize(values, type));
         }
 

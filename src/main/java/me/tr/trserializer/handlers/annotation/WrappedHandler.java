@@ -8,9 +8,7 @@ import me.tr.trserializer.types.GenericType;
 import me.tr.trserializer.utility.Utility;
 
 import java.lang.reflect.Field;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class WrappedHandler implements TypeHandler {
     private final Process process;
@@ -33,11 +31,12 @@ public class WrappedHandler implements TypeHandler {
             return null;
 
         for (Field field : getFields()) {
-            Object object = getDeserializer().getMapValue(field, (Map<String, Object>) obj);
+            // TODO: FIX
+            // Object object = getDeserializer().getMapValue(field, (Map<String, Object>) obj);
 
-            if (object != null) {
-                return getDeserializer().deserialize(object, type);
-            }
+            //if (object != null) {
+            //    return getDeserializer().deserialize(object, type);
+            //}
         }
 
         return instance;

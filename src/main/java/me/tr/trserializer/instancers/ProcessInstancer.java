@@ -36,6 +36,8 @@ public class ProcessInstancer implements Instancer {
             return null;
         }
 
+        Object instance = SINGLETON_INSTANCES.get(clazz); // -> This is index 0
+
         List<Supplier<Object>> functions = List.of(
                 () -> getProcess().getOptions().getInstance(clazz),
                 () -> getMethodByAnnotation(clazz).map(this::instance).orElse(null),
@@ -44,10 +46,20 @@ public class ProcessInstancer implements Instancer {
                 () -> instance(getFirstConstr(clazz))
         );
 
-        Object instance = SINGLETON_INSTANCES.get(clazz);
         int i = -1;
         while (instance == null && i++ < 4) {
-            // Skip the instance creation with the annotated method.
+            /*
+             * Checks from index 2 if clazz is instantiable
+             * because instancers from index 0 to index 2 support
+             * creation of non instantiable classes by providing
+             * a custom method to instance it.
+             *
+             * For example:
+             * An interface or an abstract class can be instanced
+             * by declaring a static method (annotated with @Initialize)
+             * that returns an instance of a class that extends it.
+             * Similar for enumerators.
+             */
             if (i == 2 && isNotInstantiable(clazz)) {
                 String className = Utility.getClassName(clazz);
                 TrLogger.exception(new NoSuchMethodException("The class " + className + " is not instantiable automatically. Add a \"access-modifier static " + className.replace("class ", " ") + " method_name(params...)\" annotated with @Initialize or add a default instance process with \"getProcess().getOptions().addInstance(Class<?>, Supplier)\""));

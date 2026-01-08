@@ -68,11 +68,8 @@ public class Serializer extends Process {
     }
 
     public <T> Optional<T> serializeAsSimple(Object obj, GenericType<T> type) {
-        ValidationResult result = isValid(obj, type);
-        if (!result.isSuccess()) {
-            TrLogger.msg(result.message());
+        if (!isValid(obj, type).isSuccess())
             return Optional.empty();
-        }
 
         if (getCache().has(obj)) {
             TrLogger.dbg("Object (" + Utility.getClassName(obj.getClass()) + ") found in cache, reusing it.");
@@ -92,21 +89,22 @@ public class Serializer extends Process {
     }
 
     protected <T> T serialize(Object obj, GenericType<T> type, Deque<ProcessTaskContainer> tasks) {
+        if (!isValid(obj, type).isSuccess())
+            return null;
+
         Optional<T> simpleResult = serializeAsSimple(obj, type);
 
-        if (simpleResult.isEmpty())
+        if (simpleResult.isEmpty()) {
+            executeEndMethods(obj);
             return makeReturn(obj, serializeAsMap(obj, new HashMap<>(), tasks), type);
-
+        }
+        executeEndMethods(obj);
         return simpleResult.get();
     }
 
     protected Map<String, Object> serializeAsMap(Object obj, Map<String, Object> result, Deque<ProcessTaskContainer> tasks) {
-        ValidationResult validationResult = isValid(obj);
-
-        if (!validationResult.isSuccess()) {
-            TrLogger.dbg(validationResult.message());
+        if (!isValid(obj).isSuccess())
             return result;
-        }
 
         cache(obj, result);
 
@@ -131,9 +129,7 @@ public class Serializer extends Process {
         try {
             Object value = field.get(instance);
 
-            ValidationResult validationResult = isValid(field, value);
-            if (!validationResult.isSuccess()) {
-                TrLogger.dbg(validationResult.message());
+            if (!isValid(field, value).isSuccess()) {
                 return;
             }
 
@@ -163,13 +159,8 @@ public class Serializer extends Process {
     }
 
     protected Optional<? extends RSerResult> result(Object... obj) {
-        if (obj == null) {
-            TrLogger.exception(new TypeMissMatched("Params for result building are null."));
-            return Optional.empty();
-        }
-        final int objLen = obj.length;
-        if (objLen < 4) {
-            TrLogger.exception(new TypeMissMatched("Params for result building are not enough. Expected: 4, Found: " + objLen));
+        if (isParamsOfResultInvalid(obj)) {
+            TrLogger.exception(new TypeMissMatched("Params for result building are not valid."));
             return Optional.empty();
         }
         if (!(obj[0] instanceof String str)) {
@@ -181,16 +172,11 @@ public class Serializer extends Process {
             return Optional.empty();
         }
         Object uncheckedResultMap = obj[3];
-        if (!Utility.isAMapWithStringKeys(uncheckedResultMap)) {
+        if (!Utility.isAMapWithStringKeys(uncheckedResultMap, true)) {
             TrLogger.exception(new TypeMissMatched("The param at index 3 is not the map result."));
             return Optional.empty();
         }
         return Optional.of(new RSerResult(this, str, obj[1], type, (Map<String, Object>) uncheckedResultMap));
-    }
-
-    @Override
-    protected void _cache(Object object, Object result) {
-        getCache().put(object, result);
     }
 
     protected String getMapKey(Field field) {
@@ -208,7 +194,7 @@ public class Serializer extends Process {
     }
 
     @Override
-    protected Map<Class<?>, String[]> getMethods() {
+    protected Map<Class<?>, String[]> getEndMethods() {
         return getOptions().getEndMethods();
     }
 
