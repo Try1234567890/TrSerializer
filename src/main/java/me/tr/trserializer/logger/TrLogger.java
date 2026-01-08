@@ -16,6 +16,10 @@ public class TrLogger extends TrConsoleLogger {
         getInstance().error(getStackTraceAsString(e));
     }
 
+    public static void msg(String message) {
+        getInstance().info(message);
+    }
+
     public static void warning(String message) {
         getInstance().warn(message);
     }
