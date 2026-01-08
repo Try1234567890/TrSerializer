@@ -2,7 +2,7 @@ package me.tr.trserializer.processes.deserializer.addons;
 
 import me.tr.trserializer.annotations.wrap.Wrapped;
 import me.tr.trserializer.handlers.annotation.WrappedHandler;
-import me.tr.trserializer.logger.TrLogger;
+import me.tr.trserializer.logger.ProcessLogger;
 import me.tr.trserializer.processes.deserializer.Deserializer;
 import me.tr.trserializer.processes.process.Process;
 import me.tr.trserializer.processes.process.addons.PWrapAddon;
@@ -24,14 +24,14 @@ public class DWrapAddon extends PWrapAddon {
             Wrapped wrapped = field.getAnnotation(Wrapped.class);
 
             if (!Utility.isAMapWithStringKeys(obj)) {
-                TrLogger.dbg("Cannot proceed, the provided object is not valid.");
+                deserializer.getLogger().debug("Cannot proceed, the provided object is not valid.");
                 return Optional.empty();
             }
 
             Object subMap = ((Map<?, ?>) obj).get(wrapped.key());
 
             if (!Utility.isAMapWithStringKeys(subMap)) {
-                TrLogger.dbg("Cannot proceed, the found object found as sub map is not valid.");
+                deserializer.getLogger().debug("Cannot proceed, the found object found as sub map is not valid.");
                 return Optional.empty();
             }
 

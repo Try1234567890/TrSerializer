@@ -1,6 +1,5 @@
 package me.tr.trserializer.processes.serializer;
 
-import me.tr.trserializer.logger.TrLogger;
 import me.tr.trserializer.processes.process.ProcessOptions;
 import me.tr.trserializer.processes.options.Option;
 import me.tr.trserializer.processes.options.Options;
@@ -13,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 
 public class SerializerOptions extends ProcessOptions {
-    private final Option<Map<Class<?>, String[]>> endMethods = new Option<>(Options.SER_END_METHODS, new HashMap<>());
     private final Option<List<Three<Class<?>, String, String>>> aliases = new Option<>(Options.MAP_ALIASES, new ArrayList<>());
 
 
@@ -48,6 +46,14 @@ public class SerializerOptions extends ProcessOptions {
      * @param aliases        The aliases to register.
      */
     public SerializerOptions addAlias(Class<?> declaringClazz, String fieldName, String aliases) {
+        if (fieldName == null) {
+            getSerializer().getLogger().warn("The field name to add aliases  is null");
+            return this;
+        }
+        if (aliases == null) {
+            getSerializer().getLogger().warn("The aliases to add is null");
+            return this;
+        }
         getAliasesOption().getValue().add(new Three<>(declaringClazz, fieldName, aliases));
         return this;
     }
@@ -59,6 +65,11 @@ public class SerializerOptions extends ProcessOptions {
      * @see #addAlias(Class, String, String)
      */
     public SerializerOptions addAlias(Three<Class<?>, String, String> alias) {
+        if (alias == null) {
+            getSerializer().getLogger().warn("The aliases to add is null");
+            return this;
+        }
+
         getAliasesOption().getValue().add(alias);
         return this;
     }
@@ -71,6 +82,7 @@ public class SerializerOptions extends ProcessOptions {
      */
     public boolean hasAliases(Class<?> clazz) {
         if (clazz == null) {
+            getSerializer().getLogger().throwable(new NullPointerException("The class is null."));
             return false;
         }
 
@@ -85,6 +97,14 @@ public class SerializerOptions extends ProcessOptions {
      * @return {@code true} if it has, otherwise {@code false}.
      */
     public boolean hasAliases(Class<?> clazz, String fieldName) {
+        if (clazz == null) {
+            getSerializer().getLogger().throwable(new NullPointerException("The class is null."));
+            return false;
+        }
+        if (fieldName == null) {
+            getSerializer().getLogger().throwable(new NullPointerException("The field name is null."));
+            return false;
+        }
         return hasAliases(clazz) && getAliases().stream().anyMatch(alias -> alias.value().equalsIgnoreCase(fieldName));
     }
 
@@ -96,41 +116,11 @@ public class SerializerOptions extends ProcessOptions {
      */
     public boolean hasAliases(Field field) {
         if (field == null) {
+            getSerializer().getLogger().throwable(new NullPointerException("The field is null."));
             return false;
         }
 
         return hasAliases(field.getDeclaringClass(), field.getName());
-    }
-
-
-    /*
-     * =----------------=
-     * END METHODS OPTION
-     * =----------------=
-     */
-    public Option<Map<Class<?>, String[]>> getEndMethodsOption() {
-        return endMethods;
-    }
-
-    public Map<Class<?>, String[]> getEndMethods() {
-        return getEndMethodsOption().getValue();
-    }
-
-    public boolean hasEndMethods(Class<?> clazz) {
-        if (clazz == null)
-            return false;
-
-        return getEndMethods().containsKey(clazz);
-    }
-
-    public String[] getEndMethodNamesFor(Class<?> clazz) {
-        if (clazz == null) {
-            TrLogger.exception(
-                    new NullPointerException("The class is null."));
-            return new String[0];
-        }
-
-        return getEndMethods().get(clazz);
     }
 
     public Serializer getSerializer() {

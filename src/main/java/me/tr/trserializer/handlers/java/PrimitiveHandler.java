@@ -3,7 +3,8 @@ package me.tr.trserializer.handlers.java;
 import me.tr.trserializer.converters.Converter;
 import me.tr.trserializer.exceptions.TypeMissMatched;
 import me.tr.trserializer.handlers.TypeHandler;
-import me.tr.trserializer.logger.TrLogger;
+import me.tr.trserializer.logger.Logger;
+import me.tr.trserializer.logger.ProcessLogger;
 import me.tr.trserializer.registries.ConvertersRegistry;
 import me.tr.trserializer.types.GenericType;
 import me.tr.trserializer.utility.Utility;
@@ -40,7 +41,7 @@ public class PrimitiveHandler implements TypeHandler {
 
         }
 
-        TrLogger.exception(new TypeMissMatched("The provided object (" + clazz + ") is not a primitive type or a wrapper"));
+        Logger.exception(new TypeMissMatched("The provided object (" + clazz + ") is not a primitive type or a wrapper"));
         return null;
     }
 }

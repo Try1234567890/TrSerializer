@@ -15,6 +15,7 @@ import me.tr.trserializer.handlers.dates.LocalDateHandler;
 import me.tr.trserializer.handlers.dates.LocalDateTimeHandler;
 import me.tr.trserializer.handlers.dates.SQLDateHandler;
 import me.tr.trserializer.handlers.java.*;
+import me.tr.trserializer.logger.Logger;
 import me.tr.trserializer.processes.process.Process;
 import me.tr.trserializer.utility.Utility;
 
@@ -40,7 +41,6 @@ public class HandlersRegistry extends Registry<Predicate<Class<?>>, Function<Pro
     public static final OptionalHandler OPTIONAL_HANDLER = new OptionalHandler();
     public static final StringHandler STRING_HANDLER = new StringHandler();
     public static final BooleanHandler BOOLEAN_HANDLER = new BooleanHandler();
-    public static final EnumHandler ENUM_HANDLER = new EnumHandler();
     public static final PrimitiveHandler PRIMITIVE_HANDLER = new PrimitiveHandler();
 
     public static HandlersRegistry getInstance() {
@@ -77,19 +77,18 @@ public class HandlersRegistry extends Registry<Predicate<Class<?>>, Function<Pro
         handlers.put(String.class::isAssignableFrom, (p) -> STRING_HANDLER);
         handlers.put(Class::isRecord, RecordHandler::new);
         handlers.put(Class::isArray, ArrayHandler::new);
-        handlers.put(Class::isEnum, (p) -> ENUM_HANDLER);
+        handlers.put(Class::isEnum, EnumHandler::new);
         handlers.put((c) -> c.isPrimitive() || Utility.isWrapper(c), (p) -> PRIMITIVE_HANDLER);
     }
 
     public Optional<TypeHandler> get(Class<?> clazz, Process process) {
-        for (Map.Entry<Predicate<Class<?>>, Function<Process, TypeHandler>> entry
-                : getRegistry().entrySet()) {
-            if (clazz != null &&
-                    entry.getKey().test(clazz)) {
+        for (Map.Entry<Predicate<Class<?>>, Function<Process, TypeHandler>> entry : getRegistry().entrySet()) {
+            if (clazz != null && entry.getKey().test(clazz)) {
+                Logger.dbg("Found the handler for " + Utility.getClassName(clazz) + '.');
                 return Optional.ofNullable(entry.getValue().apply(process));
             }
         }
-
+        Logger.dbg("The handler for " + Utility.getClassName(clazz) + " was not found.");
         return Optional.empty();
     }
 }

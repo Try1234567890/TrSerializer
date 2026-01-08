@@ -1,9 +1,8 @@
 package me.tr.trserializer.processes.deserializer;
 
-import me.tr.trserializer.logger.TrLogger;
-import me.tr.trserializer.processes.process.ProcessOptions;
 import me.tr.trserializer.processes.options.Option;
 import me.tr.trserializer.processes.options.Options;
+import me.tr.trserializer.processes.process.ProcessOptions;
 import me.tr.trserializer.utility.Three;
 
 import java.lang.reflect.Field;
@@ -13,14 +12,14 @@ import java.util.function.Function;
 public class DeserializerOptions extends ProcessOptions {
     private final Option<Boolean> ignoreCase = new Option<>(Options.IGNORE_CASE, true);
     private final Option<List<Three<Class<?>, String, String[]>>> aliases = new Option<>(Options.ALIASES, new ArrayList<>());
-    private final Option<Map<Class<?>, String[]>> endMethods = new Option<>(Options.DES_END_METHODS, new HashMap<>());
     // If a class is inside this map as key, while processing it if
-    // the function returns a different type, this one will be used.
+    // the function returns a different type, the new one will be used.
     private final Option<Map<Class<?>, Function<Object, Optional<Class<?>>>>> alternatives = new Option<>(Options.TYPE_ALTERNATIVES, new HashMap<>());
 
     public DeserializerOptions(Deserializer process) {
         super(process);
     }
+
     /*
      * =---------------------=
      * ALTERNATIVES OPTIONS
@@ -36,6 +35,10 @@ public class DeserializerOptions extends ProcessOptions {
     }
 
     public boolean hasAlternatives(Class<?> clazz) {
+        if (clazz == null) {
+            getProcess().getLogger().throwable(new NullPointerException("The class is null."));
+            return false;
+        }
         return getAlternatives().containsKey(clazz);
     }
 
@@ -49,8 +52,7 @@ public class DeserializerOptions extends ProcessOptions {
      */
     public Function<Object, Optional<Class<?>>> getAlternatives(Class<?> clazz) {
         if (clazz == null) {
-            TrLogger.exception(
-                    new NullPointerException("The class is null."));
+            getProcess().getLogger().throwable(new NullPointerException("The class is null."));
             return null;
         }
         return getAlternatives().get(clazz);
@@ -63,70 +65,16 @@ public class DeserializerOptions extends ProcessOptions {
      * @param function The function that contains logic to determinate which alternative use.
      */
     public DeserializerOptions addAlternatives(Class<?> clazz, Function<Object, Optional<Class<?>>> function) {
-        if (clazz != null && function != null)
-            getAlternatives().put(clazz, function);
-        return this;
-    }
-
-    /*
-     * =----------------=
-     * END METHODS OPTION
-     * =----------------=
-     */
-    public Option<Map<Class<?>, String[]>> getEndMethodsOptions() {
-        return endMethods;
-    }
-
-    /**
-     * Retrieve the methods that will be executed at the
-     * deserialization end of the class.
-     *
-     * @return All ends methods register for this deserializer.
-     */
-    public Map<Class<?>, String[]> getEndMethods() {
-        return getEndMethodsOptions().getValue();
-    }
-
-    /**
-     * Checks if the class has end methods registered.
-     *
-     * @param clazz The class to check for.
-     * @return {@code true} if it has, otherwise {@code false}.
-     */
-    public boolean hasEndMethods(Class<?> clazz) {
-        if (clazz == null)
-            return false;
-
-        return getEndMethods().containsKey(clazz);
-    }
-
-    /**
-     * Retrieve the end method names for the class,
-     * if it has any.
-     *
-     * @param clazz The class to get method names for.
-     * @return The method names if it has any, otherwise {@code null}.
-     * @throws NullPointerException if the class is null
-     */
-    public String[] getEndMethodNamesFor(Class<?> clazz) {
         if (clazz == null) {
-            TrLogger.exception(
-                    new NullPointerException("The class is null.")
-            );
-            return null;
+            getProcess().getLogger().throwable(new NullPointerException("The class is null."));
+            return this;
         }
-        return getEndMethods().get(clazz);
-    }
 
-    public DeserializerOptions addEndMethod(Class<?> clazz, String method) {
-        if (clazz != null && method != null)
-            getEndMethods().put(clazz, new String[]{method});
-        return this;
-    }
-
-    public DeserializerOptions addEndMethods(Class<?> clazz, String... methods) {
-        if (clazz != null && (methods != null && methods.length != 0))
-            getEndMethods().put(clazz, methods);
+        if (function == null) {
+            getProcess().getLogger().throwable(new NullPointerException("The function is null."));
+            return this;
+        }
+        getAlternatives().put(clazz, function);
         return this;
     }
 
@@ -165,9 +113,15 @@ public class DeserializerOptions extends ProcessOptions {
      */
     @Deprecated(forRemoval = true)
     public DeserializerOptions addAlias(Class<?> declaringClazz, String fieldName, String... aliases) {
-        if (fieldName != null && (aliases != null && aliases.length != 0)) {
-            getAliasesOption().getValue().add(new Three<>(declaringClazz, fieldName, aliases));
+        if (fieldName == null) {
+            getProcess().getLogger().throwable(new NullPointerException("The field name is null."));
+            return this;
         }
+        if (aliases == null || aliases.length == 0) {
+            getProcess().getLogger().throwable(new NullPointerException("The aliases are null."));
+            return this;
+        }
+        getAliasesOption().getValue().add(new Three<>(declaringClazz, fieldName, aliases));
         return this;
     }
 
@@ -180,8 +134,11 @@ public class DeserializerOptions extends ProcessOptions {
      */
     @Deprecated(forRemoval = true)
     public DeserializerOptions addAlias(Three<Class<?>, String, String[]> alias) {
-        if (alias != null)
-            getAliasesOption().getValue().add(alias);
+        if (alias == null) {
+            getProcess().getLogger().throwable(new NullPointerException("The alias is null."));
+            return this;
+        }
+        getAliasesOption().getValue().add(alias);
         return this;
     }
 
@@ -194,8 +151,10 @@ public class DeserializerOptions extends ProcessOptions {
      */
     @Deprecated(forRemoval = true)
     public boolean hasAliases(Class<?> clazz) {
-        if (clazz == null)
+        if (clazz == null) {
+            getProcess().getLogger().throwable(new NullPointerException("The class is null."));
             return false;
+        }
 
         return getAliases().stream().anyMatch(alias -> alias.key().equals(clazz));
     }
@@ -210,8 +169,15 @@ public class DeserializerOptions extends ProcessOptions {
      */
     @Deprecated(forRemoval = true)
     public boolean hasAliases(Class<?> clazz, String fieldName) {
-        if (clazz == null || (fieldName == null || fieldName.isEmpty()))
+        if (clazz == null) {
+            getProcess().getLogger().throwable(new NullPointerException("The class is null."));
             return false;
+        }
+
+        if (fieldName == null || fieldName.isEmpty()) {
+            getProcess().getLogger().throwable(new NullPointerException("The field name is null."));
+            return false;
+        }
 
         return hasAliases(clazz) && getAliases().stream().anyMatch(alias -> compare(alias.value(), fieldName));
     }
@@ -225,8 +191,10 @@ public class DeserializerOptions extends ProcessOptions {
      */
     @Deprecated(forRemoval = true)
     public boolean hasAliases(Field field) {
-        if (field == null)
+        if (field == null) {
+            getProcess().getLogger().throwable(new NullPointerException("The field is null."));
             return false;
+        }
 
         return hasAliases(field.getDeclaringClass(), field.getName());
     }

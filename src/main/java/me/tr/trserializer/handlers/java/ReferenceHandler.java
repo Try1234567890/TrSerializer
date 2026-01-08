@@ -2,9 +2,8 @@ package me.tr.trserializer.handlers.java;
 
 import me.tr.trserializer.exceptions.TypeMissMatched;
 import me.tr.trserializer.handlers.TypeHandler;
-import me.tr.trserializer.logger.TrLogger;
-import me.tr.trserializer.processes.process.Process;
 import me.tr.trserializer.processes.deserializer.Deserializer;
+import me.tr.trserializer.processes.process.Process;
 import me.tr.trserializer.processes.serializer.Serializer;
 import me.tr.trserializer.types.GenericType;
 
@@ -33,7 +32,7 @@ public class ReferenceHandler implements TypeHandler {
             return getSerializer().serialize(ref.get());
         }
 
-        TrLogger.exception(
+        getProcess().getLogger().throwable(
                 new TypeMissMatched("The provided object " + obj + " is not convertible to an Reference"));
 
         return null;
@@ -47,7 +46,7 @@ public class ReferenceHandler implements TypeHandler {
         } else if (SoftReference.class.isAssignableFrom(clazz)) {
             return new SoftReference<>(value);
         } else if (PhantomReference.class.isAssignableFrom(clazz)) {
-            TrLogger.exception(
+            getProcess().getLogger().throwable(
                     new UnsupportedOperationException("PhantomReference is not supported for automatic deserialization."));
         }
 

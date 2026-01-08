@@ -1,16 +1,15 @@
 package me.tr.trserializer.processes.deserializer;
 
-import me.tr.trserializer.annotations.Aliases;
-import me.tr.trserializer.annotations.Essential;
 import me.tr.trserializer.annotations.unwrap.Unwrapped;
 import me.tr.trserializer.annotations.wrap.Wrapped;
 import me.tr.trserializer.exceptions.TypeMissMatched;
-import me.tr.trserializer.logger.TrLogger;
+import me.tr.trserializer.logger.ProcessLogger;
+import me.tr.trserializer.processes.deserializer.helper.DValueRetriever;
+import me.tr.trserializer.processes.deserializer.helper.DValueSetter;
 import me.tr.trserializer.processes.process.Process;
 import me.tr.trserializer.processes.process.ProcessTaskContainer;
 import me.tr.trserializer.processes.process.addons.PAddon;
 import me.tr.trserializer.types.GenericType;
-import me.tr.trserializer.utility.Three;
 import me.tr.trserializer.utility.Utility;
 
 import java.lang.reflect.Field;
@@ -38,9 +37,18 @@ public class Deserializer extends Process {
         return (DeserializerOptions) super.getOptions();
     }
 
+    public DValueRetriever getValueRetriever() {
+        return getContext().getValueRetriever();
+    }
+
+    public DValueSetter getValueSetter() {
+        return getContext().getValueSetter();
+    }
+
+
     public <T> T deserialize(Object obj, T type) {
         if (type == null) {
-            TrLogger.exception(new NullPointerException("Object or type is null!"));
+            getLogger().throwable(new NullPointerException("Object or type is null!"));
             return null;
         }
         return (T) deserialize(obj, type.getClass());
@@ -48,18 +56,20 @@ public class Deserializer extends Process {
 
     public <T> T deserialize(Object obj, Class<T> type) {
         if (type == null) {
-            TrLogger.exception(new NullPointerException("Object or type is null!"));
+            getLogger().throwable(new NullPointerException("Object or type is null!"));
             return null;
         }
         return deserialize(obj, new GenericType<>(type));
     }
 
     protected <T> Optional<T> deserializeAsSimple(Object obj, GenericType<T> type) {
-        if (!isValid(obj, type).isSuccess())
+        if (!getProcessValidator().isValid(obj, type).isSuccess())
             return Optional.empty();
 
+        getMethodsExecutor().executeStartMethods(obj);
+
         if (getCache().has(obj)) {
-            TrLogger.dbg("Object (" + obj.getClass() + "#" + obj.hashCode() + ") found in cache, reusing it.");
+            ProcessLogger.dbg("Object (" + obj.getClass() + "#" + obj.hashCode() + ") found in cache, reusing it.");
             return Optional.of((T) getCache().get(obj));
         }
 
@@ -73,6 +83,8 @@ public class Deserializer extends Process {
             return Optional.of((T) addons.get().getValue());
         }
 
+        getMethodsExecutor().executeEndMethods(obj);
+
         return Optional.empty();
     }
 
@@ -80,25 +92,25 @@ public class Deserializer extends Process {
         return deserialize(obj, type, null);
     }
 
-    public Object deserializeFromMap(Object instance, Map<String, Object> map) {
-        return deserializeFromMap(instance, map, null);
+    public Object deserializeFromMap(Object obj, Map<String, Object> map) {
+        return deserializeFromMap(obj, map, null);
     }
 
-    public void deserialize(Field field, Object instance,
+    public void deserialize(Field field, Object obj,
                             Class<?> clazz, Map<String, Object> map) {
-        deserialize(field, instance, clazz, map, null);
+        deserialize(field, obj, clazz, map, null);
     }
 
     protected <T> T deserialize(Object obj, GenericType<T> type,
                                 Deque<ProcessTaskContainer> tasks) {
-        if (!isValid(obj, type).isSuccess())
+        if (!getProcessValidator().isValid(obj, type).isSuccess())
             return null;
 
         Optional<T> simpleResult = deserializeAsSimple(obj, type);
 
         if (simpleResult.isEmpty()) {
             if (!Utility.isAMapWithStringKeys(obj)) {
-                TrLogger.dbg("The provided object is not a map. Cannot set fields values for " + type + ", an empty instance will be used.");
+                ProcessLogger.dbg("The provided object is not a map. Cannot set fields values for " + type + ", an empty instance will be used.");
                 return makeReturn(obj, instance(type.getTypeClass()), type);
             }
 
@@ -107,7 +119,7 @@ public class Deserializer extends Process {
 
             cache(obj, instance);
 
-            executeEndMethods(instance);
+
             return makeReturn(obj, deserializeFromMap(instance, checkedMap, tasks), type);
         }
 
@@ -115,25 +127,29 @@ public class Deserializer extends Process {
     }
 
 
-    protected Object deserializeFromMap(Object instance, Map<String, Object> map,
+    protected Object deserializeFromMap(Object obj, Map<String, Object> map,
                                         Deque<ProcessTaskContainer> tasks) {
-        if (instance == null || map == null) {
-            TrLogger.exception(new NullPointerException("Instance or Map is null!"));
+        if (obj == null || map == null) {
+            getLogger().throwable(new NullPointerException("Object or Map is null!"));
             return null;
         }
 
-        Class<?> clazz = instance.getClass();
+        getMethodsExecutor().executeStartMethods(obj);
+
+        Class<?> clazz = obj.getClass();
         Set<Field> fields = getFields(clazz);
 
         for (Field field : fields) {
-            deserialize(field, instance, clazz, map, tasks);
+            deserialize(field, obj, clazz, map, tasks);
         }
 
-        return instance;
+        getMethodsExecutor().executeEndMethods(obj);
+
+        return obj;
     }
 
 
-    protected void deserialize(Field field, Object instance,
+    protected void deserialize(Field field, Object obj,
                                Class<?> clazz, Map<String, Object> values,
                                Deque<ProcessTaskContainer> tasks) {
         field.setAccessible(true);
@@ -141,19 +157,19 @@ public class Deserializer extends Process {
 
         try {
             String fieldName = field.getName();
-            Object fieldValue = field.get(instance);
+            Object fieldValue = field.get(obj);
 
             // Skip fields already set by @Initialize entry point.
             if (fieldValue != null) {
-                TrLogger.dbg("Field " + fieldName + " in class " + Utility.getClassName(clazz) + " is already set " + fieldValue);
+                ProcessLogger.dbg("Field " + fieldName + " in class " + Utility.getClassName(clazz) + " is already set " + fieldValue);
                 return;
             }
 
-            if (!isValid(field).isSuccess())
+            if (!getProcessValidator().isValid(field).isSuccess())
                 return;
 
             GenericType<?> type = new GenericType<>(field);
-            Object valueFromMap = getMapValue(field, values);
+            Object valueFromMap = getValueRetriever().getMapValue(field, values);
 
 
             Optional<Map.Entry<PAddon, ?>> addons = Optional.empty();
@@ -168,102 +184,35 @@ public class Deserializer extends Process {
 
             if (addons.isPresent()) {
                 Object addResult = addons.get().getValue();
-                setField(field, instance, addResult);
+                getValueSetter().setField(field, obj, addResult);
                 return;
             }
 
-            result(field, valueFromMap, instance, type, values, tasks).ifPresent(DesResult::accept);
+            result(field, valueFromMap, obj, type, values, tasks).ifPresent(DesResult::accept);
         } catch (IllegalAccessException e) {
-            TrLogger.exception(new RuntimeException(
-                    "An error occurs while setting value for " + field.getName() + " in class " + Utility.getClassName(clazz), e));
+            getLogger().throwable(new RuntimeException("An error occurs while setting value for " + field.getName() + " in class " + Utility.getClassName(clazz), e));
         }
     }
 
     protected Optional<? extends RDesResult> result(Object... obj) {
         if (isParamsOfResultInvalid(obj)) {
-            TrLogger.exception(new TypeMissMatched("Params for result building are not valid."));
+            getLogger().throwable(new TypeMissMatched("Params for result building are not valid."));
             return Optional.empty();
         }
         if (!(obj[0] instanceof Field field)) {
-            TrLogger.exception(new TypeMissMatched("The param at index 0 is not the processing field."));
+            getLogger().throwable(new TypeMissMatched("The param at index 0 is not the processing field."));
             return Optional.empty();
         }
         if (!(obj[3] instanceof GenericType<?> type)) {
-            TrLogger.exception(new TypeMissMatched("The param at index 3 is not the value type."));
+            getLogger().throwable(new TypeMissMatched("The param at index 3 is not the value type."));
             return Optional.empty();
         }
         Object uncheckedResultMap = obj[4];
         if (!Utility.isAMapWithStringKeys(uncheckedResultMap, true)) {
-            TrLogger.exception(new TypeMissMatched("The param at index 3 is not the map result."));
+            getLogger().throwable(new TypeMissMatched("The param at index 3 is not the map result."));
             return Optional.empty();
         }
         return Optional.of(new RDesResult(this, field, obj[1], obj[2], type, (Map<String, Object>) uncheckedResultMap));
-    }
-
-    protected void setField(Field field, Object instance, Object value) {
-        String fieldName = field.getName();
-        String className = Utility.getClassName(instance.getClass());
-        try {
-
-            if (field.isAnnotationPresent(Essential.class)
-                    && !isValid(value).isSuccess()) {
-                TrLogger.exception(new NullPointerException("The value for field " + fieldName + " in class " + className + " hasn't pass the validation and the field is annotated with @Essential."));
-                return;
-            }
-
-            field.set(instance, value);
-        } catch (IllegalAccessException e) {
-            TrLogger.exception(new RuntimeException("An error occurs while setting the value to " + fieldName + " in class " + className, e));
-        }
-    }
-
-    protected Object getMapValue(Field field, Map<String, Object> map) {
-        String fieldName = applyNamingStrategy(field);
-
-        if (map.containsKey(fieldName)) {
-            return map.get(fieldName);
-        }
-
-        Set<String> aliases = getAliases(field);
-
-        for (Map.Entry<String, Object> entry : map.entrySet()) {
-            String key = entry.getKey();
-            if (compare(fieldName, key) || aliases.contains(key)) {
-                return entry.getValue();
-            }
-        }
-
-        return null;
-    }
-
-    protected Set<String> getAliases(Field field) {
-        Set<String> result = new HashSet<>();
-        Class<?> declaringClass = field.getDeclaringClass();
-        String fieldName = applyNamingStrategy(field);
-
-        for (Three<Class<?>, String, String[]> aliases : getOptions().getAliases()) {
-            if (aliases.key().equals(declaringClass) &&
-                    compare(fieldName, aliases.value())) {
-                result.addAll(List.of(aliases.subValue()));
-                break;
-            }
-        }
-
-        if (field.isAnnotationPresent(Aliases.class)) {
-            Aliases ann = field.getAnnotation(Aliases.class);
-            result.addAll(List.of(ann.aliases()));
-        }
-
-        return result;
-    }
-
-    protected boolean compare(String s, String s2) {
-        return getOptions().isIgnoreCase() ? s.equalsIgnoreCase(s2) : s.equals(s2);
-    }
-
-    @Override
-    protected Map<Class<?>, String[]> getEndMethods() {
-        return getOptions().getEndMethods();
     }
 
     protected abstract static class DesResult {
@@ -320,7 +269,7 @@ public class Deserializer extends Process {
         public void accept() {
             Object deserialized = deserializer().deserialize(mapValue(), type());
 
-            deserializer().setField(field(), instance(), deserialized);
+            deserializer().getValueSetter().setField(field(), instance(), deserialized);
         }
     }
 
@@ -347,14 +296,14 @@ public class Deserializer extends Process {
         public void accept() {
             Optional<?> simpleValue = deserializer().deserializeAsSimple(mapValue(), type());
             if (simpleValue.isPresent()) {
-                deserializer().setField(field(), instance(), simpleValue.get());
+                deserializer().getValueSetter().setField(field(), instance(), simpleValue.get());
                 return;
             }
 
             if (mapValue() instanceof Map) {
                 Object childInstance = deserializer().instance(type().getTypeClass(), (Map<String, Object>) mapValue());
 
-                deserializer().setField(field(), instance(), childInstance);
+                deserializer().getValueSetter().setField(field(), instance(), childInstance);
 
                 tasks().push(new ProcessTaskContainer(childInstance, type(), (Map<String, Object>) mapValue()));
             }

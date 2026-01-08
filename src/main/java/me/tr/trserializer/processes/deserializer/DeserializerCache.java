@@ -2,12 +2,12 @@ package me.tr.trserializer.processes.deserializer;
 
 import me.tr.trserializer.processes.process.ProcessCache;
 
-import java.util.HashMap;
+import java.util.IdentityHashMap;
 
 public class DeserializerCache extends ProcessCache {
 
     public DeserializerCache(Deserializer deserializer) {
-        super(deserializer, new HashMap<>());
+        super(deserializer, new IdentityHashMap<>());
     }
 
     @Override

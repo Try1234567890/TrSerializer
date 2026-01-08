@@ -1,6 +1,5 @@
 package me.tr.trserializer.processes.serializer;
 
-import me.tr.trserializer.logger.TrLogger;
 import me.tr.trserializer.processes.process.ProcessTaskContainer;
 import me.tr.trserializer.types.GenericType;
 
@@ -51,13 +50,13 @@ public class ISerializer extends Serializer {
 
         RSerResult rResult = result.get();
         if (!(obj[4] instanceof Deque<?> tasks)) {
-            TrLogger.dbg("The param at index 4 is not a Deque. Creating a new one.");
+            getLogger().debug("The param at index 4 is not a Deque. Creating a new one.");
             return result.map(r -> new ISerResult(r, new ArrayDeque<>()));
         }
 
         Object peek = tasks.peek();
         if (!tasks.isEmpty() && !(peek instanceof ProcessTaskContainer)) {
-            TrLogger.dbg("The param at index 4 is not a deque of ProcessTaskContainer but: " + (peek == null ? "null" : peek.getClass().getName()) + ". Creating a new one.");
+            getLogger().debug("The param at index 4 is not a deque of ProcessTaskContainer but: " + (peek == null ? "null" : peek.getClass().getName()) + ". Creating a new one.");
             return result.map(r -> new ISerResult(r, new ArrayDeque<>()));
         }
 

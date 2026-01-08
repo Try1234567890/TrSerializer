@@ -1,7 +1,8 @@
 package me.tr.trserializer.handlers.dates;
 
 import me.tr.trserializer.exceptions.TypeMissMatched;
-import me.tr.trserializer.logger.TrLogger;
+import me.tr.trserializer.logger.Logger;
+import me.tr.trserializer.logger.ProcessLogger;
 import me.tr.trserializer.types.GenericType;
 
 import java.sql.Timestamp;
@@ -25,12 +26,12 @@ public class LocalDateTimeHandler extends DateHandlerContainer {
             try {
                 return LocalDateTime.parse(date, DateTimeFormatter.ofPattern(getFormat()));
             } catch (DateTimeParseException e) {
-                TrLogger.exception(new DateTimeException("An error occurs while parsing " + date + " with format " + getFormat(), e));
+                Logger.exception(new DateTimeException("An error occurs while parsing " + date + " with format " + getFormat(), e));
                 return null;
             }
         }
 
-        TrLogger.exception(new TypeMissMatched("The provided object (" + obj.getClass().getName() + ") is not a valid type to deserialize it as LocalDateTime."));
+        Logger.exception(new TypeMissMatched("The provided object (" + obj.getClass().getName() + ") is not a valid type to deserialize it as LocalDateTime."));
         return null;
     }
 

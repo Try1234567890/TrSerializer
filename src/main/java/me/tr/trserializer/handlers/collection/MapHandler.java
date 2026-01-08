@@ -1,7 +1,7 @@
 package me.tr.trserializer.handlers.collection;
 
 import me.tr.trserializer.handlers.TypeHandler;
-import me.tr.trserializer.logger.TrLogger;
+import me.tr.trserializer.logger.ProcessLogger;
 import me.tr.trserializer.processes.process.Process;
 import me.tr.trserializer.processes.deserializer.Deserializer;
 import me.tr.trserializer.processes.serializer.Serializer;
@@ -38,8 +38,7 @@ public class MapHandler implements TypeHandler {
 
                     result.put(field.getName(), des);
                 } catch (IllegalAccessException e) {
-                    TrLogger.exception(
-                            new RuntimeException("An error occurs while accessing the field " + field.getName()));
+                    getProcess().getLogger().throwable(new RuntimeException("An error occurs while accessing the field " + field.getName()));
                 }
             }
             return result;

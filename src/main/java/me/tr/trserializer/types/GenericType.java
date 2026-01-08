@@ -1,5 +1,7 @@
 package me.tr.trserializer.types;
 
+import me.tr.trlogger.loggers.TrLogger;
+import me.tr.trserializer.logger.Logger;
 import me.tr.trserializer.utility.Utility;
 
 import java.lang.reflect.Field;
@@ -34,14 +36,16 @@ public class GenericType<T> implements ParameterizedType {
 
     protected Type[] getTypeArguments(Field field) {
         Class<?> component = field.getType().getComponentType();
-        if (component != null) // Is an array
+        if (component != null) {// Is an array
+            Logger.dbg("The field is an array, retrieving its component.");
             return new Type[]{component};
-
+        }
         Type generic = field.getGenericType();
 
         // Is a collection, a Map, an AtomicReference
         // or something that has generics.
         if (generic instanceof ParameterizedType par) {
+            Logger.dbg("The field is parameterized, retrieving its components.");
             return par.getActualTypeArguments();
         }
 

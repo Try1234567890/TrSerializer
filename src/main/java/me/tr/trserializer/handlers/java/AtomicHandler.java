@@ -2,7 +2,7 @@ package me.tr.trserializer.handlers.java;
 
 import me.tr.trserializer.exceptions.TypeMissMatched;
 import me.tr.trserializer.handlers.TypeHandler;
-import me.tr.trserializer.logger.TrLogger;
+import me.tr.trserializer.logger.ProcessLogger;
 import me.tr.trserializer.processes.process.Process;
 import me.tr.trserializer.processes.deserializer.Deserializer;
 import me.tr.trserializer.processes.serializer.Serializer;
@@ -46,8 +46,7 @@ public class AtomicHandler implements TypeHandler {
 
         if (AtomicInteger.class.isAssignableFrom(clazz)) {
             if (!(value instanceof Number num)) {
-                TrLogger.exception(
-                        new TypeMissMatched("The provided value for AtomicInteger is not an number: " + value.getClass()));
+                getProcess().getLogger().throwable(new TypeMissMatched("The provided value for AtomicInteger is not an number: " + value.getClass()));
                 return null;
             }
             return new AtomicInteger(num.intValue());
@@ -55,8 +54,7 @@ public class AtomicHandler implements TypeHandler {
 
         if (AtomicLong.class.isAssignableFrom(clazz)) {
             if (!(value instanceof Number num)) {
-                TrLogger.exception(
-                        new TypeMissMatched("The provided value for AtomicLong is not an number: " + value.getClass()));
+                getProcess().getLogger().throwable(new TypeMissMatched("The provided value for AtomicLong is not an number: " + value.getClass()));
                 return null;
             }
             return new AtomicLong(num.longValue());
@@ -64,8 +62,7 @@ public class AtomicHandler implements TypeHandler {
 
         if (AtomicBoolean.class.isAssignableFrom(clazz)) {
             if (!(value instanceof Boolean bool)) {
-                TrLogger.exception(
-                        new TypeMissMatched("The provided value for AtomicBoolean is not a boolean: " + value.getClass()));
+                getProcess().getLogger().throwable(new TypeMissMatched("The provided value for AtomicBoolean is not a boolean: " + value.getClass()));
                 return null;
             }
             return new AtomicBoolean(bool);

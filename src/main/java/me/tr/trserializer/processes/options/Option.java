@@ -13,7 +13,6 @@ public class Option<T> {
         this.value = value;
     }
 
-
     public Options getName() {
         return name;
     }

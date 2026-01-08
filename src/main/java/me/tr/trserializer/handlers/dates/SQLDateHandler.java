@@ -1,7 +1,8 @@
 package me.tr.trserializer.handlers.dates;
 
 import me.tr.trserializer.handlers.TypeHandler;
-import me.tr.trserializer.logger.TrLogger;
+import me.tr.trserializer.logger.Logger;
+import me.tr.trserializer.logger.ProcessLogger;
 import me.tr.trserializer.registries.HandlersRegistry;
 import me.tr.trserializer.types.GenericType;
 
@@ -17,7 +18,7 @@ public class SQLDateHandler extends DateHandlerContainer {
         LocalDate date = DATE_HANDLER.deserialize(obj, type);
 
         if (date == null) {
-            TrLogger.dbg("The LocalDateHandler returns null, stopping execution.");
+            ProcessLogger.dbg("The LocalDateHandler returns null, stopping execution.");
             return null;
         }
 
@@ -35,13 +36,13 @@ public class SQLDateHandler extends DateHandlerContainer {
     private static LocalDateHandler getLocalDateHandler() {
         Optional<TypeHandler> optHandler = HandlersRegistry.getInstance().get(LocalDate.class, null);
         if (optHandler.isEmpty()) {
-            TrLogger.err("The handler for LocalDate is not found. Creating a new instance of it.");
+            Logger.warning("The handler for LocalDate is not found. Creating a new instance of it.");
             return new LocalDateHandler();
         }
 
         TypeHandler handler = optHandler.get();
         if (!(handler instanceof LocalDateHandler dateHandler)) {
-            TrLogger.err("The found handler for LocalDate is not instance of LocalDateHandler. Creating a new instance of it.");
+            Logger.warning("The found handler for LocalDate is not instance of LocalDateHandler. Creating a new instance of it.");
             return new LocalDateHandler();
         }
 

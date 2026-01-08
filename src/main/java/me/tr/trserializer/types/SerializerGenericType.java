@@ -1,7 +1,8 @@
 package me.tr.trserializer.types;
 
 import me.tr.trserializer.annotations.SerializeAs;
-import me.tr.trserializer.logger.TrLogger;
+import me.tr.trserializer.logger.Logger;
+import me.tr.trserializer.utility.Utility;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
@@ -27,15 +28,16 @@ public class SerializerGenericType<T> extends GenericType<T> {
 
     private Class<?> getSerializeType(Field field) {
         if (field == null) {
-            TrLogger.exception(new NullPointerException("Object is null!"));
+            Logger.exception(new NullPointerException("Object is null!"));
             return Object.class;
         }
 
-        if (!field.isAnnotationPresent(SerializeAs.class)) {
-            TrLogger.dbg("The field " + field.getName() + " is not annotated with @SerializeAs.");
-            return Object.class;
+        if (field.isAnnotationPresent(SerializeAs.class)) {
+            Class<?> as = field.getAnnotation(SerializeAs.class).as();
+            Logger.dbg("The field " + field.getName() + " is annotated with @SerializeAs with class " + Utility.getClassName(as));
+            return as;
         }
 
-        return field.getAnnotation(SerializeAs.class).as();
+        return Object.class;
     }
 }

@@ -1,7 +1,7 @@
 package me.tr.trserializer.processes.process.addons;
 
 import me.tr.trserializer.handlers.TypeHandler;
-import me.tr.trserializer.logger.TrLogger;
+import me.tr.trserializer.logger.ProcessLogger;
 import me.tr.trserializer.processes.process.Process;
 import me.tr.trserializer.types.GenericType;
 
@@ -16,35 +16,14 @@ public abstract class PHandlerAddon extends PAddon {
     }
 
     public Optional<Object> process(Process process, Object obj, GenericType<?> type, Field field) throws Exception {
-        Optional<TypeHandler> handlerOpt = process.getHandler(getClassForHandler(obj, type));
+        Optional<TypeHandler> handler = process.getHandler(getClassForHandler(obj, type));
 
-        TrLogger.dbg("Handler for " + type + ": ");
-
-        if (handlerOpt.isPresent()) {
-            TrLogger.dbg("Handler found: ");
-
-            TypeHandler handler = handlerOpt.get();
-
-            if (process.getRunningHandlers().containsKey(handler)) {
-                Map.Entry<Object, GenericType<?>> handlersValue =
-                        process.getRunningHandlers().get(handler);
-
-                if (handlersValue.getKey().equals(obj)
-                        && handlersValue.getValue().equals(type)) {
-                    TrLogger.dbg("The handler is already running, probable infinite recursion. Skipping...");
-                    /*
-                     * Is an already running handler that call this function.
-                     * To prevent stack overflow error, we return Optional.empty()
-                     * to proceed the execution in serialize () method.
-                     */
-                    return Optional.empty();
-                }
-            }
-
-            return Optional.ofNullable(execute(handler, obj, type));
+        if (handler.isPresent()) {
+            ProcessLogger.dbg("Handler for " + type + " found.");
+            return Optional.ofNullable(execute(handler.get(), obj, type));
         }
 
-        TrLogger.dbg("No handler found.");
+        ProcessLogger.dbg("Handler for " + type + " not found.");
         return Optional.empty();
     }
 

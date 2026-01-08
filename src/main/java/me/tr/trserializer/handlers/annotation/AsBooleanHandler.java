@@ -1,17 +1,12 @@
 package me.tr.trserializer.handlers.annotation;
 
 import me.tr.trserializer.annotations.AsBoolean;
-import me.tr.trserializer.handlers.TypeHandler;
-import me.tr.trserializer.instancers.ProcessInstancer;
-import me.tr.trserializer.logger.TrLogger;
-import me.tr.trserializer.processes.deserializer.Deserializer;
+import me.tr.trserializer.logger.ProcessLogger;
 import me.tr.trserializer.processes.process.Process;
-import me.tr.trserializer.processes.serializer.Serializer;
 import me.tr.trserializer.types.GenericType;
 import me.tr.trserializer.utility.Utility;
 
 import java.lang.reflect.Field;
-import java.util.Map;
 import java.util.Set;
 
 public class AsBooleanHandler extends AsStringHandler {
@@ -34,7 +29,7 @@ public class AsBooleanHandler extends AsStringHandler {
 
             return getSerializer().serialize(value, Boolean.class);
         } catch (Exception e) {
-            TrLogger.exception(new RuntimeException("An error occurs while retrieving the value of field " + field.getName() + " in class " + Utility.getClassName(clazz), e));
+            getProcess().getLogger().throwable(new RuntimeException("An error occurs while retrieving the value of field " + field.getName() + " in class " + Utility.getClassName(clazz), e));
             return null;
         }
     }
@@ -50,7 +45,7 @@ public class AsBooleanHandler extends AsStringHandler {
             String paramName = asString.field();
 
             if (paramName.isEmpty()) {
-                TrLogger.exception(
+                getProcess().getLogger().throwable(
                         new NullPointerException("The class " + Utility.getClassName(clazz) + " contains more than 1 field and no fields is specified " +
                                 "in @AsBoolean annotation. Please specify the field to working on in annotation param."));
                 return null;
@@ -62,7 +57,7 @@ public class AsBooleanHandler extends AsStringHandler {
                 }
             }
 
-            TrLogger.exception(new NullPointerException("The field with name " + paramName + " is not found in class " + Utility.getClassName(clazz) + ". Make sure that the name is correct (case-sensitive)."));
+            getProcess().getLogger().throwable(new NullPointerException("The field with name " + paramName + " is not found in class " + Utility.getClassName(clazz) + ". Make sure that the name is correct (case-sensitive)."));
         }
 
         return null;

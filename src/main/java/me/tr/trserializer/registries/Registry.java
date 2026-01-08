@@ -1,5 +1,8 @@
 package me.tr.trserializer.registries;
 
+import me.tr.trserializer.logger.Logger;
+import me.tr.trserializer.utility.Utility;
+
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -43,7 +46,7 @@ public abstract class Registry<K, V> {
      */
     public void register(K id, V value) {
         if (getRegistry().containsKey(id)) {
-            throw new NotUniqueIdentifierException("Identifier " + id + " is already used in registry " + value.getClass().getSimpleName());
+            Logger.exception(new NotUniqueIdentifierException("Identifier " + id + " is already used in registry " + Utility.getClassName(value.getClass())));
         }
         getRegistry().put(id, value);
     }

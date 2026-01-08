@@ -3,7 +3,7 @@ package me.tr.trserializer.processes.process.addons;
 import me.tr.trserializer.annotations.Format;
 import me.tr.trserializer.handlers.TypeHandler;
 import me.tr.trserializer.handlers.dates.DateHandlerContainer;
-import me.tr.trserializer.logger.TrLogger;
+import me.tr.trserializer.logger.ProcessLogger;
 import me.tr.trserializer.processes.process.Process;
 import me.tr.trserializer.types.GenericType;
 
@@ -27,14 +27,14 @@ public abstract class PDateAnnAddon extends PAddon {
             Optional<TypeHandler> handlerOpt = process.getHandler(getClassForHandler(obj, type));
 
             if (handlerOpt.isEmpty()) {
-                TrLogger.dbg("No handler found for " + type.getTypeClass());
+                ProcessLogger.dbg("No handler found for " + type.getTypeClass());
                 return Optional.empty();
             }
 
             TypeHandler handler = handlerOpt.get();
 
             if (!(handler instanceof DateHandlerContainer date)) {
-                TrLogger.dbg("The found handler is not an instance of DateHandler.");
+                ProcessLogger.dbg("The found handler is not an instance of DateHandler.");
                 return Optional.empty();
             }
 

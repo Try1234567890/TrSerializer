@@ -2,47 +2,52 @@ package me.tr.trserializer.handlers.java;
 
 import me.tr.trserializer.exceptions.TypeMissMatched;
 import me.tr.trserializer.handlers.TypeHandler;
-import me.tr.trserializer.instancers.ProcessInstancer;
-import me.tr.trserializer.logger.TrLogger;
+import me.tr.trserializer.logger.Logger;
+import me.tr.trserializer.processes.process.Process;
 import me.tr.trserializer.types.GenericType;
 import me.tr.trserializer.utility.Utility;
 
-import java.lang.reflect.InvocationTargetException;
+import java.util.Map;
 
 public class EnumHandler implements TypeHandler {
+    private final Process process;
+
+    public EnumHandler(Process process) {
+        this.process = process;
+    }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
-    public Enum<?> deserialize(Object obj, GenericType<?> type) {
+    public Object deserialize(Object obj, GenericType<?> type) {
         Class<?> clazz = type.getTypeClass();
-
-        ProcessInstancer.getMethodByAnnotation(clazz).ifPresent(method -> {
-            try {
-                method.setAccessible(true);
-                method.invoke(null, obj);
-            } catch (IllegalAccessException | InvocationTargetException e) {
-                TrLogger.exception(new RuntimeException(
-                        "An error occurs while creating a new instance of " + type.getTypeClass(), e));
-            }
-        });
 
         String name = obj.toString();
         try {
+            Object instance = getProcess().getInstancer(Map.of("", name)).instance(clazz);
+
+            if (instance != null) {
+                getProcess().getLogger().debug("The instancer successfully instanced the class " + Utility.getClassName(clazz));
+                return instance;
+            }
+
             return Enum.valueOf((Class<Enum>) clazz, name);
         } catch (IllegalArgumentException e) {
-            TrLogger.exception(
-                    new RuntimeException("Constant " + name + " not found in Enum " + Utility.getClassName(clazz), e));
+            Logger.exception(new RuntimeException("Constant " + name + " not found in Enum " + Utility.getClassName(clazz), e));
             return null;
         }
     }
 
     @Override
     public String serialize(Object obj, GenericType<?> type) {
-        if (obj instanceof Enum<?> en)
-            return en.name();
+        if (obj instanceof Enum<?> en) {
+            return en.toString();
+        }
 
-        TrLogger.exception(
-                new TypeMissMatched("The provided class is not an Enum, cannot serialize it."));
+        Logger.exception(new TypeMissMatched("The provided class is not an Enum, cannot serialize it."));
         return null;
+    }
+
+    public Process getProcess() {
+        return process;
     }
 }

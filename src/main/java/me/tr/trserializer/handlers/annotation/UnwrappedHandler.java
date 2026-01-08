@@ -2,7 +2,6 @@ package me.tr.trserializer.handlers.annotation;
 
 import me.tr.trserializer.exceptions.TypeMissMatched;
 import me.tr.trserializer.handlers.TypeHandler;
-import me.tr.trserializer.logger.TrLogger;
 import me.tr.trserializer.processes.deserializer.Deserializer;
 import me.tr.trserializer.processes.process.Process;
 import me.tr.trserializer.processes.serializer.Serializer;
@@ -31,8 +30,7 @@ public class UnwrappedHandler implements TypeHandler {
     @Override
     public Object deserialize(Object obj, GenericType<?> type) {
         if (!Utility.isAMapWithStringKeys(obj)) {
-            TrLogger.exception(
-                    new TypeMissMatched("The provided object is not a map"));
+            getProcess().getLogger().throwable(new TypeMissMatched("The provided object is not a map"));
             return instance;
         }
 

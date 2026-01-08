@@ -3,7 +3,6 @@ package me.tr.trserializer.instancers;
 import me.tr.trserializer.annotations.Initialize;
 import me.tr.trserializer.annotations.naming.Naming;
 import me.tr.trserializer.exceptions.TypeMissMatched;
-import me.tr.trserializer.logger.TrLogger;
 import me.tr.trserializer.processes.deserializer.Deserializer;
 import me.tr.trserializer.processes.process.Process;
 import me.tr.trserializer.utility.Utility;
@@ -32,7 +31,7 @@ public class ProcessInstancer implements Instancer {
     @Override
     public Object instance(Class<?> clazz) {
         if (clazz == null) {
-            TrLogger.exception(new NullPointerException("Class to instance is null"));
+            getProcess().getLogger().throwable(new NullPointerException("Class to instance is null"));
             return null;
         }
 
@@ -40,6 +39,7 @@ public class ProcessInstancer implements Instancer {
 
         List<Supplier<Object>> functions = List.of(
                 () -> getProcess().getOptions().getInstance(clazz),
+                () -> getEnumValueOfMethod(clazz).map(this::instance).orElse(null),
                 () -> getMethodByAnnotation(clazz).map(this::instance).orElse(null),
                 () -> getConstrByAnnotation(clazz).map(this::instance).orElse(null),
                 () -> getEmptyConstr(clazz).map(this::instance).orElse(null),
@@ -47,7 +47,7 @@ public class ProcessInstancer implements Instancer {
         );
 
         int i = -1;
-        while (instance == null && i++ < 4) {
+        while (instance == null && i++ < 5) {
             /*
              * Checks from index 2 if clazz is instantiable
              * because instancers from index 0 to index 2 support
@@ -60,9 +60,9 @@ public class ProcessInstancer implements Instancer {
              * that returns an instance of a class that extends it.
              * Similar for enumerators.
              */
-            if (i == 2 && isNotInstantiable(clazz)) {
+            if (i == 3 && isNotInstantiable(clazz)) {
                 String className = Utility.getClassName(clazz);
-                TrLogger.exception(new NoSuchMethodException("The class " + className + " is not instantiable automatically. Add a \"access-modifier static " + className.replace("class ", " ") + " method_name(params...)\" annotated with @Initialize or add a default instance process with \"getProcess().getOptions().addInstance(Class<?>, Supplier)\""));
+                getProcess().getLogger().throwable(new NoSuchMethodException("The class " + className + " is not instantiable automatically. Add a \"access-modifier static " + className.replace("class ", " ") + " method_name(params...)\" annotated with @Initialize or add a default instance process with \"getProcess().getOptions().addInstance(Class<?>, Supplier)\""));
                 return null;
             }
 
@@ -127,7 +127,7 @@ public class ProcessInstancer implements Instancer {
         Object[] params = new Object[paramNames.length];
 
         if (parameters.length != paramNames.length) {
-            TrLogger.exception(new IndexOutOfBoundsException("Mismatch between the number of parameter names provided with the @Initialize annotation and the actual number of constructor parameters."));
+            getProcess().getLogger().throwable(new IndexOutOfBoundsException("Mismatch between the number of parameter names provided with the @Initialize annotation and the actual number of constructor parameters."));
             return params;
         }
 
@@ -179,12 +179,12 @@ public class ProcessInstancer implements Instancer {
         return clazz.getDeclaredConstructors()[0];
     }
 
-    // public static because EnumHandler use this method too.
-    public static Optional<Method> getMethodByAnnotation(Class<?> clazz) {
+    private Optional<Method> getMethodByAnnotation(Class<?> clazz) {
         for (Method method : clazz.getDeclaredMethods()) {
+
             if (method.isAnnotationPresent(Initialize.class)) {
                 if (!Modifier.isStatic(method.getModifiers())) {
-                    TrLogger.exception(
+                    getProcess().getLogger().throwable(
                             new IllegalAccessException("The annotated as @Initialize method must be static."));
                     return Optional.empty();
                 }
@@ -193,7 +193,7 @@ public class ProcessInstancer implements Instancer {
 
                 if (returnType.isAssignableFrom(Class.class) ||
                         !returnType.equals(clazz)) {
-                    TrLogger.exception(
+                    getProcess().getLogger().throwable(
                             new TypeMissMatched("The return type of the annotated as @Initialize method is not " + Utility.getClassName(clazz).replace("class ", "")));
                     return Optional.empty();
                 }
@@ -206,8 +206,21 @@ public class ProcessInstancer implements Instancer {
         return Optional.empty();
     }
 
+    private Optional<Method> getEnumValueOfMethod(Class<?> clazz) {
+        try {
+            if (clazz.isEnum()) {
+                return Optional.of(clazz.getDeclaredMethod("valueOf", String.class));
+            }
+        } catch (NoSuchMethodException e) {
+            // impossible
+            getProcess().getLogger().throwable(
+                    new RuntimeException("An error occurs while retrieving \"valueOf\" method.", e));
+        }
+        return Optional.empty();
+    }
+
     private Object getFromProvidedParams(String name, Naming ann, Class<?> expected) {
-        String newName = ann != null ? getProcess().applyNamingStrategy(name, ann) : name;
+        String newName = ann != null ? getProcess().getNamingStrategyApplier().applyNamingStrategy(name, ann) : name;
         Object result = null;
 
         if (getParams().size() == 1) {

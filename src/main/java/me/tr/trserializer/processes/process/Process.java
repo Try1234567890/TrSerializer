@@ -1,19 +1,14 @@
 package me.tr.trserializer.processes.process;
 
-import me.tr.trlogger.levels.TrDebug;
-import me.tr.trlogger.levels.TrError;
-import me.tr.trlogger.levels.TrLevel;
-import me.tr.trserializer.annotations.Ignore;
-import me.tr.trserializer.annotations.includeIf.IncludeIf;
-import me.tr.trserializer.annotations.includeIf.IncludeStrategy;
-import me.tr.trserializer.annotations.naming.Naming;
-import me.tr.trserializer.annotations.naming.NamingStrategy;
 import me.tr.trserializer.exceptions.InstancerError;
 import me.tr.trserializer.exceptions.TypeMissMatched;
 import me.tr.trserializer.handlers.TypeHandler;
 import me.tr.trserializer.instancers.ProcessInstancer;
-import me.tr.trserializer.logger.TrLogger;
+import me.tr.trserializer.logger.ProcessLogger;
 import me.tr.trserializer.processes.process.addons.PAddon;
+import me.tr.trserializer.processes.process.helper.MethodsExecutor;
+import me.tr.trserializer.processes.process.helper.NamingStrategyApplier;
+import me.tr.trserializer.processes.process.helper.ProcessValidator;
 import me.tr.trserializer.registries.HandlersRegistry;
 import me.tr.trserializer.types.GenericType;
 import me.tr.trserializer.utility.Utility;
@@ -21,7 +16,6 @@ import me.tr.trserializer.utility.Utility;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.*;
 
 /**
@@ -35,10 +29,8 @@ import java.util.*;
  * </ul>
  */
 public abstract class Process {
-    protected static final String CACHE_ID = "TrSerializer:!__#@ID__!";
-    protected static final String CACHE_REF = "TrSerializer:!__#@REF__!";
-    private final IdentityHashMap<TypeHandler, Map.Entry<Object, GenericType<?>>>
-            RUNNING_HANDLERS = new IdentityHashMap<>();
+    //protected static final String CACHE_ID = "TrSerializer:!__#@ID__!";
+    //protected static final String CACHE_REF = "TrSerializer:!__#@REF__!";
     private ProcessContext context;
 
     /**
@@ -82,12 +74,33 @@ public abstract class Process {
     }
 
     /**
-     * @return a map of handlers currently being executed in the stack.
+     * @return the logger for this process
      */
-    public IdentityHashMap<TypeHandler,
-            Map.Entry<Object, GenericType<?>>> getRunningHandlers() {
-        return RUNNING_HANDLERS;
+    public ProcessLogger getLogger() {
+        return getContext().getLogger();
     }
+
+    /**
+     * @return The naming strategy applier for this process
+     */
+    public NamingStrategyApplier getNamingStrategyApplier() {
+        return getContext().getNamingStrategyApplier();
+    }
+
+    /**
+     * @return The process validator for this process.
+     */
+    public ProcessValidator getProcessValidator() {
+        return getContext().getProcessValidator();
+    }
+
+    /**
+     * @return The methods executor for this process.
+     */
+    public MethodsExecutor getMethodsExecutor() {
+        return getContext().getMethodsExecutor();
+    }
+
 
     /*
      * ===============================
@@ -108,18 +121,18 @@ public abstract class Process {
         for (PAddon addon : getContext().getAddons()) {
             String addonName = addon.getName();
             try {
-                TrLogger.dbg("Executing \"" + addonName + "\"");
+                getLogger().debug("Executing \"" + addonName + "\"");
 
                 Optional<?> result = addon.process(this, obj, type, field);
 
                 if (result.isEmpty()) {
-                    TrLogger.dbg("Process \"" + addonName + "\" returned empty");
+                    getLogger().debug("Process \"" + addonName + "\" returned empty");
                     continue;
                 }
 
                 return Optional.of(Map.entry(addon, makeReturn(obj, result.get(), type)));
             } catch (Exception e) {
-                TrLogger.exception(new RuntimeException("The addon \"" + addonName + "\" thrown an exception.", e));
+                getLogger().throwable(new RuntimeException("The addon \"" + addonName + "\" thrown an exception.", e));
             }
         }
 
@@ -134,12 +147,12 @@ public abstract class Process {
      */
     protected boolean isParamsOfResultInvalid(Object[] obj) {
         if (obj == null) {
-            TrLogger.exception(new TypeMissMatched("Params for result building are null."));
+            getLogger().throwable(new TypeMissMatched("Params for result building are null."));
             return true;
         }
         final int objLen = obj.length;
         if (objLen < 4) {
-            TrLogger.exception(new TypeMissMatched("Params for result building are not enough. Expected: 4, Found: " + objLen));
+            getLogger().throwable(new TypeMissMatched("Params for result building are not enough. Expected: 4, Found: " + objLen));
             return true;
         }
         return false;
@@ -162,7 +175,7 @@ public abstract class Process {
      */
     @SuppressWarnings("unchecked")
     protected <T> T makeReturn(Object object, Object result, GenericType<T> type) {
-        if (!isValid(result).isSuccess())
+        if (!getProcessValidator().isValid(result).isSuccess())
             return null;
 
         cache(object, result);
@@ -191,8 +204,7 @@ public abstract class Process {
             return (T) new HashMap<>(Map.of("", (T) result));
         }
 
-        TrLogger.exception(
-                new TypeMissMatched("The result " + result + " is not assignable from " + expectedClass));
+        getLogger().throwable(new TypeMissMatched("The result " + result + " is not assignable from " + expectedClass));
         return null;
     }
 
@@ -214,129 +226,6 @@ public abstract class Process {
     }
 
     /**
-     * Invokes all registered 'end methods' (cleanup or finalization) for a given instance.
-     *
-     * @param instance the object instance on which to invoke the methods.
-     */
-    protected void executeEndMethods(Object instance) {
-        if (instance == null) {
-            TrLogger.exception(
-                    new NullPointerException("Instance is null."));
-            return;
-        }
-        executeMethods(instance, getEndMethods(instance.getClass(), getEndMethods()));
-    }
-
-    /**
-     * Retrieves the mapping of classes to their respective end-method names for this process.
-     * <p>
-     * This is decoupled from {@link ProcessOptions} because {@code Serializer} and
-     * {@code Deserializer} require different finalization logic.
-     * </p>
-     *
-     * @return a map where keys are classes and values are arrays of method names; never {@code null}.
-     * @implNote Implementations must return an empty map if no end methods are defined.
-     */
-    protected abstract Map<Class<?>, String[]> getEndMethods();
-
-    /**
-     * Invokes a set of methods on the specified instance via reflection.
-     *
-     * @param instance the target object.
-     * @param methods  the methods to be invoked.
-     */
-    private void executeMethods(Object instance, Method[] methods) {
-        if (instance == null) {
-            TrLogger.exception(
-                    new NullPointerException("Instance is null."));
-            return;
-        }
-
-        if (methods == null) {
-            TrLogger.exception(
-                    new NullPointerException("Methods is null."));
-            return;
-        }
-
-        for (Method method : methods) {
-            try {
-                method.setAccessible(true);
-                method.invoke(instance);
-            } catch (IllegalAccessException | InvocationTargetException e) {
-                TrLogger.exception(new RuntimeException("An error occurs while invoking method " + method.getName() + " in class " + instance.getClass().getSimpleName(), e));
-            }
-        }
-    }
-
-    /**
-     * Resolves method names into {@link Method} objects for a specific class.
-     *
-     * @param clazz      the class to inspect.
-     * @param endMethods the map of class-to-method-names definitions.
-     * @return an array of resolved {@code Method} objects; empty if none found or class not registered.
-     */
-    private Method[] getEndMethods(Class<?> clazz, Map<Class<?>, String[]> endMethods) {
-        if (clazz == null) {
-            TrLogger.exception(new NullPointerException("Class is null"));
-            return new Method[0];
-        }
-
-        if (endMethods == null || endMethods.isEmpty() ||
-                !endMethods.containsKey(clazz)) {
-            return new Method[0];
-        }
-
-        String[] methodNames = endMethods.get(clazz);
-        Method[] methods = new Method[methodNames.length];
-
-        for (int i = 0; i < methodNames.length; i++) {
-            String name = methodNames[i];
-            Method method = getMethod(clazz, name);
-
-            if (method == null) {
-                TrLogger.exception(new NoSuchMethodException("No method founds in class " + clazz + " with name: " + name));
-                continue;
-            }
-
-            methods[i] = method;
-        }
-
-        return methods;
-    }
-
-    /**
-     * Recursively searches for a method by name in the class hierarchy.
-     *
-     * @param clazz the starting class for the search.
-     * @param name  the name of the method.
-     * @return the {@link Method} if found; {@code null} otherwise.
-     */
-    private Method getMethod(Class<?> clazz, String name) {
-        if (clazz == null) {
-            TrLogger.exception(new NullPointerException("The provided class is null."));
-            return null;
-        }
-
-        if (name == null || name.isEmpty()) {
-            TrLogger.exception(new NullPointerException("The provided method name is null."));
-            return null;
-        }
-
-        Class<?> current = clazz;
-
-        while (current != null && !current.equals(Object.class)) {
-            try {
-                return current.getDeclaredMethod(name);
-            } catch (NoSuchMethodException e) {
-                current = current.getSuperclass();
-            }
-        }
-
-        TrLogger.exception(new NoSuchMethodException("No method found in class " + clazz + " with name: " + name));
-        return null;
-    }
-
-    /**
      * Creates a new instance of the specified class using the current instancer and parameters.
      *
      * @param clazz the class to instantiate.
@@ -349,7 +238,7 @@ public abstract class Process {
         Object instance = instancer.instance(clazz);
 
         if (instance == null) {
-            TrLogger.exception(new InstancerError("An error occurs while instancing " + clazz + ": " + instancer.getReason()));
+            getLogger().throwable(new InstancerError("An error occurs while instancing " + clazz + ": " + instancer.getReason()));
             instancer.reset();
             return null;
         }
@@ -368,7 +257,7 @@ public abstract class Process {
         Object instance = instancer.instance(clazz);
 
         if (instance == null) {
-            TrLogger.exception(
+            getLogger().throwable(
                     new InstancerError("An error occurs while instancing " + clazz, instancer.getReason()));
             instancer.reset();
             return null;
@@ -378,66 +267,9 @@ public abstract class Process {
     }
 
     /**
-     * Applies the naming strategy to a field's name based on {@link Naming} annotations.
-     *
-     * @param field the field whose name should be transformed.
-     * @return the transformed field name.
-     */
-    protected String applyNamingStrategy(Field field) {
-        String fieldName = field.getName();
-        Optional<Naming> annotation = getNamingAnn(field);
-
-        if (annotation.isPresent())
-            return applyNamingStrategy(fieldName, annotation.get());
-
-        return fieldName;
-    }
-
-    /**
-     * Checks for the presence of a {@link Naming} annotation on the field or its declaring class.
-     */
-    private Optional<Naming> getNamingAnn(Field field) {
-        if (field.isAnnotationPresent(Naming.class)) {
-            return Optional.of(field.getAnnotation(Naming.class));
-        }
-
-        Class<?> declaring = field.getDeclaringClass();
-        if (declaring.isAnnotationPresent(Naming.class)) {
-            return Optional.of(declaring.getAnnotation(Naming.class));
-        }
-
-        return Optional.empty();
-    }
-
-    /**
-     * Formats a name using the specified {@link Naming} annotation settings.
-     *
-     * @param name the original name.
-     * @param ann  the naming annotation containing strategies.
-     * @return the formatted name.
-     */
-    public String applyNamingStrategy(String name, Naming ann) {
-        NamingStrategy strategy = ann.strategy();
-
-        NamingStrategy from = ann.from();
-
-        if (strategy == NamingStrategy.NOTHING) {
-            TrLogger.warning("The strategy of @Naming on " + name + " is null. Ignoring it.");
-            return name;
-        }
-
-
-        if (from == NamingStrategy.NOTHING)
-            return strategy.format(name);
-
-        return strategy.format(name, from.getFormat());
-    }
-
-
-    /**
      * Retrieves all valid fields from the provided class and its superclasses.
      * <p>
-     * Fields are filtered based on the logic in {@link #isValid(Field, Object)}.
+     * Fields are filtered based on the logic in {@link #getProcessValidator#isValid(Field, Object)}.
      * </p>
      *
      * @param clazz the class to inspect.
@@ -447,15 +279,15 @@ public abstract class Process {
         Set<Field> result = new HashSet<>();
 
         if (clazz == null) {
-            TrLogger.exception(
-                    new NullPointerException("The provide class is null."));
+            getLogger().throwable(new NullPointerException("The provide class is null."));
             return result;
         }
 
         Class<?> current = clazz;
         while (current != null && !current.equals(Object.class)) {
+
             Arrays.stream(current.getDeclaredFields())
-                    .filter(f -> isValid(f).isSuccess())
+                    .filter(f -> getProcessValidator().isValid(f).isSuccess())
                     .forEach(result::add);
 
             current = current.getSuperclass();
@@ -473,187 +305,5 @@ public abstract class Process {
     public Optional<TypeHandler> getHandler(Class<?> clazz) {
         // No null-checks needed, simply if clazz is null returns Optional.empty().
         return HandlersRegistry.getInstance().get(clazz, this);
-    }
-
-    /*
-     * ===============================
-     * VALIDATION CHECKS FOR HANDLERS
-     * ===============================
-     */
-
-    /**
-     * Determines if the package of the provided object is restricted by process options.
-     */
-    private ValidationResult isPackageBlocked(Object o) {
-        if (o == null)
-            return ValidationResult.fatal("The provided object is null.");
-
-
-        if (getOptions().isPackageBlocked(o.getClass().getPackageName())) {
-            return ValidationResult.error("The provided object package is blocked.");
-        }
-
-        return ValidationResult.success();
-    }
-
-    /**
-     * Validates if an object and its generic type are eligible for processing.
-     *
-     * @param obj  the object to validate.
-     * @param type the generic type metadata.
-     * @return the {@link ValidationResult} of the check.
-     */
-    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-    protected ValidationResult isValid(Object obj, GenericType<?> type) {
-        if (type == null)
-            return ValidationResult.fatal("The provided object is null.");
-
-        return isValid(obj);
-    }
-
-    /**
-     * Validates if an object is eligible for processing based on nullability and process options.
-     *
-     * @param obj the object to validate.
-     * @return a {@link ValidationResult} indicating success or the severity of the failure.
-     */
-    protected ValidationResult isValid(Object obj) {
-        if (obj == null) {
-            if (!getOptions().isAcceptNulls())
-                return ValidationResult.fatal("The provided object is null and the process not accept null values.");
-            return ValidationResult.error("The provided object is null but the process accepts null values.");
-        }
-
-
-        if (obj instanceof Optional<?> opt && opt.isEmpty()) {
-            if (!getOptions().isAcceptEmptyOptional())
-                return ValidationResult.fatal("The provided object is an empty optional and the process not accept empty optional values.");
-            return ValidationResult.error("The provided object is an empty optional but the process accepts empty optional values.");
-        }
-
-        return isPackageBlocked(obj);
-    }
-
-    /**
-     * Validates if a field should be included in the process.
-     * <p>
-     * A field is considered invalid if it is annotated with {@link Ignore},
-     * fails a {@link IncludeIf} strategy, or violates modifier-based rules
-     * defined in {@link ProcessOptions}.
-     * </p>
-     *
-     * @param field the field to validate.
-     * @param value the current value of the field.
-     * @return a {@link ValidationResult} representing the validation state.
-     */
-    protected ValidationResult isValid(Field field, Object value) {
-        if (field == null) {
-            return ValidationResult.fatal("The provided field is null.");
-        }
-
-        String fieldName = field.getName();
-
-        if (field.isAnnotationPresent(IncludeIf.class)) {
-            IncludeIf ann = field.getAnnotation(IncludeIf.class);
-            IncludeStrategy strategy = ann.strategy();
-
-
-            if (strategy == null) {
-                return ValidationResult.fatal("The strategy of @IncludeIf on " + fieldName + " in class " + Utility.getClassName(field.getDeclaringClass()) + " is null. Ignoring it.");
-            }
-
-            if (!strategy.isValid(value)) {
-                return ValidationResult.error("The value of " + fieldName + " doesn't pass the @IncludeIf strategy check. Skipping it...");
-            }
-        }
-
-
-        return isValid(field);
-    }
-
-    protected ValidationResult isValid(Field field) {
-        String fieldName = field.getName();
-
-        int mod = field.getModifiers();
-        if (field.isAnnotationPresent(Ignore.class)) {
-            return ValidationResult.error("The field " + fieldName + " is annotated with @Ignore.");
-        }
-        if (getOptions().isIgnoreStatic() && Modifier.isStatic(mod)) {
-            return ValidationResult.error("The option \"ignore static\" is enabled and " + fieldName + " is static");
-        }
-        if (getOptions().isIgnoreFinal() && Modifier.isFinal(mod)) {
-            return ValidationResult.error("The option \"ignore final\" is enabled and " + fieldName + " is final");
-        }
-        if (getOptions().isIgnoreTransient() && Modifier.isTransient(mod)) {
-            return ValidationResult.error("The option \"ignore transient\" is enabled and " + fieldName + " is transient");
-        }
-
-        return ValidationResult.success();
-    }
-
-    /**
-     * Represents the outcome of a validation check, including success status and logging info.
-     */
-    public static class ValidationResult {
-        private final boolean success;
-        private final String message;
-        private final TrLevel level;
-
-
-        private ValidationResult(boolean success, String message, TrLevel level) {
-            this.success = success;
-            this.message = message;
-            this.level = level;
-        }
-
-        /**
-         * Returns a successful result with no message.
-         */
-        public static ValidationResult success() {
-            return new ValidationResult(true, "", null);
-        }
-
-        /**
-         * Returns a failed result that should be logged as an error.
-         *
-         * @param msg the error message.
-         */
-        public static ValidationResult fatal(String msg) {
-            return new ValidationResult(false, msg, TrError.ERROR);
-        }
-
-        /**
-         * Returns a failed result that should be logged as a debug message.
-         *
-         * @param msg the debug/info message.
-         */
-        public static ValidationResult error(String msg) {
-            return new ValidationResult(false, msg, TrDebug.DEBUG);
-        }
-
-        /**
-         * Prints the message to the logger if a log level is assigned.
-         */
-        public void print() {
-            if (level != null)
-                TrLogger.getInstance().log(message(), level);
-        }
-
-        /**
-         * Prints the result and returns the success status.
-         *
-         * @return {@code true} if validation passed.
-         */
-        public boolean isSuccess() {
-            print();
-            return success;
-        }
-
-        /**
-         * @return the validation message.
-         */
-        public String message() {
-            return message;
-        }
     }
 }

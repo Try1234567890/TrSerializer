@@ -1,5 +1,6 @@
 package me.tr.trserializer.handlers.annotation;
 
+import me.tr.trserializer.exceptions.TypeMissMatched;
 import me.tr.trserializer.handlers.TypeHandler;
 import me.tr.trserializer.processes.deserializer.Deserializer;
 import me.tr.trserializer.processes.process.Process;
@@ -27,16 +28,19 @@ public class WrappedHandler implements TypeHandler {
     @SuppressWarnings("unchecked")
     @Override
     public Object deserialize(Object obj, GenericType<?> type) {
-        if (!Utility.isAMapWithStringKeys(obj))
+        if (!Utility.isAMapWithStringKeys(obj)) {
+            getDeserializer().getLogger().throwable(new TypeMissMatched("The provided object is not a map"));
             return null;
+        }
+
+        Map<String, Object> map = (Map<String, Object>) obj;
 
         for (Field field : getFields()) {
-            // TODO: FIX
-            // Object object = getDeserializer().getMapValue(field, (Map<String, Object>) obj);
+            Object object = getDeserializer().getValueRetriever().getMapValue(field, map);
 
-            //if (object != null) {
-            //    return getDeserializer().deserialize(object, type);
-            //}
+            if (object != null) {
+                return getDeserializer().deserialize(object, type);
+            }
         }
 
         return instance;

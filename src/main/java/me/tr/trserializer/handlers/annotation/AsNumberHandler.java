@@ -3,7 +3,6 @@ package me.tr.trserializer.handlers.annotation;
 import me.tr.trserializer.annotations.AsNumber;
 import me.tr.trserializer.handlers.TypeHandler;
 import me.tr.trserializer.instancers.ProcessInstancer;
-import me.tr.trserializer.logger.TrLogger;
 import me.tr.trserializer.processes.deserializer.Deserializer;
 import me.tr.trserializer.processes.process.Process;
 import me.tr.trserializer.processes.serializer.Serializer;
@@ -46,7 +45,7 @@ public class AsNumberHandler implements TypeHandler {
 
                 return instance;
             } catch (Exception e) {
-                TrLogger.exception(new RuntimeException("An error occurs while setting the value of field " + field.getName() + " in class " + Utility.getClassName(clazz), e));
+                getProcess().getLogger().throwable(new RuntimeException("An error occurs while setting the value of field " + field.getName() + " in class " + Utility.getClassName(clazz), e));
             }
         }
 
@@ -69,7 +68,7 @@ public class AsNumberHandler implements TypeHandler {
 
                 return getSerializer().serialize(value, asNumber.type());
             } catch (Exception e) {
-                TrLogger.exception(new RuntimeException("An error occurs while retrieving the value of field " + field.getName() + " in class " + Utility.getClassName(clazz), e));
+                getProcess().getLogger().throwable(new RuntimeException("An error occurs while retrieving the value of field " + field.getName() + " in class " + Utility.getClassName(clazz), e));
             }
         }
 
@@ -85,7 +84,7 @@ public class AsNumberHandler implements TypeHandler {
         String paramName = ann.field();
 
         if (paramName.isEmpty()) {
-            TrLogger.exception(
+            getProcess().getLogger().throwable(
                     new NullPointerException("The class " + Utility.getClassName(clazz) + " contains more than 1 field and no fields is specified " +
                             "in @AsNumber annotation. Please specify the field to working on in annotation param."));
             return null;
@@ -97,7 +96,7 @@ public class AsNumberHandler implements TypeHandler {
             }
         }
 
-        TrLogger.exception(new NullPointerException("The field with name " + paramName + " is not found in class " + Utility.getClassName(clazz) + ". Make sure that the name is correct (case-sensitive)."));
+        getProcess().getLogger().throwable(new NullPointerException("The field with name " + paramName + " is not found in class " + Utility.getClassName(clazz) + ". Make sure that the name is correct (case-sensitive)."));
 
 
         return null;

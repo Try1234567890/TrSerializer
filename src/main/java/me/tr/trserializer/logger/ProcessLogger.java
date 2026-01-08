@@ -1,40 +1,38 @@
-package me.tr.trserializer.processes.process;
+package me.tr.trserializer.logger;
 
-import me.tr.trlogger.loggers.TrConsoleLogger;
+import me.tr.trlogger.levels.TrLevel;
+import me.tr.trserializer.processes.process.Process;
+import me.tr.trserializer.utility.Utility;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
-public class ProcessLogger extends TrConsoleLogger {
+public class ProcessLogger extends Logger {
     private static final Map<Process, ProcessLogger> LOGGERS = new IdentityHashMap<>();
     private final Process process;
 
-    public ProcessLogger(Process process) {
-        if ()
+    private ProcessLogger(Process process) {
         this.process = process;
+        LOGGERS.put(process, this);
+    }
+
+    public static ProcessLogger of(Process process) {
+        if (LOGGERS.containsKey(process)) {
+            return LOGGERS.get(process);
+        }
+        return new ProcessLogger(process);
     }
 
     public Process getProcess() {
         return process;
     }
 
-    public void exception(Throwable throwable) {
+    public void throwable(Throwable throwable) {
         error(getStackTraceAsString(throwable));
     }
 
-    public String getStackTraceAsString(Throwable throwable) {
-        if (!getProcess().getOptions().isExpandedExceptions()) {
-            return throwable.getMessage();
-        }
-
-        StringWriter sw = new StringWriter();
-        try (PrintWriter pw = new PrintWriter(sw)) {
-            throwable.printStackTrace(pw);
-        }
-        return sw.toString();
+    @Override
+    protected String compose(String msg, TrLevel level) {
+        return "[" + Utility.getClassName(getProcess().getClass()) + "] " + super.compose(msg, level);
     }
-
-
 }

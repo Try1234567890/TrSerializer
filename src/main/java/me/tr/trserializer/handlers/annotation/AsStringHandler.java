@@ -3,9 +3,8 @@ package me.tr.trserializer.handlers.annotation;
 import me.tr.trserializer.annotations.AsString;
 import me.tr.trserializer.handlers.TypeHandler;
 import me.tr.trserializer.instancers.ProcessInstancer;
-import me.tr.trserializer.logger.TrLogger;
-import me.tr.trserializer.processes.process.Process;
 import me.tr.trserializer.processes.deserializer.Deserializer;
+import me.tr.trserializer.processes.process.Process;
 import me.tr.trserializer.processes.serializer.Serializer;
 import me.tr.trserializer.types.GenericType;
 import me.tr.trserializer.utility.Utility;
@@ -30,22 +29,15 @@ public class AsStringHandler implements TypeHandler {
             return null;
 
         Object newValue = getDeserializer().deserialize(obj, field.getType());
-
-        if (clazz.isRecord()) {
-            return new ProcessInstancer(getProcess(), Map.of("", newValue)).instance(clazz);
-        }
-
-        Object instance = getProcess().instance(clazz);
+        Object instance = getProcess().getInstancer(Map.of("", newValue)).instance(clazz);
 
         try {
-            field.setAccessible(true);
-
-            field.set(instance, newValue);
+            getDeserializer().getValueSetter().setField(field, instance, newValue);
 
             return instance;
         } catch (Exception e) {
-            TrLogger.exception(new RuntimeException("An error occurs while setting the value of field " + field.getName() + " in class " + Utility.getClassName(clazz), e));
-            return null;
+            getProcess().getLogger().throwable(new RuntimeException("An error occurs while setting the value of field " + field.getName() + " in class " + Utility.getClassName(clazz), e));
+            return instance;
         }
     }
 
@@ -54,8 +46,10 @@ public class AsStringHandler implements TypeHandler {
         Class<?> clazz = obj.getClass();
         Field field = getField(clazz);
 
-        if (field == null)
+        if (field == null) {
+            getProcess().getLogger().debug("The field is null");
             return null;
+        }
 
         try {
             field.setAccessible(true);
@@ -63,7 +57,7 @@ public class AsStringHandler implements TypeHandler {
 
             return getSerializer().serialize(value, String.class);
         } catch (Exception e) {
-            TrLogger.exception(new RuntimeException("An error occurs while retrieving the value of field " + field.getName() + " in class " + Utility.getClassName(clazz), e));
+            getProcess().getLogger().throwable(new RuntimeException("An error occurs while retrieving the value of field " + field.getName() + " in class " + Utility.getClassName(clazz), e));
             return null;
         }
     }
@@ -79,7 +73,7 @@ public class AsStringHandler implements TypeHandler {
             String paramName = asString.field();
 
             if (paramName.isEmpty()) {
-                TrLogger.exception(
+                getProcess().getLogger().throwable(
                         new NullPointerException("The class " + Utility.getClassName(clazz) + " contains more than 1 field and no fields is specified " +
                                 "in @AsString annotation. Please specify the field to working on in annotation param."));
                 return null;
@@ -91,7 +85,7 @@ public class AsStringHandler implements TypeHandler {
                 }
             }
 
-            TrLogger.exception(new NullPointerException("The field with name " + paramName + " is not found in class " + Utility.getClassName(clazz) + ". Make sure that the name is correct (case-sensitive)."));
+            getProcess().getLogger().throwable(new NullPointerException("The field with name " + paramName + " is not found in class " + Utility.getClassName(clazz) + ". Make sure that the name is correct (case-sensitive)."));
         }
 
         return null;
