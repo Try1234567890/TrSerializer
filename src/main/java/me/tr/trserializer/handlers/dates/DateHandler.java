@@ -3,6 +3,7 @@ package me.tr.trserializer.handlers.dates;
 import me.tr.trserializer.exceptions.TypeMissMatched;
 import me.tr.trserializer.logger.TrLogger;
 import me.tr.trserializer.types.GenericType;
+import me.tr.trserializer.utility.Utility;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -34,7 +35,7 @@ public class DateHandler extends DateHandlerContainer {
 
         TrLogger.exception(
                 new TypeMissMatched(
-                        "The provided object (" + obj.getClass().getName() +
+                        "The provided object (" + Utility.getClassName(obj.getClass()) +
                                 ") is not a valid type to deserialize it as Date."
                 )
         );

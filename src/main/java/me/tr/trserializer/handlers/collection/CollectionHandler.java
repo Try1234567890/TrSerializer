@@ -46,10 +46,12 @@ public class CollectionHandler implements TypeHandler {
     public Object serialize(Object obj, GenericType<?> type) {
         List<Object> result = new ArrayList<>();
         if (obj instanceof Collection<?> coll) {
+
             for (Object item : coll) {
                 Object serializedItem = getSerializer().serialize(item, type.getFirstArgumentType());
                 result.add(serializedItem);
             }
+            
         }
 
         return result;

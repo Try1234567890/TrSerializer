@@ -5,6 +5,7 @@ import me.tr.trserializer.handlers.TypeHandler;
 import me.tr.trserializer.instancers.ProcessInstancer;
 import me.tr.trserializer.logger.TrLogger;
 import me.tr.trserializer.types.GenericType;
+import me.tr.trserializer.utility.Utility;
 
 import java.lang.reflect.InvocationTargetException;
 
@@ -30,7 +31,7 @@ public class EnumHandler implements TypeHandler {
             return Enum.valueOf((Class<Enum>) clazz, name);
         } catch (IllegalArgumentException e) {
             TrLogger.exception(
-                    new RuntimeException("Constant " + name + " not found in Enum " + clazz.getName(), e));
+                    new RuntimeException("Constant " + name + " not found in Enum " + Utility.getClassName(clazz), e));
             return null;
         }
     }

@@ -1,13 +1,10 @@
 package me.tr.trserializer.handlers.annotation;
 
-import me.tr.trserializer.exceptions.TypeMissMatched;
 import me.tr.trserializer.handlers.TypeHandler;
-import me.tr.trserializer.logger.TrLogger;
 import me.tr.trserializer.processes.deserializer.Deserializer;
 import me.tr.trserializer.processes.process.Process;
 import me.tr.trserializer.processes.serializer.Serializer;
 import me.tr.trserializer.types.GenericType;
-import me.tr.trserializer.utility.Utility;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
@@ -31,18 +28,18 @@ public class UnwrappedHandler implements TypeHandler {
     @Override
     public Object deserialize(Object obj, GenericType<?> type) {
         for (Field field : getFields()) {
-            getDeserializer().deserializeField(field, instance, (Map<String, Object>) obj);
+            getDeserializer().deserialize(field, instance, instance.getClass(), (Map<String, Object>) obj);
         }
 
         return instance;
     }
 
     @Override
-    public Map<String, Object> serialize(Object instance2, GenericType<?> type) {
+    public Map<String, Object> serialize(Object instance, GenericType<?> type) {
         Map<String, Object> map = new HashMap<>();
 
         for (Field field : getFields()) {
-            getSerializer().serializeField(field, instance, map);
+            getSerializer().serialize(field, instance, instance.getClass(), map);
         }
 
         return map;

@@ -8,6 +8,7 @@ import me.tr.trserializer.processes.deserializer.Deserializer;
 import me.tr.trserializer.processes.process.Process;
 import me.tr.trserializer.processes.serializer.Serializer;
 import me.tr.trserializer.types.GenericType;
+import me.tr.trserializer.utility.Utility;
 
 import java.lang.reflect.Field;
 import java.util.Map;
@@ -45,7 +46,7 @@ public class AsNumberHandler implements TypeHandler {
 
                 return instance;
             } catch (Exception e) {
-                TrLogger.exception(new RuntimeException("An error occurs while setting the value of field " + field.getName() + " in class " + clazz.getName(), e));
+                TrLogger.exception(new RuntimeException("An error occurs while setting the value of field " + field.getName() + " in class " + Utility.getClassName(clazz), e));
             }
         }
 
@@ -68,7 +69,7 @@ public class AsNumberHandler implements TypeHandler {
 
                 return getSerializer().serialize(value, asNumber.type());
             } catch (Exception e) {
-                TrLogger.exception(new RuntimeException("An error occurs while retrieving the value of field " + field.getName() + " in class " + clazz.getName(), e));
+                TrLogger.exception(new RuntimeException("An error occurs while retrieving the value of field " + field.getName() + " in class " + Utility.getClassName(clazz), e));
             }
         }
 
@@ -85,7 +86,7 @@ public class AsNumberHandler implements TypeHandler {
 
         if (paramName.isEmpty()) {
             TrLogger.exception(
-                    new NullPointerException("The class " + clazz.getName() + " contains more than 1 field and no fields is specified " +
+                    new NullPointerException("The class " + Utility.getClassName(clazz) + " contains more than 1 field and no fields is specified " +
                             "in @AsNumber annotation. Please specify the field to working on in annotation param."));
             return null;
         }
@@ -96,7 +97,7 @@ public class AsNumberHandler implements TypeHandler {
             }
         }
 
-        TrLogger.exception(new NullPointerException("The field with name " + paramName + " is not found in class " + clazz.getName() + ". Make sure that the name is correct (case-sensitive)."));
+        TrLogger.exception(new NullPointerException("The field with name " + paramName + " is not found in class " + Utility.getClassName(clazz) + ". Make sure that the name is correct (case-sensitive)."));
 
 
         return null;

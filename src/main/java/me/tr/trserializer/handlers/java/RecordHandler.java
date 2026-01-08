@@ -9,6 +9,7 @@ import me.tr.trserializer.processes.serializer.Serializer;
 import me.tr.trserializer.types.GenericType;
 import me.tr.trserializer.utility.Utility;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class RecordHandler implements TypeHandler {
@@ -33,7 +34,7 @@ public class RecordHandler implements TypeHandler {
 
     @Override
     public Map<String, Object> serialize(Object obj, GenericType<?> type) {
-        return getSerializer().serializeAsMap(obj);
+        return getSerializer().serializeAsMap(obj, new HashMap<>());
     }
 
     public Process getProcess() {
