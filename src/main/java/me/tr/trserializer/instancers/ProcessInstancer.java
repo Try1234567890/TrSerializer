@@ -46,14 +46,12 @@ public class ProcessInstancer implements Instancer {
 
         Object instance = SINGLETON_INSTANCES.get(clazz);
         int i = -1;
-        while (instance == null && i++ < 3) {
+        while (instance == null && i++ < 4) {
             // Skip the instance creation with the annotated method.
-            if (i == 2) {
-                if (!isInstantiable(clazz)) {
-                    String className = Utility.getClassName(clazz);
-                    TrLogger.exception(new NoSuchMethodException("The class " + className + " is not instantiable automatically. Add a \"access-modifier static " + className.replace("class ", " ") + " method_name(params...)\" annotated with @Initialize or add a default instance process with \"getProcess().getOptions().addInstance(Class<?>, Supplier)\""));
-                    return null;
-                }
+            if (i == 2 && isNotInstantiable(clazz)) {
+                String className = Utility.getClassName(clazz);
+                TrLogger.exception(new NoSuchMethodException("The class " + className + " is not instantiable automatically. Add a \"access-modifier static " + className.replace("class ", " ") + " method_name(params...)\" annotated with @Initialize or add a default instance process with \"getProcess().getOptions().addInstance(Class<?>, Supplier)\""));
+                return null;
             }
 
             instance = functions.get(i).get();
@@ -288,10 +286,10 @@ public class ProcessInstancer implements Instancer {
      * @param clazz The class to check
      * @return {@code true} if it is, otherwise {@code false}.
      */
-    private boolean isInstantiable(Class<?> clazz) {
-        return !clazz.isEnum() &&
-                !clazz.isPrimitive() &&
-                !clazz.isInterface() &&
-                !Modifier.isAbstract(clazz.getModifiers());
+    private boolean isNotInstantiable(Class<?> clazz) {
+        return clazz.isEnum() &&
+                clazz.isPrimitive() &&
+                clazz.isInterface() &&
+                Modifier.isAbstract(clazz.getModifiers());
     }
 }
