@@ -14,7 +14,7 @@ public abstract class PDateAnnAddon extends PAddon {
 
 
     public PDateAnnAddon() {
-        super("DateAnnotation", Priority.NORMAL_PLUS);
+        super("date-annotation", Priority.NORMAL_PLUS);
     }
 
     @Override

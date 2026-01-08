@@ -12,7 +12,7 @@ import java.util.Optional;
 public abstract class PHandlerAddon extends PAddon {
 
     public PHandlerAddon() {
-        super("Handler");
+        super("handlers");
     }
 
     public Optional<Object> process(Process process, Object obj, GenericType<?> type, Field field) throws Exception {

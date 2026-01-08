@@ -29,7 +29,7 @@ public class WrapInsert implements InsertMethod {
 
         Map.Entry<String, Object> entry = valueMap.entrySet().iterator().next();
         String newKey = entry.getKey();
-        Map<String, Object> entryValue = Map.of(key, entry.getValue());
+        Map<String, Object> entryValue = new HashMap<>(Map.of(key, entry.getValue()));
         Map<String, Object> newValue = entryValue;
 
         if (map.containsKey(newKey)) {

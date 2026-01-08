@@ -1,17 +1,17 @@
 package me.tr.trserializer.processes.serializer;
 
+import me.tr.trserializer.exceptions.TypeMissMatched;
 import me.tr.trserializer.logger.TrLogger;
 import me.tr.trserializer.processes.process.Process;
+import me.tr.trserializer.processes.process.ProcessTaskContainer;
 import me.tr.trserializer.processes.process.addons.PAddon;
 import me.tr.trserializer.types.GenericType;
 import me.tr.trserializer.types.SerializerGenericType;
 import me.tr.trserializer.utility.Three;
+import me.tr.trserializer.utility.Utility;
 
 import java.lang.reflect.Field;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @SuppressWarnings("unchecked")
 public class Serializer extends Process {
@@ -53,13 +53,30 @@ public class Serializer extends Process {
         return serialize(obj, new GenericType<>(type));
     }
 
+
     public <T> T serialize(Object obj, GenericType<T> type) {
-        if (!isValid(obj, type))
-            return null;
+        return serialize(obj, type, null);
+    }
+
+    public Map<String, Object> serializeAsMap(Object obj, Map<String, Object> result) {
+        return serializeAsMap(obj, result, null);
+    }
+
+    public void serialize(Field field, Object instance,
+                          Class<?> clazz, Map<String, Object> result) {
+        serialize(field, instance, clazz, result, null);
+    }
+
+    public <T> Optional<T> serializeAsSimple(Object obj, GenericType<T> type) {
+        ValidationResult result = isValid(obj, type);
+        if (!result.isSuccess()) {
+            TrLogger.msg(result.message());
+            return Optional.empty();
+        }
 
         if (getCache().has(obj)) {
-            TrLogger.dbg("Object (" + obj.getClass().getName() + ") found in cache, reusing it.");
-            return (T) getCache().get(obj);
+            TrLogger.dbg("Object (" + Utility.getClassName(obj.getClass()) + ") found in cache, reusing it.");
+            return Optional.of((T) getCache().get(obj));
         }
 
         Optional<Map.Entry<PAddon, ?>> addons = processAddons(obj, type, null);
@@ -67,19 +84,27 @@ public class Serializer extends Process {
         // Already made returns in processAddon()
         // if one of available addons is valid.
         if (addons.isPresent()) {
-            return (T) addons.get().getValue();
+            TrLogger.dbg("Addons found for " + type + ", returning the result.");
+            return Optional.of((T) addons.get().getValue());
         }
 
-        return makeReturn(obj, serializeAsMap(obj), type);
-
+        return Optional.empty();
     }
 
+    protected <T> T serialize(Object obj, GenericType<T> type, Deque<ProcessTaskContainer> tasks) {
+        Optional<T> simpleResult = serializeAsSimple(obj, type);
 
-    public Map<String, Object> serializeAsMap(Object obj) {
-        Map<String, Object> result = new HashMap<>();
+        if (simpleResult.isEmpty())
+            return makeReturn(obj, serializeAsMap(obj, new HashMap<>(), tasks), type);
 
-        if (obj == null) {
-            TrLogger.exception(new NullPointerException("Object is null!"));
+        return simpleResult.get();
+    }
+
+    protected Map<String, Object> serializeAsMap(Object obj, Map<String, Object> result, Deque<ProcessTaskContainer> tasks) {
+        ValidationResult validationResult = isValid(obj);
+
+        if (!validationResult.isSuccess()) {
+            TrLogger.dbg(validationResult.message());
             return result;
         }
 
@@ -89,45 +114,78 @@ public class Serializer extends Process {
         Set<Field> fields = getFields(clazz);
 
         for (Field field : fields) {
-            serializeField(field, obj, result);
+            serialize(field, obj, clazz, result, tasks);
         }
 
         return result;
     }
 
-    public void serializeField(Field field, Object instance, Map<String, Object> result) {
-        Class<?> clazz = instance.getClass();
+    protected void serialize(Field field, Object instance,
+                             Class<?> clazz, Map<String, Object> result,
+                             Deque<ProcessTaskContainer> tasks) {
         field.setAccessible(true);
-        String name = getMapKey(field);
+        String fieldName = getMapKey(field);
+
+        TrLogger.dbg("Serializing field " + fieldName + " of " + Utility.getClassName(clazz));
 
         try {
             Object value = field.get(instance);
 
-            if (!isValid(field, value)) {
-                TrLogger.dbg("The validation for field " + name + " in class" + clazz + " failed. Skipping it...");
+            ValidationResult validationResult = isValid(field, value);
+            if (!validationResult.isSuccess()) {
+                TrLogger.dbg(validationResult.message());
                 return;
             }
 
-            GenericType<?> valueType = new SerializerGenericType<>(field);
+            GenericType<?> type = new SerializerGenericType<>(field);
 
-            Optional<Map.Entry<PAddon, ?>> addons = processAddons(value, valueType, field);
 
+            Optional<Map.Entry<PAddon, ?>> addons = processAddons(value, type, field);
             if (addons.isPresent()) {
+                TrLogger.dbg("Addons found for " + (type.getTypeClass() == Object.class ? Utility.getClassName(clazz) : type) + ", inserting in the result.");
+
                 Map.Entry<PAddon, ?> entry = addons.get();
                 Object addonResult = entry.getValue();
 
                 cache(value, addonResult);
-
                 entry.getKey()
                         .getInsert()
-                        .insert(name, addonResult, result);
+                        .insert(fieldName, addonResult, result);
                 return;
             }
 
-            result.put(name, serialize(value, valueType));
+
+            TrLogger.dbg("Addons not found for " + type + ", adding to tasks.");
+            result(fieldName, value, type, result, tasks).ifPresent(SerResult::accept);
         } catch (Exception e) {
-            TrLogger.exception(new RuntimeException("An error occurs while retrieving value from " + name + " in class " + clazz.getName(), e));
+            TrLogger.exception(new RuntimeException("An error occurs while retrieving value from " + fieldName + " in class " + Utility.getClassName(clazz), e));
         }
+    }
+
+    protected Optional<? extends RSerResult> result(Object... obj) {
+        if (obj == null) {
+            TrLogger.exception(new TypeMissMatched("Params for result building are null."));
+            return Optional.empty();
+        }
+        final int objLen = obj.length;
+        if (objLen < 4) {
+            TrLogger.exception(new TypeMissMatched("Params for result building are not enough. Expected: 4, Found: " + objLen));
+            return Optional.empty();
+        }
+        if (!(obj[0] instanceof String str)) {
+            TrLogger.exception(new TypeMissMatched("The param at index 0 is not the map value key."));
+            return Optional.empty();
+        }
+        if (!(obj[2] instanceof GenericType<?> type)) {
+            TrLogger.exception(new TypeMissMatched("The param at index 2 is not the value type."));
+            return Optional.empty();
+        }
+        Object uncheckedResultMap = obj[3];
+        if (!Utility.isAMapWithStringKeys(uncheckedResultMap)) {
+            TrLogger.exception(new TypeMissMatched("The param at index 3 is not the map result."));
+            return Optional.empty();
+        }
+        return Optional.of(new RSerResult(this, str, obj[1], type, (Map<String, Object>) uncheckedResultMap));
     }
 
     @Override
@@ -135,7 +193,7 @@ public class Serializer extends Process {
         getCache().put(object, result);
     }
 
-    private String getMapKey(Field field) {
+    protected String getMapKey(Field field) {
         Class<?> declaringClass = field.getDeclaringClass();
         String fieldName = field.getName();
 
@@ -152,6 +210,93 @@ public class Serializer extends Process {
     @Override
     protected Map<Class<?>, String[]> getMethods() {
         return getOptions().getEndMethods();
+    }
+
+    protected abstract static class SerResult {
+        private final Serializer serializer;
+        private final String key;
+        private final Object value;
+        private final GenericType<?> type;
+
+        public SerResult(Serializer serializer, String key, Object value, GenericType<?> type) {
+            this.serializer = serializer;
+            this.key = key;
+            this.value = value;
+            this.type = type;
+        }
+
+        protected Serializer serializer() {
+            return serializer;
+        }
+
+        public String key() {
+            return key;
+        }
+
+        public Object value() {
+            return value;
+        }
+
+        public GenericType<?> type() {
+            return type;
+        }
+
+        public abstract void accept();
+    }
+
+    protected static class RSerResult extends SerResult {
+        private final Map<String, Object> result;
+
+        public RSerResult(Serializer serializer, String key, Object value, GenericType<?> type, Map<String, Object> result) {
+            super(serializer, key, value, type);
+            this.result = result;
+        }
+
+        public Map<String, Object> result() {
+            return result;
+        }
+
+        @Override
+        public void accept() {
+            result().put(key(), serializer().serialize(value(), type()));
+        }
+    }
+
+    protected static class ISerResult extends RSerResult {
+        private final Deque<ProcessTaskContainer> tasks;
+
+
+        public ISerResult(Serializer serializer, String key, Object value, GenericType<?> type, Map<String, Object> result, Deque<ProcessTaskContainer> tasks) {
+            super(serializer, key, value, type, result);
+            this.tasks = tasks;
+        }
+
+        public ISerResult(RSerResult recursiveResult, Deque<ProcessTaskContainer> tasks) {
+            super(
+                    recursiveResult.serializer(),
+                    recursiveResult.key(),
+                    recursiveResult.value(),
+                    recursiveResult.type(),
+                    recursiveResult.result()
+            );
+            this.tasks = tasks;
+        }
+
+        public Deque<ProcessTaskContainer> tasks() {
+            return tasks;
+        }
+
+        @Override
+        public void accept() {
+            Optional<?> simpleValue = serializer().serializeAsSimple(value(), type());
+            if (simpleValue.isPresent()) {
+                result().put(key(), simpleValue.get());
+                return;
+            }
+            Map<String, Object> childMap = new HashMap<>();
+            result().put(key(), childMap);
+            tasks().push(new ProcessTaskContainer(value(), type(), childMap));
+        }
     }
 }
 

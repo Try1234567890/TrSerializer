@@ -73,18 +73,18 @@ public abstract class Process {
         for (PAddon addon : getContext().getAddons()) {
             String addonName = addon.getName();
             try {
-                TrLogger.dbg("Executing " + addonName);
+                TrLogger.dbg("Executing \"" + addonName + "\"");
 
                 Optional<?> result = addon.process(this, obj, type, field);
 
                 if (result.isEmpty()) {
-                    TrLogger.dbg("Process " + addonName + " returned empty");
+                    TrLogger.dbg("Process \"" + addonName + "\" returned empty");
                     continue;
                 }
 
                 return Optional.of(Map.entry(addon, makeReturn(obj, result.get(), type)));
             } catch (Exception e) {
-                TrLogger.exception(new RuntimeException("The addon " + addon.getName() + " thrown an exception.", e));
+                TrLogger.exception(new RuntimeException("The addon \"" + addonName + "\" thrown an exception.", e));
             }
         }
 
@@ -108,8 +108,9 @@ public abstract class Process {
      */
     @SuppressWarnings("unchecked")
     protected <T> T makeReturn(Object object, Object result, GenericType<T> type) {
-        if (!isValid(result)) {
-            TrLogger.dbg("The result " + result + " is not valid");
+        ValidationResult validationResult = isValid(result);
+        if (!validationResult.success) {
+            TrLogger.msg(validationResult.message);
             return null;
         }
 
@@ -359,7 +360,7 @@ public abstract class Process {
         Class<?> current = clazz;
         while (current != null && !current.equals(Object.class)) {
             Arrays.stream(current.getDeclaredFields())
-                    .filter(this::isValid)
+                    .filter(f -> isValid(f).success)
                     .forEach(result::add);
 
             current = current.getSuperclass();
@@ -386,18 +387,34 @@ public abstract class Process {
      */
 
     /**
+     * Checks if object package is blocked.
+     *
+     * @param o The object to verify.
+     * @return {@link ValidationResult#success()} if it is, otherwise {@link  ValidationResult#failed(String)}.
+     */
+    private ValidationResult isPackageBlocked(Object o) {
+        if (o == null) {
+            return ValidationResult.failed("The provided object is null.");
+        }
+
+        if (getOptions().isPackageBlocked(o.getClass().getPackageName())) {
+            return ValidationResult.failed("The provided object package is blocked.");
+        }
+
+        return ValidationResult.success();
+    }
+
+    /**
      * Checks if the provided object and type is valid for be processed.
      *
      * @param obj  The object to validate.
      * @param type The type to validate.
-     * @return {@code true} if it is, otherwise {@code false}.
-     * @throws NullPointerException if the object is null and nulls is not accepted.
+     * @return {@link ValidationResult#success()} if it is, otherwise {@link  ValidationResult#failed(String)}.
      */
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-    protected boolean isValid(Object obj, GenericType<?> type) {
+    protected ValidationResult isValid(Object obj, GenericType<?> type) {
         if (type == null) {
-            TrLogger.exception(new NullPointerException("Object or type is null!"));
-            return false;
+            return ValidationResult.failed("The provided object is null.");
         }
 
         return isValid(obj);
@@ -410,37 +427,19 @@ public abstract class Process {
      * @return {@code true} if it is, otherwise {@code false}.
      * @throws NullPointerException if the object is null and nulls is not accepted.
      */
-    protected boolean isValid(Object obj) {
+    protected ValidationResult isValid(Object obj) {
         if (obj == null) {
             if (!getOptions().isAcceptNulls())
-                TrLogger.exception(new NullPointerException("The provided object is null and the process not accept null values."));
-            return false;
+                return ValidationResult.failed("The provided object is null and the process not accept null values.");
         }
+
 
         if (obj instanceof Optional<?> opt && opt.isEmpty()) {
-            if (!getOptions().isAcceptEmptyOptional()) {
-                TrLogger.exception(new NullPointerException("The provided object is an empty optional and the process not accept empty optional values."));
-                return false;
-            }
+            if (!getOptions().isAcceptEmptyOptional())
+                return ValidationResult.failed("The provided object is an empty optional and the process not accept empty optional values.");
         }
 
-        return !isPackageBlocked(obj);
-    }
-
-    /**
-     * Checks if object package is blocked.
-     *
-     * @param o The object to verify.
-     * @return {@code true} if is blocked, otherwise false.
-     * @throws NullPointerException if the object is null.
-     */
-    private boolean isPackageBlocked(Object o) {
-        if (o == null) {
-            TrLogger.exception(new NullPointerException("The object is null."));
-            return true;
-        }
-
-        return getOptions().isPackageBlocked(o.getClass().getPackageName());
+        return isPackageBlocked(obj);
     }
 
     /**
@@ -455,34 +454,71 @@ public abstract class Process {
      * </ul>
      *
      * @param field The field to validate.
+     * @param value The value of the field processed.
      * @return {@code true} if it is, otherwise {@code false}.
      * @throws NullPointerException if the field is null
      */
-    protected boolean isValid(Field field, Object value) {
+    protected ValidationResult isValid(Field field, Object value) {
         if (field == null) {
             TrLogger.exception(new NullPointerException("The field to validate is null."));
-            return false;
+            return ValidationResult.failed("The provided field is null.");
         }
+        String fieldName = field.getName();
 
         if (field.isAnnotationPresent(IncludeIf.class)) {
             IncludeIf ann = field.getAnnotation(IncludeIf.class);
             IncludeStrategy strategy = ann.strategy();
 
+
             if (strategy == null) {
-                TrLogger.warning("The strategy of @IncludeIf on " + field.getName() + " in class " + field.getDeclaringClass().getName() + " is null. Ignoring it.");
-                return true;
+                return ValidationResult.failed("The strategy of @IncludeIf on " + fieldName + " in class " + field.getDeclaringClass().getName() + " is null. Ignoring it.");
             }
 
-            if (!strategy.isValid(value))
-                return false;
+            if (!strategy.isValid(value)) {
+                return ValidationResult.failed("The value of " + fieldName + " doesn't pass the @IncludeIf strategy check. Skipping it...");
+            }
         }
 
         int mod = field.getModifiers();
-        return !field.isAnnotationPresent(Ignore.class) &&
-                (!getOptions().isIgnoreStatic() || !Modifier.isStatic(mod)) &&
-                (!getOptions().isIgnoreFinal() || !Modifier.isFinal(mod)) &&
-                (!getOptions().isIgnoreTransient() || !Modifier.isTransient(mod));
+        if (field.isAnnotationPresent(Ignore.class)) {
+            return ValidationResult.failed("The field " + field.getName() + " is annotated with @Ignore.");
+        }
+        if (getOptions().isIgnoreStatic() && Modifier.isStatic(mod)) {
+            return ValidationResult.failed("The option \"ignore static\" is enabled and " + fieldName + " is static");
+        }
+        if (getOptions().isIgnoreFinal() && Modifier.isFinal(mod)) {
+            return ValidationResult.failed("The option \"ignore final\" is enabled and " + fieldName + " is final");
+        }
+        if (getOptions().isIgnoreTransient() && Modifier.isTransient(mod)) {
+            return ValidationResult.failed("The option \"ignore transient\" is enabled and " + fieldName + " is transient");
+        }
+
+        return ValidationResult.success();
     }
 
+    public static class ValidationResult {
+        private final boolean success;
+        private final String message;
 
+        public ValidationResult(boolean success, String message) {
+            this.success = success;
+            this.message = message;
+        }
+
+        public static ValidationResult success() {
+            return new ValidationResult(true, "");
+        }
+
+        public static ValidationResult failed(String msg) {
+            return new ValidationResult(false, msg);
+        }
+
+        public boolean isSuccess() {
+            return success;
+        }
+
+        public String message() {
+            return message;
+        }
+    }
 }

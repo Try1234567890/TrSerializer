@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 public abstract class PUnwrapAddon extends PAddon {
 
     public PUnwrapAddon() {
-        super("Unwrap", Priority.HIGH, InsertMethodsRegistry.getMethod(UnwrapInsert.class));
+        super("unwrapper", Priority.HIGH, InsertMethodsRegistry.getMethod(UnwrapInsert.class));
     }
 
 
