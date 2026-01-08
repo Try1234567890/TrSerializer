@@ -3,9 +3,16 @@ package me.tr.trserializer;
 import me.tr.trserializer.annotation.DecimalColor;
 import me.tr.trserializer.annotation.HexColor;
 import me.tr.trserializer.person.Birthday;
+import me.tr.trserializer.person.Gender;
+import me.tr.trserializer.person.Generalities;
+import me.tr.trserializer.person.Person;
 import me.tr.trserializer.processes.deserializer.Deserializer;
 import me.tr.trserializer.processes.serializer.Serializer;
 import org.junit.jupiter.api.Test;
+
+import java.time.LocalDate;
+import java.time.Month;
+import java.util.List;
 
 public class AnnotationTest {
 
@@ -13,6 +20,25 @@ public class AnnotationTest {
         testAsNumber();
         testAsString();
         testGetter();
+    }
+
+    @Test
+    public void testSetter() {
+        System.out.println("\n===----------=== SETTER ANNOTATION TEST ===----------===");
+
+        Person person = new Person(
+                null,
+                new Birthday(LocalDate.of(2023, Month.SEPTEMBER, 26)),
+                Gender.MALE,
+                new String[0],
+                List.of()
+        );
+
+        Object s = new Serializer().serialize(person);
+        System.out.println(s);
+
+        Person d = new Deserializer().deserialize(s, Person.class);
+        System.out.println(d);
     }
 
     @Test

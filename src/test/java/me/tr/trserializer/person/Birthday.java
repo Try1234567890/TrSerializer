@@ -12,7 +12,6 @@ import java.time.LocalDate;
 @Naming(strategy = NamingStrategy.PASCAL_CASE)
 public class Birthday {
     @Unwrap
-    @Getter()
     @Format(format = "dd.MM.yyyy")
     private LocalDate date;
     private int age;

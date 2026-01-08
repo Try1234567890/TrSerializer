@@ -12,6 +12,7 @@ import java.util.*;
 
 @Naming(strategy = NamingStrategy.PASCAL_CASE)
 public class Person {
+    @Setter
     private Generalities generalities;
     private Gender gender;
     @Unwrapped
@@ -39,9 +40,8 @@ public class Person {
         this.friends = friends;
     }
 
-    @Initialize(paramNames = {"generalities", "birthday", "gender"})
-    public Person(Generalities generalities, Birthday birthday, Gender gender) {
-        this.generalities = generalities;
+    @Initialize(paramNames = {"birthday", "gender"})
+    public Person(Birthday birthday, Gender gender) {
         this.birthday = birthday;
         this.gender = gender;
     }
@@ -50,7 +50,12 @@ public class Person {
         return generalities;
     }
 
+
     public Person setGeneralities(Generalities generalities) {
+        if (generalities == null) {
+            this.generalities = new Generalities("Paolo", "Guccione");
+            return this;
+        }
         this.generalities = generalities;
         return this;
     }

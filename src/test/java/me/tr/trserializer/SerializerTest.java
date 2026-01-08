@@ -1,6 +1,5 @@
 package me.tr.trserializer;
 
-import me.tr.trserializer.logger.TrLogger;
 import me.tr.trserializer.person.*;
 import me.tr.trserializer.processes.deserializer.Deserializer;
 import me.tr.trserializer.processes.serializer.Serializer;
