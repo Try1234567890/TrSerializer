@@ -14,7 +14,6 @@ import java.util.*;
 public class SerializerTest {
 
     public static void main(String[] args) {
-        TrLogger.getInstance().setDebug(false);
         new SerializerTest().runAll();
     }
 
@@ -99,7 +98,6 @@ public class SerializerTest {
 
     @Test
     public void testBasics() {
-        TrLogger.getInstance().setDebug(false);
         System.out.println("\n===----------=== BASICS ===----------===");
 
         Person person = new Person(

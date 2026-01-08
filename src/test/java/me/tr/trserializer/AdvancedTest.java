@@ -4,6 +4,8 @@ import me.tr.trserializer.logger.TrLogger;
 import me.tr.trserializer.nodes.Node;
 import me.tr.trserializer.person.*;
 import me.tr.trserializer.processes.deserializer.Deserializer;
+import me.tr.trserializer.processes.deserializer.IDeserializer;
+import me.tr.trserializer.processes.serializer.ISerializer;
 import me.tr.trserializer.processes.serializer.Serializer;
 import me.tr.trserializer.types.GenericType;
 import org.junit.jupiter.api.Test;
@@ -76,13 +78,8 @@ public class AdvancedTest {
 
     @Test
     public void testDeepNesting() {
-        TrLogger.getInstance().setDebug(true);
         System.out.println("\n===----------=== DEEP NESTING TEST ===----------===");
-        /*
-         * Max depth is 2842 with default stack size.
-         * !IMPORTANT! At max depth (2842) no all the time ends with no StackOverflow.
-         */
-        int depth = 10;
+        int depth = 10_000_000;
         Node head = new Node(null);
         Node current = head;
 
@@ -93,10 +90,16 @@ public class AdvancedTest {
         }
 
         try {
-            Object s = new Serializer().serialize(head);
-            System.out.println("Passed deep nesting of " + depth + " levels.");
+            Object s = new ISerializer().serialize(head);
+            System.out.println("Serializer passed deep nesting of " + depth + " levels.");
+            try {
+                Node d = new IDeserializer().deserialize(s, Node.class);
+                System.out.println("Deserializer passed deep nesting of " + depth + " levels.");
+            } catch (StackOverflowError e) {
+                System.out.println("Deserializer failed Stack Overflow at depth " + depth);
+            }
         } catch (StackOverflowError e) {
-            System.out.println("Failed: Stack Overflow at depth " + depth);
+            System.out.println("Serializer failed Stack Overflow at depth " + depth);
         }
     }
 }
