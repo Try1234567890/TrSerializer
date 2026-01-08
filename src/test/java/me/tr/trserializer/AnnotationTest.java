@@ -2,6 +2,7 @@ package me.tr.trserializer;
 
 import me.tr.trserializer.annotation.DecimalColor;
 import me.tr.trserializer.annotation.HexColor;
+import me.tr.trserializer.person.Birthday;
 import me.tr.trserializer.processes.deserializer.Deserializer;
 import me.tr.trserializer.processes.serializer.Serializer;
 import org.junit.jupiter.api.Test;
@@ -11,6 +12,18 @@ public class AnnotationTest {
     public void runAll() {
         testAsNumber();
         testAsString();
+        testGetter();
+    }
+
+    @Test
+    public void testGetter() {
+        System.out.println("\n===----------=== GETTER ANNOTATION TEST ===----------===");
+
+        Birthday birthday = new Birthday(null);
+
+        Object date = new Serializer().serialize(birthday);
+
+        System.out.println(date);
     }
 
     @Test

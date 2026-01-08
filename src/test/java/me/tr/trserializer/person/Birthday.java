@@ -1,6 +1,7 @@
 package me.tr.trserializer.person;
 
 import me.tr.trserializer.annotations.Format;
+import me.tr.trserializer.annotations.Getter;
 import me.tr.trserializer.annotations.Initialize;
 import me.tr.trserializer.annotations.unwrap.Unwrap;
 import me.tr.trserializer.annotations.naming.Naming;
@@ -11,6 +12,7 @@ import java.time.LocalDate;
 @Naming(strategy = NamingStrategy.PASCAL_CASE)
 public class Birthday {
     @Unwrap
+    @Getter()
     @Format(format = "dd.MM.yyyy")
     private LocalDate date;
     private int age;
@@ -18,10 +20,12 @@ public class Birthday {
     @Initialize(paramNames = {"date"})
     public Birthday(LocalDate date) {
         this.date = date;
-        this.age = LocalDate.now().getYear() - date.getYear();
+        this.age = LocalDate.now().getYear() - (date == null ? 0 : date.getYear());
     }
 
     public LocalDate getDate() {
+        if (date == null)
+            return date = LocalDate.now();
         return date;
     }
 
