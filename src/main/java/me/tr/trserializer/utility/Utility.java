@@ -76,6 +76,13 @@ public class Utility {
         return clazz;
     }
 
+    public static String getClassName(Class<?> clazz) {
+        if (clazz == null) return "null";
+        if (clazz.isArray())
+            return "Array of " + clazz.getComponentType().getName();
+        return clazz.getName();
+    }
+
 
     public static boolean isAMapWithStringKeys(Object obj) {
         if (!(obj instanceof Map<?, ?> unsafeSubMap)) {
