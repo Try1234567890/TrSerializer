@@ -175,6 +175,10 @@ public abstract class Process {
             return (T) result;
         }
 
+        if (String.class.isAssignableFrom(resultClass)) {
+            return (T) String.valueOf(result);
+        }
+
         if (Optional.class.isAssignableFrom(resultClass)) {
             return (T) Optional.of(result);
         }
