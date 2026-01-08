@@ -99,6 +99,7 @@ public class SerializerTest {
 
     @Test
     public void testBasics() {
+        TrLogger.getInstance().setDebug(false);
         System.out.println("\n===----------=== BASICS ===----------===");
 
         Person person = new Person(

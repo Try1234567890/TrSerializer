@@ -1,5 +1,6 @@
 package me.tr.trserializer;
 
+import me.tr.trserializer.logger.TrLogger;
 import me.tr.trserializer.nodes.Node;
 import me.tr.trserializer.person.*;
 import me.tr.trserializer.processes.deserializer.Deserializer;
@@ -10,7 +11,6 @@ import org.junit.jupiter.api.Test;
 import java.time.LocalDate;
 import java.time.Month;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -74,19 +74,20 @@ public class AdvancedTest {
         System.out.println("Correct class: " + (d instanceof Pet));
     }
 
-    //    @Test
+    @Test
     public void testDeepNesting() {
+        TrLogger.getInstance().setDebug(true);
         System.out.println("\n===----------=== DEEP NESTING TEST ===----------===");
         /*
          * Max depth is 2842 with default stack size.
          * !IMPORTANT! At max depth (2842) no all the time ends with no StackOverflow.
          */
-        int depth = 5000;
-        Node head = new Node("Node 0");
+        int depth = 10;
+        Node head = new Node(null);
         Node current = head;
 
         for (int i = 1; i < depth; i++) {
-            Node next = new Node("Node " + i);
+            Node next = new Node(null);
             current.setNext(next);
             current = next;
         }
