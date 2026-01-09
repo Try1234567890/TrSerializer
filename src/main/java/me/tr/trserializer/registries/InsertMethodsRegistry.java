@@ -1,9 +1,9 @@
 package me.tr.trserializer.registries;
 
-import me.tr.trserializer.processes.process.insert.BaseInsert;
-import me.tr.trserializer.processes.process.insert.InsertMethod;
-import me.tr.trserializer.processes.process.insert.UnwrapInsert;
-import me.tr.trserializer.processes.process.insert.WrapInsert;
+import me.tr.trserializer.processes.serializer.helper.insert.BaseInsert;
+import me.tr.trserializer.processes.serializer.helper.insert.InsertMethod;
+import me.tr.trserializer.processes.serializer.helper.insert.UnwrapInsert;
+import me.tr.trserializer.processes.serializer.helper.insert.WrapInsert;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

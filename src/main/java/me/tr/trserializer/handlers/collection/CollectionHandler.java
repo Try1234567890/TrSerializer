@@ -19,6 +19,9 @@ public class CollectionHandler implements TypeHandler {
 
     @Override
     public Object deserialize(Object obj, GenericType<?> type) {
+        if (obj == null)
+            return null;
+
         Collection<?> source;
         if (obj instanceof Collection) {
             source = (Collection<?>) obj;
@@ -44,6 +47,9 @@ public class CollectionHandler implements TypeHandler {
 
     @Override
     public Object serialize(Object obj, GenericType<?> type) {
+        if (obj == null)
+            return null;
+
         List<Object> result = new ArrayList<>();
         if (obj instanceof Collection<?> coll) {
 
@@ -51,7 +57,7 @@ public class CollectionHandler implements TypeHandler {
                 Object serializedItem = getSerializer().serialize(item, type.getFirstArgumentType());
                 result.add(serializedItem);
             }
-            
+
         }
 
         return result;

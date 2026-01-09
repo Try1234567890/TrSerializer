@@ -29,6 +29,9 @@ public class UnwrappedHandler implements TypeHandler {
     @SuppressWarnings("unchecked")
     @Override
     public Object deserialize(Object obj, GenericType<?> type) {
+        if (obj == null)
+            return null;
+
         if (!Utility.isAMapWithStringKeys(obj)) {
             getProcess().getLogger().throwable(new TypeMissMatched("The provided object is not a map"));
             return instance;

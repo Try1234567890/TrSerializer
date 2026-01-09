@@ -4,6 +4,7 @@ import me.tr.trserializer.processes.deserializer.addons.DDateAnnAddon;
 import me.tr.trserializer.processes.deserializer.addons.DHandlerAddon;
 import me.tr.trserializer.processes.deserializer.addons.DUnwrapAddon;
 import me.tr.trserializer.processes.deserializer.addons.DWrapAddon;
+import me.tr.trserializer.processes.deserializer.helper.DAddonsManager;
 import me.tr.trserializer.processes.deserializer.helper.DValueRetriever;
 import me.tr.trserializer.processes.deserializer.helper.DValueSetter;
 import me.tr.trserializer.processes.process.ProcessContext;
@@ -15,7 +16,11 @@ public class DeserializerContext extends ProcessContext {
     private final DValueSetter valueSetter;
 
     public DeserializerContext(Deserializer deserializer) {
-        super(deserializer, new DeserializerCache(deserializer), new DeserializerOptions(deserializer));
+        super(deserializer,
+                new DeserializerCache(deserializer),
+                new DeserializerOptions(deserializer),
+                new DAddonsManager(deserializer)
+        );
         this.valueRetriever = new DValueRetriever(deserializer);
         this.valueSetter = new DValueSetter(deserializer);
         getAddons().addAll(List.of(new DUnwrapAddon(), new DWrapAddon(), new DDateAnnAddon(), new DHandlerAddon()));
@@ -36,6 +41,11 @@ public class DeserializerContext extends ProcessContext {
         return (DeserializerOptions) super.getOptions();
     }
 
+    @Override
+    public DAddonsManager getAddonsManager() {
+        return (DAddonsManager) super.getAddonsManager();
+    }
+
     public DValueRetriever getValueRetriever() {
         return valueRetriever;
     }
@@ -43,4 +53,5 @@ public class DeserializerContext extends ProcessContext {
     public DValueSetter getValueSetter() {
         return valueSetter;
     }
+
 }

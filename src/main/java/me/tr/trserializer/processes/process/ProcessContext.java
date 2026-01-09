@@ -3,6 +3,7 @@ package me.tr.trserializer.processes.process;
 import me.tr.trserializer.instancers.ProcessInstancer;
 import me.tr.trserializer.logger.ProcessLogger;
 import me.tr.trserializer.processes.process.addons.PAddon;
+import me.tr.trserializer.processes.process.helper.AddonsManager;
 import me.tr.trserializer.processes.process.helper.MethodsExecutor;
 import me.tr.trserializer.processes.process.helper.NamingStrategyApplier;
 import me.tr.trserializer.processes.process.helper.ProcessValidator;
@@ -17,10 +18,11 @@ public class ProcessContext {
     private final NamingStrategyApplier namingStrategyApplier;
     private final ProcessValidator processValidator;
     private final MethodsExecutor methodsExecutor;
+    private final AddonsManager addonsManager;
     private final PriorityQueue<PAddon> addons;
 
 
-    public ProcessContext(Process process, ProcessCache cache, ProcessOptions options) {
+    public ProcessContext(Process process, ProcessCache cache, ProcessOptions options, AddonsManager addonsManager) {
         this.process = process;
         this.options = options;
         this.cache = cache;
@@ -28,6 +30,7 @@ public class ProcessContext {
         this.namingStrategyApplier = new NamingStrategyApplier(process);
         this.processValidator = new ProcessValidator(process);
         this.methodsExecutor = new MethodsExecutor(process);
+        this.addonsManager = addonsManager;
         this.addons = new PriorityQueue<>(Comparator.comparingInt(PAddon::getPriorityCode));
     }
 
@@ -61,6 +64,10 @@ public class ProcessContext {
 
     public MethodsExecutor getMethodsExecutor() {
         return methodsExecutor;
+    }
+
+    public AddonsManager getAddonsManager() {
+        return addonsManager;
     }
 
     public PriorityQueue<PAddon> getAddons() {

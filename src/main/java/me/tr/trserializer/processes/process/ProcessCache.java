@@ -39,7 +39,8 @@ public class ProcessCache {
     private boolean isCacheable(Object obj) {
         return obj != null &&
                 !obj.getClass().isPrimitive() &&
-                !(obj instanceof String);
+                !(obj instanceof String) &&
+                !obj.getClass().isEnum();
     }
 
     public Process getProcess() {

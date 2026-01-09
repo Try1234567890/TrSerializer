@@ -4,6 +4,7 @@ import me.tr.trserializer.annotations.unwrap.Unwrapped;
 import me.tr.trserializer.annotations.wrap.Wrapped;
 import me.tr.trserializer.exceptions.TypeMissMatched;
 import me.tr.trserializer.logger.ProcessLogger;
+import me.tr.trserializer.processes.deserializer.helper.DAddonsManager;
 import me.tr.trserializer.processes.deserializer.helper.DValueRetriever;
 import me.tr.trserializer.processes.deserializer.helper.DValueSetter;
 import me.tr.trserializer.processes.process.Process;
@@ -22,27 +23,49 @@ public class Deserializer extends Process {
         setContext(new DeserializerContext(this));
     }
 
+    /**
+     * @return The cache for this deserializer.
+     */
     @Override
     public DeserializerCache getCache() {
         return (DeserializerCache) super.getCache();
     }
 
+    /**
+     * @return The context for this deserializer.
+     */
     @Override
     public DeserializerContext getContext() {
         return (DeserializerContext) super.getContext();
     }
 
+    /**
+     * @return The options for this deserializer.
+     */
     @Override
     public DeserializerOptions getOptions() {
         return (DeserializerOptions) super.getOptions();
     }
 
+    /**
+     * @return The value retriever for this deserializer.
+     */
     public DValueRetriever getValueRetriever() {
         return getContext().getValueRetriever();
     }
 
+    /**
+     * @return The value setter for this deserializer.
+     */
     public DValueSetter getValueSetter() {
         return getContext().getValueSetter();
+    }
+
+    /**
+     * @return The addons manager for this deserializer.
+     */
+    public DAddonsManager getAddonsManager() {
+        return getContext().getAddonsManager();
     }
 
 
@@ -74,13 +97,13 @@ public class Deserializer extends Process {
         }
 
 
-        Optional<Map.Entry<PAddon, ?>> addons = processAddons(obj, type, null);
+        Optional<Object> addons = getAddonsManager().getValidAddon(obj, type);
 
 
         // Already made returns in processAddon()
         // if one of available addons is valid.
         if (addons.isPresent()) {
-            return Optional.of((T) addons.get().getValue());
+            return Optional.of((T) addons.get());
         }
 
         getMethodsExecutor().executeEndMethods(obj);
@@ -111,7 +134,7 @@ public class Deserializer extends Process {
         if (simpleResult.isEmpty()) {
             if (!Utility.isAMapWithStringKeys(obj)) {
                 ProcessLogger.dbg("The provided object is not a map. Cannot set fields values for " + type + ", an empty instance will be used.");
-                return makeReturn(obj, instance(type.getTypeClass()), type);
+                return validate(obj, instance(type.getTypeClass()), type);
             }
 
             Map<String, Object> checkedMap = (Map<String, Object>) obj;
@@ -120,7 +143,7 @@ public class Deserializer extends Process {
             cache(obj, instance);
 
 
-            return makeReturn(obj, deserializeFromMap(instance, checkedMap, tasks), type);
+            return validate(obj, deserializeFromMap(instance, checkedMap, tasks), type);
         }
 
         return simpleResult.get();
@@ -154,7 +177,6 @@ public class Deserializer extends Process {
                                Deque<ProcessTaskContainer> tasks) {
         field.setAccessible(true);
 
-
         try {
             String fieldName = field.getName();
             Object fieldValue = field.get(obj);
@@ -172,18 +194,10 @@ public class Deserializer extends Process {
             Object valueFromMap = getValueRetriever().getMapValue(field, values);
 
 
-            Optional<Map.Entry<PAddon, ?>> addons = Optional.empty();
-            if (valueFromMap == null &&
-                    (field.isAnnotationPresent(Unwrapped.class) ||
-                            field.isAnnotationPresent(Wrapped.class))) {
-                addons = processAddons(values, type, field);
-
-            } else if (valueFromMap != null) {
-                addons = processAddons(valueFromMap, type, field);
-            }
+            Optional<Object> addons = getAddonsManager().getValidAddon(valueFromMap, values, type, field);
 
             if (addons.isPresent()) {
-                Object addResult = addons.get().getValue();
+                Object addResult = addons.get();
                 getValueSetter().setField(field, obj, addResult);
                 return;
             }

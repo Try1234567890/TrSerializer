@@ -10,16 +10,17 @@ import java.util.Objects;
 
 @Naming(strategy = NamingStrategy.PASCAL_CASE)
 public class Pet {
-    @Wrapped(key = "Others")
     private Generalities generalities;
     private Gender gender;
-    @Unwrapped
     private Birthday birthday;
     private String type;
 
-    @Initialize
-    private Pet() {
+    private static Pet newInstance(Generalities generalities) {
+        return new Pet(generalities);
+    }
 
+    public Pet(Generalities generalities) {
+        this.generalities = generalities;
     }
 
     public Pet(Generalities generalities, Gender gender, Birthday birthday, String type) {

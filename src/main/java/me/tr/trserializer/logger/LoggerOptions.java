@@ -6,7 +6,7 @@ import me.tr.trserializer.processes.options.Options;
 public class LoggerOptions {
     private final Logger logger;
     // If this is false, the exception will be shortened in a single line.
-    private final Option<Boolean> expandedExceptions = new Option<>(Options.EXPAND_EXCEPTION, false);
+    private final Option<Boolean> expandedExceptions = new Option<>(Options.EXPAND_EXCEPTION, true);
 
     public LoggerOptions(Logger logger) {
         this.logger = logger;

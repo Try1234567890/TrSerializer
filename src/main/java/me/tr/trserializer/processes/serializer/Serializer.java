@@ -2,9 +2,9 @@ package me.tr.trserializer.processes.serializer;
 
 import me.tr.trserializer.exceptions.TypeMissMatched;
 import me.tr.trserializer.processes.process.Process;
-import me.tr.trserializer.processes.process.ProcessOptions;
 import me.tr.trserializer.processes.process.ProcessTaskContainer;
-import me.tr.trserializer.processes.process.addons.PAddon;
+import me.tr.trserializer.processes.serializer.addons.SAddon;
+import me.tr.trserializer.processes.serializer.helper.SAddonsManager;
 import me.tr.trserializer.processes.serializer.helper.SValueRetriever;
 import me.tr.trserializer.types.GenericType;
 import me.tr.trserializer.types.SerializerGenericType;
@@ -34,6 +34,10 @@ public class Serializer extends Process {
 
     public SValueRetriever getValueRetriever() {
         return getContext().getValueRetriever();
+    }
+
+    public SAddonsManager getAddonsManager() {
+        return getContext().getAddonsManager();
     }
 
 
@@ -82,7 +86,7 @@ public class Serializer extends Process {
             return Optional.of((T) getCache().get(obj));
         }
 
-        Optional<Map.Entry<PAddon, ?>> addons = processAddons(obj, type, null);
+        Optional<Map.Entry<SAddon, ?>> addons = getAddonsManager().getValidAddon(obj, type);
 
         // Already made returns in processAddon()
         // if one of available addons is valid.
@@ -101,18 +105,14 @@ public class Serializer extends Process {
             return null;
 
 
-        T result;
-
         Optional<T> simpleResult = serializeAsSimple(obj, type);
 
         if (simpleResult.isPresent()) {
-            result = makeReturn(obj, simpleResult.get(), type);
+            return validate(obj, simpleResult.get(), type);
         } else {
-            result = makeReturn(obj, serializeAsMap(obj, new HashMap<>(), tasks), type);
+            return validate(obj, serializeAsMap(obj, new HashMap<>(), tasks), type);
         }
 
-
-        return result;
     }
 
     protected Map<String, Object> serializeAsMap(Object obj, Map<String, Object> result, Deque<ProcessTaskContainer> tasks) {
@@ -152,14 +152,14 @@ public class Serializer extends Process {
 
             GenericType<?> type = new SerializerGenericType<>(field);
 
+            Optional<Map.Entry<SAddon, ?>> addons = getAddonsManager().getValidAddon(value, type, field);
 
-            Optional<Map.Entry<PAddon, ?>> addons = processAddons(value, type, field);
             if (addons.isPresent()) {
-
-                Map.Entry<PAddon, ?> entry = addons.get();
+                Map.Entry<SAddon, ?> entry = addons.get();
                 Object addonResult = entry.getValue();
 
                 cache(value, addonResult);
+
                 entry.getKey()
                         .getInsert()
                         .insert(fieldName, addonResult, result);

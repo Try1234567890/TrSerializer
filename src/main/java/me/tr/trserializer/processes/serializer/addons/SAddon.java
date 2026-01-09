@@ -1,7 +1,7 @@
 package me.tr.trserializer.processes.serializer.addons;
 
 import me.tr.trserializer.processes.process.Process;
-import me.tr.trserializer.processes.process.insert.InsertMethod;
+import me.tr.trserializer.processes.serializer.helper.insert.InsertMethod;
 import me.tr.trserializer.processes.process.addons.PAddon;
 import me.tr.trserializer.processes.process.addons.Priority;
 import me.tr.trserializer.processes.serializer.Serializer;
@@ -11,21 +11,23 @@ import java.lang.reflect.Field;
 import java.util.Optional;
 
 public abstract class SAddon extends PAddon {
+    private final InsertMethod insert;
 
     public SAddon(String name, Priority priority, InsertMethod insert) {
-        super(name, priority, insert);
-    }
-
-    public SAddon(String name, InsertMethod insert) {
-        super(name, insert);
+        super(name, priority);
+        this.insert = insert;
     }
 
     public SAddon(String name, Priority priority) {
-        super(name, priority);
+        this(name, priority, InsertMethod.BASE);
     }
 
     public SAddon(String name) {
-        super(name);
+        this(name, Priority.NORMAL, InsertMethod.BASE);
+    }
+
+    public InsertMethod getInsert() {
+        return insert;
     }
 
     public abstract Optional<Object> process(Serializer process, Object obj, GenericType<?> type, Field field) throws Exception;

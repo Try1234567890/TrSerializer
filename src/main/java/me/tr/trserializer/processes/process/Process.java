@@ -5,7 +5,7 @@ import me.tr.trserializer.exceptions.TypeMissMatched;
 import me.tr.trserializer.handlers.TypeHandler;
 import me.tr.trserializer.instancers.ProcessInstancer;
 import me.tr.trserializer.logger.ProcessLogger;
-import me.tr.trserializer.processes.process.addons.PAddon;
+import me.tr.trserializer.processes.process.helper.AddonsManager;
 import me.tr.trserializer.processes.process.helper.MethodsExecutor;
 import me.tr.trserializer.processes.process.helper.NamingStrategyApplier;
 import me.tr.trserializer.processes.process.helper.ProcessValidator;
@@ -14,8 +14,6 @@ import me.tr.trserializer.types.GenericType;
 import me.tr.trserializer.utility.Utility;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.*;
 
 /**
@@ -109,37 +107,6 @@ public abstract class Process {
      */
 
     /**
-     * Executes all registered addons for this process sequentially.
-     *
-     * @param obj   the object to be processed by addons.
-     * @param type  the generic type metadata of the object.
-     * @param field the field associated with the object, or {@code null} if not applicable.
-     * @return an {@link Optional} containing the first addon that returns a non-empty result,
-     * paired with its processed output.
-     */
-    protected Optional<Map.Entry<PAddon, ?>> processAddons(Object obj, GenericType<?> type, Field field) {
-        for (PAddon addon : getContext().getAddons()) {
-            String addonName = addon.getName();
-            try {
-                getLogger().debug("Executing \"" + addonName + "\"");
-
-                Optional<?> result = addon.process(this, obj, type, field);
-
-                if (result.isEmpty()) {
-                    getLogger().debug("Process \"" + addonName + "\" returned empty");
-                    continue;
-                }
-
-                return Optional.of(Map.entry(addon, makeReturn(obj, result.get(), type)));
-            } catch (Exception e) {
-                getLogger().throwable(new RuntimeException("The addon \"" + addonName + "\" thrown an exception.", e));
-            }
-        }
-
-        return Optional.empty();
-    }
-
-    /**
      * Validates if the array of parameters required to build a process result is consistent.
      *
      * @param obj the array of parameters to check.
@@ -174,7 +141,7 @@ public abstract class Process {
      * @return the casted result if valid, or {@code null} if validation fails.
      */
     @SuppressWarnings("unchecked")
-    protected <T> T makeReturn(Object object, Object result, GenericType<T> type) {
+    public <T> T validate(Object object, Object result, GenericType<T> type) {
         if (!getProcessValidator().isValid(result).isSuccess())
             return null;
 
@@ -198,10 +165,6 @@ public abstract class Process {
 
         if (Collection.class.isAssignableFrom(resultClass)) {
             return (T) new ArrayList<>(List.of(result));
-        }
-
-        if (Map.class.isAssignableFrom(resultClass)) {
-            return (T) new HashMap<>(Map.of("", (T) result));
         }
 
         getLogger().throwable(new TypeMissMatched("The result " + result + " is not assignable from " + expectedClass));

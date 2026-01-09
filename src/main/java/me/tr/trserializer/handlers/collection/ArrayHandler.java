@@ -1,10 +1,12 @@
 package me.tr.trserializer.handlers.collection;
 
+import me.tr.trserializer.exceptions.TypeMissMatched;
 import me.tr.trserializer.handlers.TypeHandler;
 import me.tr.trserializer.processes.process.Process;
 import me.tr.trserializer.processes.deserializer.Deserializer;
 import me.tr.trserializer.processes.serializer.Serializer;
 import me.tr.trserializer.types.GenericType;
+import me.tr.trserializer.utility.Utility;
 
 import java.lang.reflect.Array;
 
@@ -17,6 +19,11 @@ public class ArrayHandler implements TypeHandler {
 
     @Override
     public Object deserialize(Object obj, GenericType<?> type) {
+        if (obj == null || obj.getClass().isArray()) {
+            getProcess().getLogger().throwable(new TypeMissMatched("The provided object is not an array but " + (obj == null ? "null" : Utility.getClassName(obj.getClass()))));
+            return null;
+        }
+
         Class<?> component = type.getFirstArgumentType();
 
         int length = Array.getLength(obj);
@@ -36,10 +43,17 @@ public class ArrayHandler implements TypeHandler {
 
     @Override
     public Object serialize(Object obj, GenericType<?> type) {
+        if (obj == null || obj.getClass().isArray()) {
+            getProcess().getLogger().throwable(new TypeMissMatched("The provided object is not an array but " + (obj == null ? "null" : Utility.getClassName(obj.getClass()))));
+            return null;
+        }
+
         int length = Array.getLength(obj);
 
-        if (length == 0)
+        if (length == 0) {
+            getProcess().getLogger().debug("The provided array is empty.");
             return obj;
+        }
 
 
         boolean checked = false;
@@ -52,7 +66,7 @@ public class ArrayHandler implements TypeHandler {
 
             Object value = rawValue != null ?
                     getSerializer().serialize(rawValue, rawValue.getClass()) : null;
-            
+
             if (!checked) {
                 component = value == null ? Object.class : value.getClass();
                 result = Array.newInstance(component, length);

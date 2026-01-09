@@ -1,4 +1,4 @@
-package me.tr.trserializer.processes.process.insert;
+package me.tr.trserializer.processes.serializer.helper.insert;
 
 import java.util.Map;
 

@@ -4,7 +4,9 @@ import me.tr.trserializer.annotations.unwrap.Unwrapped;
 import me.tr.trserializer.handlers.annotation.UnwrappedHandler;
 import me.tr.trserializer.processes.deserializer.Deserializer;
 import me.tr.trserializer.processes.process.Process;
-import me.tr.trserializer.processes.process.addons.PUnwrapAddon;
+import me.tr.trserializer.processes.process.addons.PAddon;
+import me.tr.trserializer.processes.process.addons.PAddonsUtility;
+import me.tr.trserializer.processes.process.addons.Priority;
 import me.tr.trserializer.types.GenericType;
 import me.tr.trserializer.utility.Utility;
 
@@ -12,7 +14,11 @@ import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.Optional;
 
-public class DUnwrapAddon extends PUnwrapAddon {
+public class DUnwrapAddon extends DAddon {
+
+    public DUnwrapAddon() {
+        super("unwrap", Priority.HIGH);
+    }
 
     public Optional<Object> process(Deserializer deserializer, Object obj, GenericType<?> type, Field field)
             throws Exception {
@@ -31,7 +37,7 @@ public class DUnwrapAddon extends PUnwrapAddon {
 
             Object instance = deserializer.instance(type.getTypeClass(), values);
 
-            return Optional.ofNullable(new UnwrappedHandler(deserializer, getFields(deserializer, unwrapped, instance), instance)
+            return Optional.ofNullable(new UnwrappedHandler(deserializer, PAddonsUtility.getFields(deserializer, unwrapped, instance), instance)
                     .deserialize(values, type));
         }
 

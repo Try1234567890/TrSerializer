@@ -3,15 +3,20 @@ package me.tr.trserializer.processes.serializer.addons;
 import me.tr.trserializer.annotations.wrap.Wrapped;
 import me.tr.trserializer.handlers.annotation.WrappedHandler;
 import me.tr.trserializer.processes.process.Process;
-import me.tr.trserializer.processes.process.addons.PWrapAddon;
+import me.tr.trserializer.processes.process.addons.Priority;
 import me.tr.trserializer.processes.serializer.Serializer;
+import me.tr.trserializer.processes.serializer.helper.insert.InsertMethod;
 import me.tr.trserializer.types.GenericType;
 
 import java.lang.reflect.Field;
 import java.util.HashSet;
 import java.util.Optional;
 
-public class SWrapAddon extends PWrapAddon {
+public class SWrapAddon extends SAddon {
+
+    public SWrapAddon() {
+        super("unwrapper", Priority.HIGH, InsertMethod.WRAP);
+    }
 
     public Optional<Object> process(Serializer serializer, Object obj, GenericType<?> type, Field field)
             throws Exception {

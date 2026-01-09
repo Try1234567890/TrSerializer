@@ -1,10 +1,12 @@
 package me.tr.trserializer.processes.serializer;
 
 import me.tr.trserializer.processes.process.ProcessContext;
+import me.tr.trserializer.processes.process.helper.AddonsManager;
 import me.tr.trserializer.processes.serializer.addons.SDateAnnAddon;
 import me.tr.trserializer.processes.serializer.addons.SHandlerAddon;
 import me.tr.trserializer.processes.serializer.addons.SUnwrapAddon;
 import me.tr.trserializer.processes.serializer.addons.SWrapAddon;
+import me.tr.trserializer.processes.serializer.helper.SAddonsManager;
 import me.tr.trserializer.processes.serializer.helper.SValueRetriever;
 
 import java.util.List;
@@ -13,7 +15,11 @@ public class SerializerContext extends ProcessContext {
     private final SValueRetriever valueRetriever;
 
     public SerializerContext(Serializer serializer) {
-        super(serializer, new SerializerCache(serializer), new SerializerOptions(serializer));
+        super(serializer,
+                new SerializerCache(serializer),
+                new SerializerOptions(serializer),
+                new SAddonsManager(serializer)
+        );
         this.valueRetriever = new SValueRetriever(serializer);
         getAddons().addAll(List.of(new SUnwrapAddon(), new SWrapAddon(), new SDateAnnAddon(), new SHandlerAddon()));
     }
@@ -33,7 +39,13 @@ public class SerializerContext extends ProcessContext {
         return (SerializerOptions) super.getOptions();
     }
 
+    @Override
+    public SAddonsManager getAddonsManager() {
+        return (SAddonsManager) super.getAddonsManager();
+    }
+
     public SValueRetriever getValueRetriever() {
         return valueRetriever;
     }
+
 }

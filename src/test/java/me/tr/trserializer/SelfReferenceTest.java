@@ -30,10 +30,10 @@ public class SelfReferenceTest {
             Node D = new Node("D");
             Node E = new Node("E");
 
-            A.setNext(E);
-            //B.setNext(C);
-            //C.setNext(D);
-            //D.setNext(E);
+            A.setNext(B);
+            B.setNext(C);
+            C.setNext(D);
+            D.setNext(E);
             E.setNext(A);
 
             Map<String, Object> nodes =

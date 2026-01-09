@@ -2,10 +2,10 @@ package me.tr.trserializer.processes.deserializer.addons;
 
 import me.tr.trserializer.annotations.wrap.Wrapped;
 import me.tr.trserializer.handlers.annotation.WrappedHandler;
-import me.tr.trserializer.logger.ProcessLogger;
 import me.tr.trserializer.processes.deserializer.Deserializer;
 import me.tr.trserializer.processes.process.Process;
-import me.tr.trserializer.processes.process.addons.PWrapAddon;
+import me.tr.trserializer.processes.process.addons.PAddon;
+import me.tr.trserializer.processes.process.addons.Priority;
 import me.tr.trserializer.types.GenericType;
 import me.tr.trserializer.utility.Utility;
 
@@ -13,7 +13,11 @@ import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.Optional;
 
-public class DWrapAddon extends PWrapAddon {
+public class DWrapAddon extends DAddon {
+
+    public DWrapAddon() {
+        super("wrap", Priority.HIGH);
+    }
 
     public Optional<Object> process(Deserializer deserializer, Object obj, GenericType<?> type, Field field)
             throws Exception {
