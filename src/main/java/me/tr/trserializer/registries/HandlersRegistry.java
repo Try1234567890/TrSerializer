@@ -14,11 +14,14 @@ import me.tr.trserializer.handlers.dates.DateHandler;
 import me.tr.trserializer.handlers.dates.LocalDateHandler;
 import me.tr.trserializer.handlers.dates.LocalDateTimeHandler;
 import me.tr.trserializer.handlers.dates.SQLDateHandler;
+import me.tr.trserializer.handlers.file.FileHandler;
+import me.tr.trserializer.handlers.file.PathHandler;
 import me.tr.trserializer.handlers.java.*;
-import me.tr.trserializer.logger.Logger;
 import me.tr.trserializer.processes.process.Process;
 import me.tr.trserializer.utility.Utility;
 
+import java.io.File;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -42,6 +45,8 @@ public class HandlersRegistry extends Registry<Predicate<Class<?>>, Function<Pro
     public static final StringHandler STRING_HANDLER = new StringHandler();
     public static final BooleanHandler BOOLEAN_HANDLER = new BooleanHandler();
     public static final PrimitiveHandler PRIMITIVE_HANDLER = new PrimitiveHandler();
+    public static final FileHandler FILE_HANDLER = new FileHandler();
+    public static final PathHandler PATH_HANDLER = new PathHandler();
 
     public static HandlersRegistry getInstance() {
         if (instance == null) {
@@ -65,6 +70,8 @@ public class HandlersRegistry extends Registry<Predicate<Class<?>>, Function<Pro
                 AtomicBoolean.class.isAssignableFrom(c) ||
                 AtomicReference.class.isAssignableFrom(c)), AtomicHandler::new);
 
+        handlers.put(File.class::isAssignableFrom, (p) -> FILE_HANDLER);
+        handlers.put(Path.class::isAssignableFrom, (p) -> PATH_HANDLER);
         handlers.put(LocalDateTime.class::isAssignableFrom, (p) -> LOCAL_DATE_TIME_HANDLER);
         handlers.put(LocalDate.class::isAssignableFrom, (p) -> LOCAL_DATE_HANDLER);
         handlers.put(Date.class::isAssignableFrom, (p) -> DATE_HANDLER);
@@ -84,11 +91,9 @@ public class HandlersRegistry extends Registry<Predicate<Class<?>>, Function<Pro
     public Optional<TypeHandler> get(Class<?> clazz, Process process) {
         for (Map.Entry<Predicate<Class<?>>, Function<Process, TypeHandler>> entry : getRegistry().entrySet()) {
             if (clazz != null && entry.getKey().test(clazz)) {
-                Logger.dbg("Found the handler for " + Utility.getClassName(clazz) + '.');
                 return Optional.ofNullable(entry.getValue().apply(process));
             }
         }
-        Logger.dbg("The handler for " + Utility.getClassName(clazz) + " was not found.");
         return Optional.empty();
     }
 }

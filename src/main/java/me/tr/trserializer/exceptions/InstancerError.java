@@ -1,6 +1,6 @@
 package me.tr.trserializer.exceptions;
 
-public class InstancerError extends RuntimeException {
+public class InstancerError extends ProcessError {
 
     public InstancerError(String message) {
         super(message);

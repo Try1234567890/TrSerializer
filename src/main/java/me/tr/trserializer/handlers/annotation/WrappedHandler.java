@@ -1,5 +1,6 @@
 package me.tr.trserializer.handlers.annotation;
 
+import me.tr.trserializer.exceptions.ProcessError;
 import me.tr.trserializer.exceptions.TypeMissMatched;
 import me.tr.trserializer.handlers.TypeHandler;
 import me.tr.trserializer.processes.deserializer.Deserializer;
@@ -9,7 +10,9 @@ import me.tr.trserializer.types.GenericType;
 import me.tr.trserializer.utility.Utility;
 
 import java.lang.reflect.Field;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 public class WrappedHandler implements TypeHandler {
     private final Process process;
@@ -28,12 +31,13 @@ public class WrappedHandler implements TypeHandler {
     @SuppressWarnings("unchecked")
     @Override
     public Object deserialize(Object obj, GenericType<?> type) {
-        if (obj == null)
-            return null;
+        if (obj == null) {
+            throw new ProcessError("The provided object for wrapper annotation handler is null");
+        }
+
 
         if (!Utility.isAMapWithStringKeys(obj)) {
-            getDeserializer().getLogger().throwable(new TypeMissMatched("The provided object is not a map"));
-            return null;
+            throw new TypeMissMatched("The provided object is not a map");
         }
 
         Map<String, Object> map = (Map<String, Object>) obj;

@@ -1,5 +1,6 @@
 package me.tr.trserializer.processes.serializer.addons;
 
+import me.tr.trserializer.exceptions.ProcessError;
 import me.tr.trserializer.handlers.TypeHandler;
 import me.tr.trserializer.processes.process.addons.handler.PHandlerAddon;
 import me.tr.trserializer.processes.process.addons.handler.PHandlerMethods;
@@ -28,7 +29,7 @@ public class SHandlerAddon extends SAddon {
     }
 
     @Override
-    public Optional<Object> process(Serializer process, Object obj, GenericType<?> type, Field field) throws Exception {
+    public Optional<Object> process(Serializer process, Object obj, GenericType<?> type, Field field) throws ProcessError {
         return handlers.process(process, obj, type, field);
     }
 }

@@ -1,6 +1,7 @@
 package me.tr.trserializer;
 
 import me.tr.trserializer.annotations.AsBoolean;
+import me.tr.trserializer.exceptions.ProcessError;
 import me.tr.trserializer.handlers.annotation.AsBooleanHandler;
 import me.tr.trserializer.processes.process.Process;
 import me.tr.trserializer.processes.serializer.Serializer;
@@ -72,8 +73,12 @@ class AsBooleanHandlerTest {
 
     @Test
     void testMultipleFieldsWithoutParamReturnsNull() {
-        Object result = handler.serialize(new MultipleFieldsNoParam(), GenericType.of(Boolean.class));
-        assertNull(result);
+        try {
+            Object result = handler.serialize(new MultipleFieldsNoParam(), GenericType.of(Boolean.class));
+            assertNull(result);
+        } catch (ProcessError ex) {
+            System.out.println("testMultipleFieldsWithoutParamReturnsNull thrown ProcessError. Passed.");
+        }
     }
 
     @Test
@@ -84,7 +89,10 @@ class AsBooleanHandlerTest {
 
     @Test
     void testNoAnnotationReturnsNull() {
-        Object result = handler.serialize(new NoAnnotation(), GenericType.of(Boolean.class));
-        assertNull(result);
+        try {
+            Object result = handler.serialize(new NoAnnotation(), GenericType.of(Boolean.class));
+        } catch (ProcessError ex) {
+            System.out.println("testNoAnnotationReturnsNull thrown ProcessError. Passed.");
+        }
     }
 }

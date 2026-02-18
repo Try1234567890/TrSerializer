@@ -1,20 +1,32 @@
 package me.tr.trserializer.registries;
 
-import me.tr.trserializer.logger.Logger;
 import me.tr.trserializer.utility.Utility;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
 
-public abstract class Registry<K, V> {
+public class Registry<K, V> {
+    private final Map<K, V> registry;
+
+    public Registry(Map<K, V> registry) {
+        this.registry = registry;
+    }
+
+    public Registry() {
+        this.registry = new HashMap<>();
+    }
+
 
     /**
      * Get the {@code Map<K, V>} that contains all the values of the registry.
      *
      * @return the {@code Map<K, V>} that contains all the values of the registry.
      */
-    public abstract Map<K, V> getRegistry();
+    public Map<K, V> getRegistry() {
+        return registry;
+    }
 
     /**
      * Get the value from the {@code Map<K, V>} with the provided identifier.
@@ -46,7 +58,7 @@ public abstract class Registry<K, V> {
      */
     public void register(K id, V value) {
         if (getRegistry().containsKey(id)) {
-            Logger.exception(new NotUniqueIdentifierException("Identifier " + id + " is already used in registry " + Utility.getClassName(value.getClass())));
+            throw new NotUniqueIdentifierException("Identifier " + id + " is already used in registry " + Utility.getClassName(value.getClass()));
         }
         getRegistry().put(id, value);
     }

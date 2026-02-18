@@ -1,10 +1,12 @@
 package me.tr.trserializer.handlers.collection;
 
+import me.tr.trserializer.exceptions.ProcessError;
 import me.tr.trserializer.handlers.TypeHandler;
-import me.tr.trserializer.processes.process.Process;
 import me.tr.trserializer.processes.deserializer.Deserializer;
+import me.tr.trserializer.processes.process.Process;
 import me.tr.trserializer.processes.serializer.Serializer;
 import me.tr.trserializer.types.GenericType;
+import me.tr.trserializer.utility.Utility;
 
 import java.lang.reflect.Array;
 import java.util.*;
@@ -19,8 +21,9 @@ public class CollectionHandler implements TypeHandler {
 
     @Override
     public Object deserialize(Object obj, GenericType<?> type) {
-        if (obj == null)
-            return null;
+        if (obj == null) {
+            throw new ProcessError("The provided object for collection deserialization is null");
+        }
 
         Collection<?> source;
         if (obj instanceof Collection) {
@@ -32,7 +35,7 @@ public class CollectionHandler implements TypeHandler {
                 temp.add(Array.get(obj, i));
             source = temp;
         } else {
-            throw new IllegalArgumentException("Unsupported source for CollectionHandler: " + obj.getClass());
+            throw new ProcessError("Unsupported source for CollectionHandler: " + Utility.getClassName(obj.getClass()));
         }
 
         Collection<Object> result = createCollectionInstance(type.getTypeClass());

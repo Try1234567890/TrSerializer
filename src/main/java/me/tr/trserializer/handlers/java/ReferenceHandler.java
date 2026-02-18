@@ -32,10 +32,7 @@ public class ReferenceHandler implements TypeHandler {
             return getSerializer().serialize(ref.get());
         }
 
-        getProcess().getLogger().throwable(
-                new TypeMissMatched("The provided object " + obj + " is not convertible to an Reference"));
-
-        return null;
+        throw new TypeMissMatched("The provided object " + obj + " is not convertible to an Reference");
     }
 
     public Reference<?> createReference(Class<?> clazz, Object value) {
@@ -46,8 +43,7 @@ public class ReferenceHandler implements TypeHandler {
         } else if (SoftReference.class.isAssignableFrom(clazz)) {
             return new SoftReference<>(value);
         } else if (PhantomReference.class.isAssignableFrom(clazz)) {
-            getProcess().getLogger().throwable(
-                    new UnsupportedOperationException("PhantomReference is not supported for automatic deserialization."));
+            throw new UnsupportedOperationException("PhantomReference is not supported for automatic deserialization.");
         }
 
         return new SoftReference<>(value);

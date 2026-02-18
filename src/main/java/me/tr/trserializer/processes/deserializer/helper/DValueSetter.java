@@ -1,16 +1,16 @@
 package me.tr.trserializer.processes.deserializer.helper;
 
-import me.tr.trformatter.strings.format.formats.CamelCase;
-import me.tr.trformatter.strings.format.formats.PascalCase;
+import me.tr.trformatter.strings.CString;
 import me.tr.trserializer.annotations.Essential;
 import me.tr.trserializer.annotations.Setter;
+import me.tr.trserializer.exceptions.ProcessError;
 import me.tr.trserializer.processes.deserializer.Deserializer;
 import me.tr.trserializer.utility.Utility;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.Arrays;
 
 public class DValueSetter {
     private final Deserializer deserializer;
@@ -34,15 +34,13 @@ public class DValueSetter {
         String className = Utility.getClassName(instanceClass);
 
         if (!hasFields(instanceClass)) {
-            getDeserializer().getLogger().debug("Class " + className + " does not have fields. Stopping setting value for " + fieldName);
             return;
         }
 
         try {
             if (field.isAnnotationPresent(Essential.class)
                     && !getDeserializer().getProcessValidator().isValid(value).isSuccess()) {
-                getDeserializer().getLogger().throwable(new NullPointerException("The value for field " + fieldName + " in class " + className + " hasn't pass the validation and the field is annotated with @Essential."));
-                return;
+                throw new ProcessError("The value for field " + fieldName + " in class " + className + " hasn't pass the validation and the field is annotated with @Essential.");
             }
 
             if (setFieldWithAnnotation(field, instance, value))
@@ -50,7 +48,7 @@ public class DValueSetter {
 
             field.set(instance, value);
         } catch (IllegalAccessException | InvocationTargetException e) {
-            getDeserializer().getLogger().throwable(new RuntimeException("An error occurs while setting the value to " + fieldName + " in class " + className, e));
+            throw new ProcessError("An error occurs while setting the value to " + fieldName + " in class " + className, e);
         }
     }
 
@@ -75,7 +73,7 @@ public class DValueSetter {
 
             String[] methodNames = {
                     ann.name(),
-                    "set" + new PascalCase(fieldName).toCaseFrom(CamelCase.class).getResult(),
+                    "set" + CString.of(fieldName).toPascalCase(),
                     fieldName
             };
 
@@ -89,7 +87,7 @@ public class DValueSetter {
                 } catch (NoSuchMethodException ignored) {
                 }
             }
-            getDeserializer().getLogger().throwable(new NoSuchMethodException("No methods found in class " + className + " with names " + Arrays.toString(methodNames) + ". Setting value to the field directly..."));
+            throw new ProcessError("No methods found in class " + className + " with names " + Arrays.toString(methodNames));
         }
 
         return false;

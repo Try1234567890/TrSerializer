@@ -1,5 +1,6 @@
 package me.tr.trserializer.processes.process.addons;
 
+import me.tr.trserializer.exceptions.ProcessError;
 import me.tr.trserializer.processes.process.Process;
 import me.tr.trserializer.types.GenericType;
 
@@ -42,7 +43,7 @@ public abstract class PAddon {
      * @return The new value of the provided object, or else {@link Optional#empty()}
      * @throws Exception If any error occurs while processing the object.
      */
-    public abstract Optional<Object> process(Process process, Object obj, GenericType<?> type, Field field) throws Exception;
+    public abstract Optional<Object> process(Process process, Object obj, GenericType<?> type, Field field) throws ProcessError;
 
 
 }

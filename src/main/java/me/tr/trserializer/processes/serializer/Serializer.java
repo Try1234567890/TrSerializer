@@ -1,5 +1,6 @@
 package me.tr.trserializer.processes.serializer;
 
+import me.tr.trserializer.exceptions.ProcessError;
 import me.tr.trserializer.exceptions.TypeMissMatched;
 import me.tr.trserializer.processes.process.Process;
 import me.tr.trserializer.processes.process.ProcessTaskContainer;
@@ -46,18 +47,16 @@ public class Serializer extends Process {
     }
 
     public <T> T serialize(Object obj, T type) {
-        if (type == null) {
-            getLogger().throwable(new NullPointerException("Object or type is null!"));
-            return null;
-        }
+        if (type == null)
+            throw new NullPointerException("Object or type is null!");
+
         return (T) serialize(obj, type.getClass());
     }
 
     public <T> T serialize(Object obj, Class<T> type) {
-        if (type == null) {
-            getLogger().throwable(new NullPointerException("Object or type is null!"));
-            return null;
-        }
+        if (type == null)
+            throw new NullPointerException("Object or type is null!");
+
         return serialize(obj, new GenericType<>(type));
     }
 
@@ -81,19 +80,17 @@ public class Serializer extends Process {
 
         getMethodsExecutor().executeStartMethods(obj);
 
-        if (getCache().has(obj)) {
-            getLogger().debug("Object (" + Utility.getClassName(obj.getClass()) + ") found in cache, reusing it.");
+        if (getCache().has(obj))
             return Optional.of((T) getCache().get(obj));
-        }
+
 
         Optional<Map.Entry<SAddon, ?>> addons = getAddonsManager().getValidAddon(obj, type);
 
         // Already made returns in processAddon()
         // if one of available addons is valid.
-        if (addons.isPresent()) {
-            getLogger().debug("Addons found for " + type + ", returning the result.");
+        if (addons.isPresent())
             return Optional.of((T) addons.get().getValue());
-        }
+
 
         getMethodsExecutor().executeEndMethods(obj);
 
@@ -141,8 +138,6 @@ public class Serializer extends Process {
         field.setAccessible(true);
         String fieldName = getValueRetriever().getMapKey(field);
 
-        getLogger().debug("Serializing field " + fieldName + " of " + Utility.getClassName(clazz));
-
         try {
             Object value = getValueRetriever().getValueOf(field, instance);
 
@@ -167,30 +162,25 @@ public class Serializer extends Process {
             }
 
 
-            getLogger().debug("Addons not found for " + type + ", adding to tasks.");
             result(fieldName, value, type, result, tasks).ifPresent(SerResult::process);
         } catch (Exception e) {
-            getLogger().throwable(new RuntimeException("An error occurs while retrieving value from " + fieldName + " in class " + Utility.getClassName(clazz), e));
+            throw new ProcessError("An error occurs while retrieving value from " + fieldName + " in class " + Utility.getClassName(clazz), e);
         }
     }
 
     protected Optional<? extends RSerResult> result(Object... obj) {
         if (isParamsOfResultInvalid(obj)) {
-            getLogger().throwable(new TypeMissMatched("Params for result building are not valid."));
-            return Optional.empty();
+            throw new TypeMissMatched("Params for result building are not valid.");
         }
         if (!(obj[0] instanceof String str)) {
-            getLogger().throwable(new TypeMissMatched("The param at index 0 is not the map value key."));
-            return Optional.empty();
+            throw new TypeMissMatched("The param at index 0 is not the map value key.");
         }
         if (!(obj[2] instanceof GenericType<?> type)) {
-            getLogger().throwable(new TypeMissMatched("The param at index 2 is not the value type."));
-            return Optional.empty();
+            throw new TypeMissMatched("The param at index 2 is not the value type.");
         }
         Object uncheckedResultMap = obj[3];
         if (!Utility.isAMapWithStringKeys(uncheckedResultMap, true)) {
-            getLogger().throwable(new TypeMissMatched("The param at index 3 is not the map result."));
-            return Optional.empty();
+            throw new TypeMissMatched("The param at index 3 is not the map result.");
         }
         return Optional.of(new RSerResult(this, str, obj[1], type, (Map<String, Object>) uncheckedResultMap));
     }

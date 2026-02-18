@@ -1,5 +1,6 @@
 package me.tr.trserializer.processes.deserializer.addons;
 
+import me.tr.trserializer.exceptions.ProcessError;
 import me.tr.trserializer.handlers.dates.DateHandlerContainer;
 import me.tr.trserializer.processes.deserializer.Deserializer;
 import me.tr.trserializer.processes.process.addons.date.PDateAnnAddon;
@@ -28,7 +29,7 @@ public class DDateAnnAddon extends DAddon {
     }
 
     @Override
-    public Optional<Object> process(Deserializer process, Object obj, GenericType<?> type, Field field) throws Exception {
+    public Optional<Object> process(Deserializer process, Object obj, GenericType<?> type, Field field) throws ProcessError {
         return ann.process(process, obj, type, field);
     }
 }

@@ -1,5 +1,6 @@
 package me.tr.trserializer.processes.deserializer.addons;
 
+import me.tr.trserializer.exceptions.ProcessError;
 import me.tr.trserializer.processes.deserializer.Deserializer;
 import me.tr.trserializer.processes.process.Process;
 import me.tr.trserializer.processes.serializer.helper.insert.InsertMethod;
@@ -20,10 +21,10 @@ public abstract class DAddon extends PAddon {
         super(name);
     }
 
-    public abstract Optional<Object> process(Deserializer deserializer, Object obj, GenericType<?> type, Field field) throws Exception;
+    public abstract Optional<Object> process(Deserializer deserializer, Object obj, GenericType<?> type, Field field) throws ProcessError;
 
     @Override
-    public Optional<Object> process(Process process, Object obj, GenericType<?> type, Field field) throws Exception {
+    public Optional<Object> process(Process process, Object obj, GenericType<?> type, Field field) throws ProcessError {
         return process((Deserializer) process, obj, type, field);
     }
 }

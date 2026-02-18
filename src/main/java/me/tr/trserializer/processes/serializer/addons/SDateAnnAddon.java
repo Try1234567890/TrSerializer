@@ -1,5 +1,6 @@
 package me.tr.trserializer.processes.serializer.addons;
 
+import me.tr.trserializer.exceptions.ProcessError;
 import me.tr.trserializer.handlers.dates.DateHandlerContainer;
 import me.tr.trserializer.processes.process.addons.date.PDateAnnMethods;
 import me.tr.trserializer.processes.process.addons.handler.PHandlerMethods;
@@ -30,7 +31,7 @@ public class SDateAnnAddon extends SAddon {
 
 
     @Override
-    public Optional<Object> process(Serializer process, Object obj, GenericType<?> type, Field field) throws Exception {
+    public Optional<Object> process(Serializer process, Object obj, GenericType<?> type, Field field) throws ProcessError {
         return ann.process(process, obj, type, field);
     }
 }

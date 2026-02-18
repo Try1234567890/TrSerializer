@@ -2,6 +2,7 @@ package me.tr.trserializer.processes.serializer.addons;
 
 import me.tr.trserializer.annotations.unwrap.Unwrap;
 import me.tr.trserializer.annotations.unwrap.Unwrapped;
+import me.tr.trserializer.exceptions.ProcessError;
 import me.tr.trserializer.handlers.annotation.UnwrappedHandler;
 import me.tr.trserializer.processes.process.Process;
 import me.tr.trserializer.processes.process.addons.PAddonsUtility;
@@ -24,7 +25,7 @@ public class SUnwrapAddon extends SAddon {
     }
 
     public Optional<Object> process(Serializer serializer, Object obj, GenericType<?> type, Field field)
-            throws Exception {
+            throws ProcessError {
         if (field == null)
             return Optional.empty();
 
@@ -39,7 +40,7 @@ public class SUnwrapAddon extends SAddon {
     }
 
     @Override
-    public Optional<Object> process(Process process, Object obj, GenericType<?> type, Field field) throws Exception {
+    public Optional<Object> process(Process process, Object obj, GenericType<?> type, Field field) throws ProcessError {
         return process((Serializer) process, obj, type, field);
     }
 }

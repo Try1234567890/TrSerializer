@@ -1,9 +1,7 @@
 package me.tr.trserializer.processes.process;
 
-import me.tr.trserializer.logger.Logger;
 import me.tr.trserializer.processes.options.Option;
 import me.tr.trserializer.processes.options.Options;
-import me.tr.trserializer.utility.Utility;
 
 import java.util.*;
 import java.util.function.Supplier;
@@ -80,7 +78,6 @@ public class ProcessOptions {
      */
     public boolean hasStartMethods(Class<?> clazz) {
         if (clazz == null) {
-            getProcess().getLogger().throwable(new NullPointerException("The class is null."));
             return false;
         }
 
@@ -97,36 +94,22 @@ public class ProcessOptions {
      */
     public String[] getStartMethodNamesFor(Class<?> clazz) {
         if (clazz == null) {
-            getProcess().getLogger().throwable(new NullPointerException("The class is null."));
-            return null;
+            throw new NullPointerException("The class is null.");
         }
         return getStartMethods().get(clazz);
     }
 
     public ProcessOptions addStartMethod(Class<?> clazz, String method) {
-        if (clazz == null) {
-            getProcess().getLogger().throwable(new NullPointerException("The class is null."));
-            return this;
-        }
-        if (method == null) {
-            getProcess().getLogger().throwable(new NullPointerException("The method is null."));
-            return this;
-        }
+        if (clazz == null) return this;
+        if (method == null) return this;
 
         getStartMethods().put(clazz, new String[]{method});
         return this;
     }
 
     public ProcessOptions addStartMethods(Class<?> clazz, String... methods) {
-        if (clazz == null) {
-            getProcess().getLogger().throwable(new NullPointerException("The class is null."));
-            return this;
-        }
-
-        if (methods == null || methods.length == 0) {
-            getProcess().getLogger().throwable(new NullPointerException("The methods are null."));
-            return this;
-        }
+        if (clazz == null) return this;
+        if (methods == null || methods.length == 0) return this;
 
         getStartMethods().put(clazz, methods);
         return this;
@@ -159,10 +142,7 @@ public class ProcessOptions {
      * @return {@code true} if it has, otherwise {@code false}.
      */
     public boolean hasEndMethods(Class<?> clazz) {
-        if (clazz == null) {
-            getProcess().getLogger().throwable(new NullPointerException("The class is null."));
-            return false;
-        }
+        if (clazz == null) return false;
 
         return getEndMethods().containsKey(clazz);
     }
@@ -177,35 +157,24 @@ public class ProcessOptions {
      */
     public String[] getEndMethodNamesFor(Class<?> clazz) {
         if (clazz == null) {
-            getProcess().getLogger().throwable(new NullPointerException("The class is null."));
-            return null;
+            throw new NullPointerException("The class is null.");
         }
         return getEndMethods().get(clazz);
     }
 
     public ProcessOptions addEndMethod(Class<?> clazz, String method) {
-        if (clazz == null) {
-            getProcess().getLogger().throwable(new NullPointerException("The class is null."));
-            return this;
-        }
-        if (method == null) {
-            getProcess().getLogger().throwable(new NullPointerException("The method is null."));
-            return this;
-        }
+        if (clazz == null) return this;
+        if (method == null) return this;
+
 
         getEndMethods().put(clazz, new String[]{method});
         return this;
     }
 
     public ProcessOptions addEndMethods(Class<?> clazz, String... methods) {
-        if (clazz == null) {
-            getProcess().getLogger().throwable(new NullPointerException("The class is null."));
-            return this;
-        }
-        if (methods == null || methods.length == 0) {
-            getProcess().getLogger().throwable(new NullPointerException("The methods are null."));
-            return this;
-        }
+        if (clazz == null) return this;
+        if (methods == null || methods.length == 0) return this;
+
 
         getEndMethods().put(clazz, methods);
         return this;
@@ -436,7 +405,7 @@ public class ProcessOptions {
     }
 
     public Object getInstance(Class<?> clazz) {
-        return getInstances().getInstance(clazz);
+        return getInstances().getInstance(clazz).orElse(null);
     }
 
     public static class BlockedPackages extends Option<Set<String>> {
@@ -446,26 +415,17 @@ public class ProcessOptions {
         }
 
         public void block(String packageName) {
-            if (packageName == null || packageName.isEmpty()) {
-                Logger.exception(new NullPointerException("The package is null or empty."));
-                return;
-            }
+            if (packageName == null || packageName.isEmpty()) return;
             getValue().add(packageName);
         }
 
         public void unblock(String packageName) {
-            if (packageName == null || packageName.isEmpty()) {
-                Logger.exception(new NullPointerException("The package is null or empty."));
-                return;
-            }
+            if (packageName == null || packageName.isEmpty()) return;
             getValue().remove(packageName);
         }
 
         public boolean isBlocked(String packageName) {
-            if (packageName == null || packageName.isEmpty()) {
-                Logger.exception(new NullPointerException("The package is null or empty."));
-                return false;
-            }
+            if (packageName == null || packageName.isEmpty()) return false;
             return getValue().contains(packageName);
         }
     }
@@ -477,49 +437,36 @@ public class ProcessOptions {
         }
 
         public void addInstance(Class<?> clazz, Supplier<?> supplier) {
-            if (clazz == null) {
-                Logger.exception(new NullPointerException("The provided class is null."));
-                return;
-            }
+            if (clazz == null) return;
+            if (supplier == null) return;
 
-            if (supplier == null) {
-                Logger.exception(new NullPointerException("The provided supplier is null."));
-                return;
-            }
             getValue().put(clazz, supplier);
         }
 
         public void removeInstance(Class<?> clazz) {
-            if (clazz == null) {
-                Logger.exception(new NullPointerException("The provided class is null."));
-                return;
-            }
+            if (clazz == null) return;
+
             getValue().remove(clazz);
         }
 
         public boolean hasInstance(Class<?> clazz) {
-            if (clazz == null) {
-                Logger.exception(new NullPointerException("The provided class is null."));
-                return false;
-            }
+            if (clazz == null) return false;
+
             return getValue().containsKey(clazz);
         }
 
         public Supplier<?> getSupplier(Class<?> clazz) {
             if (clazz == null) {
-                Logger.exception(new NullPointerException("The provided class is null."));
-                return null;
+                throw new NullPointerException("The provided class is null.");
             }
             return getValue().get(clazz);
         }
 
-        public Object getInstance(Class<?> clazz) {
+        public Optional<Object> getInstance(Class<?> clazz) {
             Supplier<?> supplier = getSupplier(clazz);
-            if (supplier == null) {
-                Logger.dbg("No instance for " + Utility.getClassName(clazz) + " is found");
-                return null;
-            }
-            return supplier.get();
+            if (supplier == null) return Optional.empty();
+
+            return Optional.ofNullable(supplier.get());
         }
     }
 }

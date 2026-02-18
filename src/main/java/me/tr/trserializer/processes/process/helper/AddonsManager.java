@@ -1,5 +1,6 @@
 package me.tr.trserializer.processes.process.helper;
 
+import me.tr.trserializer.exceptions.ProcessError;
 import me.tr.trserializer.processes.process.Process;
 import me.tr.trserializer.processes.process.addons.PAddon;
 import me.tr.trserializer.types.GenericType;
@@ -24,23 +25,13 @@ public class AddonsManager {
      * @return an {@link Optional} containing the first addon that returns a non-empty result,
      * paired with its processed output.
      */
-    public Optional<Map.Entry<PAddon, ?>> getFirstValidAddon(Object obj, GenericType<?> type, Field field) {
+    public Optional<Map.Entry<PAddon, ?>> getFirstValidAddon(Object obj, GenericType<?> type, Field field) throws ProcessError {
         for (PAddon addon : getProcess().getContext().getAddons()) {
-            String addonName = addon.getName();
-            try {
-                getProcess().getLogger().debug("Executing \"" + addonName + "\"");
+            Optional<?> result = addon.process(getProcess(), obj, type, field);
 
-                Optional<?> result = addon.process(getProcess(), obj, type, field);
+            if (result.isEmpty()) continue;
 
-                if (result.isEmpty()) {
-                    getProcess().getLogger().debug("Process \"" + addonName + "\" returned empty");
-                    continue;
-                }
-
-                return Optional.of(Map.entry(addon, getProcess().validate(obj, result.get(), type)));
-            } catch (Exception e) {
-                getProcess().getLogger().throwable(new RuntimeException("The addon \"" + addonName + "\" thrown an exception.", e));
-            }
+            return Optional.of(Map.entry(addon, getProcess().validate(obj, result.get(), type)));
         }
 
         return Optional.empty();

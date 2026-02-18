@@ -11,6 +11,10 @@ import java.util.Optional;
 
 public class ISerializer extends Serializer {
 
+    public ISerializer() {
+        super();
+    }
+
     public <T> T serialize(Object obj, GenericType<T> type, Deque<ProcessTaskContainer> tasks) {
         return super.serialize(obj, type, tasks);
     }
@@ -50,13 +54,11 @@ public class ISerializer extends Serializer {
 
         RSerResult rResult = result.get();
         if (!(obj[4] instanceof Deque<?> tasks)) {
-            getLogger().debug("The param at index 4 is not a Deque. Creating a new one.");
             return result.map(r -> new ISerResult(r, new ArrayDeque<>()));
         }
 
         Object peek = tasks.peek();
         if (!tasks.isEmpty() && !(peek instanceof ProcessTaskContainer)) {
-            getLogger().debug("The param at index 4 is not a deque of ProcessTaskContainer but: " + (peek == null ? "null" : peek.getClass().getName()) + ". Creating a new one.");
             return result.map(r -> new ISerResult(r, new ArrayDeque<>()));
         }
 

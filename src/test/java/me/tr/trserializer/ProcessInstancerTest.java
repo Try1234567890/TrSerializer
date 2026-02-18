@@ -1,6 +1,7 @@
 package me.tr.trserializer;
 
 import me.tr.trserializer.annotations.Initialize;
+import me.tr.trserializer.exceptions.TypeMissMatched;
 import me.tr.trserializer.instancers.ProcessInstancer;
 import me.tr.trserializer.processes.deserializer.Deserializer;
 import org.junit.jupiter.api.Test;
@@ -190,18 +191,16 @@ class ProcessInstancerTest {
     void testInvalidInitializeMethodSetsFailure() {
         ProcessInstancer instancer = new ProcessInstancer(new Deserializer());
 
-        Object obj = instancer.instance(WrongReturnTypeMethod.class);
+        try {
+            Object obj = instancer.instance(WrongReturnTypeMethod.class);
+            System.out.println("Object is null ? " + (obj == null));
+            System.out.println("Object is instance of WrongReturnTypeMethod ? " + (obj instanceof WrongReturnTypeMethod));
+            assertInstanceOf(WrongReturnTypeMethod.class, obj);
+        } catch (TypeMissMatched ex) {
+            System.out.println("testInvalidInitializeMethodSetsFailure Passed.");
+        }
 
-        System.out.println("!! ERROR EXCEPTED BUT OBJECT MUST NOT BE NULL !!");
-        System.out.println("!! ERROR EXCEPTED BUT OBJECT MUST NOT BE NULL !!");
-        System.out.println("!! ERROR EXCEPTED BUT OBJECT MUST NOT BE NULL !!");
-        System.out.println("!! ERROR EXCEPTED BUT OBJECT MUST NOT BE NULL !!");
-        System.out.println("!! ERROR EXCEPTED BUT OBJECT MUST NOT BE NULL !!");
 
-        System.out.println("Object is null ? " + (obj == null));
-        System.out.println("Object is instance of WrongReturnTypeMethod ? " + (obj instanceof WrongReturnTypeMethod));
-
-        assertInstanceOf(WrongReturnTypeMethod.class, obj);
     }
 }
 

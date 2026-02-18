@@ -1,6 +1,6 @@
 package me.tr.trserializer.processes.deserializer;
 
-import me.tr.trserializer.processes.process.ProcessCache;
+import me.tr.trserializer.processes.process.cache.ProcessCache;
 
 import java.util.IdentityHashMap;
 

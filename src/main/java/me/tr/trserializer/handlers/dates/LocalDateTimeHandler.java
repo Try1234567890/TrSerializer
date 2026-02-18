@@ -1,12 +1,14 @@
 package me.tr.trserializer.handlers.dates;
 
+import me.tr.trserializer.exceptions.ProcessError;
 import me.tr.trserializer.exceptions.TypeMissMatched;
-import me.tr.trserializer.logger.Logger;
-import me.tr.trserializer.logger.ProcessLogger;
 import me.tr.trserializer.types.GenericType;
+import me.tr.trserializer.utility.Utility;
 
 import java.sql.Timestamp;
-import java.time.*;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
@@ -26,13 +28,11 @@ public class LocalDateTimeHandler extends DateHandlerContainer {
             try {
                 return LocalDateTime.parse(date, DateTimeFormatter.ofPattern(getFormat()));
             } catch (DateTimeParseException e) {
-                Logger.exception(new DateTimeException("An error occurs while parsing " + date + " with format " + getFormat(), e));
-                return null;
+                throw new ProcessError("An error occurs while parsing " + date + " with format " + getFormat(), e);
             }
         }
 
-        Logger.exception(new TypeMissMatched("The provided object (" + obj.getClass().getName() + ") is not a valid type to deserialize it as LocalDateTime."));
-        return null;
+        throw new TypeMissMatched("The provided object (" + Utility.getClassName(obj.getClass()) + ") is not a valid type to deserialize it as LocalDateTime.");
     }
 
     @Override
@@ -46,6 +46,7 @@ public class LocalDateTimeHandler extends DateHandlerContainer {
             }
             return date.format(DateTimeFormatter.ofPattern(getFormat()));
         }
-        return obj;
+
+        throw new TypeMissMatched("The provided object (" + Utility.getClassName(obj.getClass()) + ") is not a LocalDateTime.");
     }
 }

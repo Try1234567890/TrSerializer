@@ -46,14 +46,10 @@ public class SerializerOptions extends ProcessOptions {
      * @param aliases        The aliases to register.
      */
     public SerializerOptions addAlias(Class<?> declaringClazz, String fieldName, String aliases) {
-        if (fieldName == null) {
-            getSerializer().getLogger().warn("The field name to add aliases  is null");
-            return this;
-        }
-        if (aliases == null) {
-            getSerializer().getLogger().warn("The aliases to add is null");
-            return this;
-        }
+        if (fieldName == null) return this;
+
+        if (aliases == null) return this;
+
         getAliasesOption().getValue().add(new Three<>(declaringClazz, fieldName, aliases));
         return this;
     }
@@ -65,10 +61,8 @@ public class SerializerOptions extends ProcessOptions {
      * @see #addAlias(Class, String, String)
      */
     public SerializerOptions addAlias(Three<Class<?>, String, String> alias) {
-        if (alias == null) {
-            getSerializer().getLogger().warn("The aliases to add is null");
-            return this;
-        }
+        if (alias == null) return this;
+
 
         getAliasesOption().getValue().add(alias);
         return this;
@@ -81,10 +75,8 @@ public class SerializerOptions extends ProcessOptions {
      * @return {@code true} if it has, otherwise {@code false}.
      */
     public boolean hasAliases(Class<?> clazz) {
-        if (clazz == null) {
-            getSerializer().getLogger().throwable(new NullPointerException("The class is null."));
-            return false;
-        }
+        if (clazz == null) return false;
+
 
         return getAliases().stream().anyMatch(alias -> alias.key().equals(clazz));
     }
@@ -97,14 +89,10 @@ public class SerializerOptions extends ProcessOptions {
      * @return {@code true} if it has, otherwise {@code false}.
      */
     public boolean hasAliases(Class<?> clazz, String fieldName) {
-        if (clazz == null) {
-            getSerializer().getLogger().throwable(new NullPointerException("The class is null."));
-            return false;
-        }
-        if (fieldName == null) {
-            getSerializer().getLogger().throwable(new NullPointerException("The field name is null."));
-            return false;
-        }
+        if (clazz == null) return false;
+
+        if (fieldName == null) return false;
+
         return hasAliases(clazz) && getAliases().stream().anyMatch(alias -> alias.value().equalsIgnoreCase(fieldName));
     }
 
@@ -115,10 +103,8 @@ public class SerializerOptions extends ProcessOptions {
      * @return {@code true} if it has, otherwise {@code false}.
      */
     public boolean hasAliases(Field field) {
-        if (field == null) {
-            getSerializer().getLogger().throwable(new NullPointerException("The field is null."));
-            return false;
-        }
+        if (field == null) return false;
+
 
         return hasAliases(field.getDeclaringClass(), field.getName());
     }

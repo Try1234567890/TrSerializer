@@ -57,18 +57,7 @@ public class NamingStrategyApplier {
     public String applyNamingStrategy(String name, Naming ann) {
         NamingStrategy strategy = ann.strategy();
 
-        NamingStrategy from = ann.from();
-
-        if (strategy == NamingStrategy.NOTHING) {
-            getProcess().getLogger().warn("The strategy of @Naming on " + name + " is null. Ignoring it.");
-            return name;
-        }
-
-
-        if (from == NamingStrategy.NOTHING)
-            return strategy.format(name);
-
-        return strategy.format(name, from.getFormat());
+        return strategy.format(name);
     }
 
     public Process getProcess() {

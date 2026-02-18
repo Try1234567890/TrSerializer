@@ -1,14 +1,13 @@
 package me.tr.trserializer.processes.process.addons.date;
 
 import me.tr.trserializer.annotations.Format;
+import me.tr.trserializer.exceptions.ProcessError;
+import me.tr.trserializer.exceptions.TypeMissMatched;
 import me.tr.trserializer.handlers.TypeHandler;
 import me.tr.trserializer.handlers.dates.DateHandlerContainer;
-import me.tr.trserializer.logger.Logger;
-import me.tr.trserializer.logger.ProcessLogger;
 import me.tr.trserializer.processes.process.Process;
 import me.tr.trserializer.processes.process.addons.PAddon;
 import me.tr.trserializer.processes.process.addons.Priority;
-import me.tr.trserializer.processes.process.addons.handler.PHandlerMethods;
 import me.tr.trserializer.types.GenericType;
 
 import java.lang.reflect.Field;
@@ -28,26 +27,23 @@ public class PDateAnnAddon extends PAddon {
 
     @Override
     public Optional<Object> process(Process process, Object obj,
-                                    GenericType<?> type, Field field) throws Exception {
-        if (field == null) {
-            Logger.dbg("The field is null, stopping execution of @Format addon.");
+                                    GenericType<?> type, Field field) throws ProcessError {
+        if (field == null)
             return Optional.empty();
-        }
+
 
         if (field.isAnnotationPresent(Format.class)) {
             Optional<TypeHandler> handlerOpt = process.getHandler(getMethods().getClassForHandler(obj, type));
 
-            if (handlerOpt.isEmpty()) {
-                ProcessLogger.dbg("No handler found for " + type.getTypeClass());
+            if (handlerOpt.isEmpty())
                 return Optional.empty();
-            }
+
 
             TypeHandler handler = handlerOpt.get();
 
-            if (!(handler instanceof DateHandlerContainer date)) {
-                ProcessLogger.dbg("The found handler is not an instance of DateHandler.");
-                return Optional.empty();
-            }
+            if (!(handler instanceof DateHandlerContainer date))
+                throw new TypeMissMatched("The found handler is not an instance of DateHandler.");
+
 
             Format ann = field.getAnnotation(Format.class);
 

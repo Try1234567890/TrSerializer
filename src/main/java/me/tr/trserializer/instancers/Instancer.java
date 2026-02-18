@@ -9,7 +9,7 @@ public interface Instancer {
      * @param clazz The class to instance.
      * @return The instance of the provided class if the process ends successfully, otherwise {@code null}.
      */
-    Object instance(Class<?> clazz);
+    Object instance(Class<?> clazz) throws NoSuchMethodException;
 
     /**
      * Checks if the process failed.

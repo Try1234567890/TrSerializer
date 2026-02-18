@@ -1,14 +1,10 @@
 package me.tr.trserializer.processes.process.helper;
 
-import me.tr.trlogger.levels.TrDebug;
-import me.tr.trlogger.levels.TrError;
-import me.tr.trlogger.levels.TrLevel;
 import me.tr.trserializer.annotations.Ignore;
 import me.tr.trserializer.annotations.includeIf.IncludeIf;
 import me.tr.trserializer.annotations.includeIf.IncludeStrategy;
-import me.tr.trserializer.logger.Logger;
-import me.tr.trserializer.processes.process.ProcessOptions;
 import me.tr.trserializer.processes.process.Process;
+import me.tr.trserializer.processes.process.ProcessOptions;
 import me.tr.trserializer.types.GenericType;
 import me.tr.trserializer.utility.Utility;
 
@@ -147,20 +143,18 @@ public class ProcessValidator {
     public static class ValidationResult {
         private final boolean success;
         private final String message;
-        private final TrLevel level;
 
 
-        private ValidationResult(boolean success, String message, TrLevel level) {
+        private ValidationResult(boolean success, String message) {
             this.success = success;
             this.message = message;
-            this.level = level;
         }
 
         /**
          * Returns a successful result with no message.
          */
         public static ValidationResult success() {
-            return new ValidationResult(true, "", null);
+            return new ValidationResult(true, "");
         }
 
         /**
@@ -169,7 +163,7 @@ public class ProcessValidator {
          * @param msg the error message.
          */
         public static ValidationResult fatal(String msg) {
-            return new ValidationResult(false, msg, TrError.ERROR);
+            return new ValidationResult(false, msg);
         }
 
         /**
@@ -178,15 +172,7 @@ public class ProcessValidator {
          * @param msg the debug/info message.
          */
         public static ValidationResult error(String msg) {
-            return new ValidationResult(false, msg, TrDebug.DEBUG);
-        }
-
-        /**
-         * Prints the message to the logger if a log level is assigned.
-         */
-        public void print() {
-            if (level != null)
-                Logger.send(message(), level);
+            return new ValidationResult(false, msg);
         }
 
         /**
@@ -195,7 +181,6 @@ public class ProcessValidator {
          * @return {@code true} if validation passed.
          */
         public boolean isSuccess() {
-            print();
             return success;
         }
 

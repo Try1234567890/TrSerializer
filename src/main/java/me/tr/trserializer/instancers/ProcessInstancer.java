@@ -2,9 +2,11 @@ package me.tr.trserializer.instancers;
 
 import me.tr.trserializer.annotations.Initialize;
 import me.tr.trserializer.annotations.naming.Naming;
+import me.tr.trserializer.exceptions.InstancerError;
 import me.tr.trserializer.exceptions.TypeMissMatched;
 import me.tr.trserializer.processes.deserializer.Deserializer;
 import me.tr.trserializer.processes.process.Process;
+import me.tr.trserializer.processes.process.cache.ProcessCache;
 import me.tr.trserializer.utility.Utility;
 
 import java.lang.reflect.*;
@@ -12,8 +14,8 @@ import java.util.*;
 import java.util.function.Supplier;
 
 public class ProcessInstancer implements Instancer {
-    private static final Map<Class<?>, Object> SINGLETON_INSTANCES = new HashMap<>();
     private final Process process;
+    private final ProcessCache.InstancesCache cache;
     private final Map<String, Object> params;
     private boolean singleton;
     private boolean failed;
@@ -25,17 +27,18 @@ public class ProcessInstancer implements Instancer {
 
     public ProcessInstancer(Process process, Map<String, Object> params) {
         this.process = process;
+        this.cache = getProcess().getCache().getInstancesCache();
         this.params = params;
     }
 
     @Override
-    public Object instance(Class<?> clazz) {
+    public Object instance(Class<?> clazz) throws InstancerError {
         if (clazz == null) {
-            getProcess().getLogger().throwable(new NullPointerException("Class to instance is null"));
-            return null;
+            throw new NullPointerException("Class to instance is null");
         }
 
-        Object instance = SINGLETON_INSTANCES.get(clazz); // -> This is index 0
+
+        Object instance = getCache().get(clazz); // -> This is index 0
 
         List<Supplier<Object>> functions = List.of(
                 () -> getProcess().getOptions().getInstance(clazz),
@@ -62,15 +65,14 @@ public class ProcessInstancer implements Instancer {
              */
             if (i == 3 && isNotInstantiable(clazz)) {
                 String className = Utility.getClassName(clazz);
-                getProcess().getLogger().throwable(new NoSuchMethodException("The class " + className + " is not instantiable automatically. Add a \"access-modifier static " + className.replace("class ", " ") + " method_name(params...)\" annotated with @Initialize or add a default instance process with \"getProcess().getOptions().addInstance(Class<?>, Supplier)\""));
-                return null;
+                throw new InstancerError("The class " + className + " is not instantiable automatically. Add a \"access-modifier static " + className.replace("class ", " ") + " method_name(params...)\" annotated with @Initialize or add a default instance process with \"getProcess().getOptions().addInstance(Class<?>, Supplier)\"");
             }
 
             instance = functions.get(i).get();
         }
 
-        if (instance != null && isSingleton()) {
-            SINGLETON_INSTANCES.put(clazz, instance);
+        if (instance != null && (isSingleton() || getCache().isEnabled())) {
+            getCache().put(clazz, instance);
         }
 
         return instance;
@@ -127,8 +129,7 @@ public class ProcessInstancer implements Instancer {
         Object[] params = new Object[paramNames.length];
 
         if (parameters.length != paramNames.length) {
-            getProcess().getLogger().throwable(new IndexOutOfBoundsException("Mismatch between the number of parameter names provided with the @Initialize annotation and the actual number of constructor parameters."));
-            return params;
+            throw new IndexOutOfBoundsException("Mismatch between the number of parameter names provided with the @Initialize annotation and the actual number of constructor parameters.");
         }
 
         for (int i = 0; i < parameters.length; i++) {
@@ -184,18 +185,14 @@ public class ProcessInstancer implements Instancer {
 
             if (method.isAnnotationPresent(Initialize.class)) {
                 if (!Modifier.isStatic(method.getModifiers())) {
-                    getProcess().getLogger().throwable(
-                            new IllegalAccessException("The annotated as @Initialize method must be static."));
-                    return Optional.empty();
+                    throw new InstancerError("The annotated as @Initialize method must be static.");
                 }
 
                 Class<?> returnType = method.getReturnType();
 
                 if (returnType.isAssignableFrom(Class.class) ||
                         !returnType.equals(clazz)) {
-                    getProcess().getLogger().throwable(
-                            new TypeMissMatched("The return type of the annotated as @Initialize method is not " + Utility.getClassName(clazz).replace("class ", "")));
-                    return Optional.empty();
+                    throw new TypeMissMatched("The return type of the annotated as @Initialize method is not " + Utility.getClassName(clazz).replace("class ", ""));
                 }
 
                 return Optional.of(method);
@@ -213,8 +210,7 @@ public class ProcessInstancer implements Instancer {
             }
         } catch (NoSuchMethodException e) {
             // impossible
-            getProcess().getLogger().throwable(
-                    new RuntimeException("An error occurs while retrieving \"valueOf\" method.", e));
+            throw new InstancerError("An error occurs while retrieving \"valueOf\" method.", e);
         }
         return Optional.empty();
     }
@@ -267,6 +263,10 @@ public class ProcessInstancer implements Instancer {
 
     public Process getProcess() {
         return process;
+    }
+
+    private ProcessCache.InstancesCache getCache() {
+        return cache;
     }
 
     private Deserializer getDeserializer() {

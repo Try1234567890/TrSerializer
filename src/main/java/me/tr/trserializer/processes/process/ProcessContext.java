@@ -1,8 +1,8 @@
 package me.tr.trserializer.processes.process;
 
 import me.tr.trserializer.instancers.ProcessInstancer;
-import me.tr.trserializer.logger.ProcessLogger;
 import me.tr.trserializer.processes.process.addons.PAddon;
+import me.tr.trserializer.processes.process.cache.ProcessCache;
 import me.tr.trserializer.processes.process.helper.AddonsManager;
 import me.tr.trserializer.processes.process.helper.MethodsExecutor;
 import me.tr.trserializer.processes.process.helper.NamingStrategyApplier;
@@ -14,7 +14,6 @@ public class ProcessContext {
     private final Process process;
     private final ProcessOptions options;
     private final ProcessCache cache;
-    private final ProcessLogger logger;
     private final NamingStrategyApplier namingStrategyApplier;
     private final ProcessValidator processValidator;
     private final MethodsExecutor methodsExecutor;
@@ -26,7 +25,6 @@ public class ProcessContext {
         this.process = process;
         this.options = options;
         this.cache = cache;
-        this.logger = ProcessLogger.of(process);
         this.namingStrategyApplier = new NamingStrategyApplier(process);
         this.processValidator = new ProcessValidator(process);
         this.methodsExecutor = new MethodsExecutor(process);
@@ -48,10 +46,6 @@ public class ProcessContext {
 
     public ProcessInstancer getInstancer(Map<String, Object> params) {
         return new ProcessInstancer(process, params);
-    }
-
-    public ProcessLogger getLogger() {
-        return logger;
     }
 
     public NamingStrategyApplier getNamingStrategyApplier() {

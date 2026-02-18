@@ -4,7 +4,6 @@ import me.tr.trserializer.converters.BooleanConverter;
 import me.tr.trserializer.converters.CharacterConverter;
 import me.tr.trserializer.converters.Converter;
 import me.tr.trserializer.converters.numbers.*;
-import me.tr.trserializer.logger.Logger;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -61,7 +60,6 @@ public class ConvertersRegistry extends Registry<Map.Entry<Class<?>, Class<?>>, 
     public Converter<?, ?> get(Map.Entry<Class<?>, Class<?>> name) {
         Converter<?, ?> bySimpleGet = super.get(name);
         if (bySimpleGet != null) {
-            Logger.dbg("The converter for " + name + " is found with simple search.");
             return bySimpleGet;
 
         } else {
@@ -74,14 +72,12 @@ public class ConvertersRegistry extends Registry<Map.Entry<Class<?>, Class<?>>, 
 
                 if (subEntry.getKey().isAssignableFrom(searchedKey) &&
                         subEntry.getValue().isAssignableFrom(searchedValue)) {
-                    Logger.dbg("The converter for " + name + " is found with complex search.");
                     return entry.getValue();
                 }
 
             }
         }
 
-        Logger.dbg("The converter for " + name + " not found.");
         return null;
     }
 

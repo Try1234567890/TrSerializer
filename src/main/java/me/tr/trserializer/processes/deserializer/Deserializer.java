@@ -1,20 +1,20 @@
 package me.tr.trserializer.processes.deserializer;
 
-import me.tr.trserializer.annotations.unwrap.Unwrapped;
-import me.tr.trserializer.annotations.wrap.Wrapped;
+import me.tr.trserializer.exceptions.ProcessError;
 import me.tr.trserializer.exceptions.TypeMissMatched;
-import me.tr.trserializer.logger.ProcessLogger;
 import me.tr.trserializer.processes.deserializer.helper.DAddonsManager;
 import me.tr.trserializer.processes.deserializer.helper.DValueRetriever;
 import me.tr.trserializer.processes.deserializer.helper.DValueSetter;
 import me.tr.trserializer.processes.process.Process;
 import me.tr.trserializer.processes.process.ProcessTaskContainer;
-import me.tr.trserializer.processes.process.addons.PAddon;
 import me.tr.trserializer.types.GenericType;
 import me.tr.trserializer.utility.Utility;
 
 import java.lang.reflect.Field;
-import java.util.*;
+import java.util.Deque;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 @SuppressWarnings("unchecked")
 public class Deserializer extends Process {
@@ -70,18 +70,16 @@ public class Deserializer extends Process {
 
 
     public <T> T deserialize(Object obj, T type) {
-        if (type == null) {
-            getLogger().throwable(new NullPointerException("Object or type is null!"));
-            return null;
-        }
+        if (type == null)
+            throw new NullPointerException("Object or type is null!");
+
         return (T) deserialize(obj, type.getClass());
     }
 
     public <T> T deserialize(Object obj, Class<T> type) {
-        if (type == null) {
-            getLogger().throwable(new NullPointerException("Object or type is null!"));
-            return null;
-        }
+        if (type == null)
+            throw new NullPointerException("Object or type is null!");
+
         return deserialize(obj, new GenericType<>(type));
     }
 
@@ -91,11 +89,8 @@ public class Deserializer extends Process {
 
         getMethodsExecutor().executeStartMethods(obj);
 
-        if (getCache().has(obj)) {
-            ProcessLogger.dbg("Object (" + obj.getClass() + "#" + obj.hashCode() + ") found in cache, reusing it.");
+        if (getCache().has(obj))
             return Optional.of((T) getCache().get(obj));
-        }
-
 
         Optional<Object> addons = getAddonsManager().getValidAddon(obj, type);
 
@@ -103,7 +98,7 @@ public class Deserializer extends Process {
         // Already made returns in processAddon()
         // if one of available addons is valid.
         if (addons.isPresent()) {
-            return Optional.of((T) addons.get());
+            return (Optional<T>) addons;
         }
 
         getMethodsExecutor().executeEndMethods(obj);
@@ -132,10 +127,9 @@ public class Deserializer extends Process {
         Optional<T> simpleResult = deserializeAsSimple(obj, type);
 
         if (simpleResult.isEmpty()) {
-            if (!Utility.isAMapWithStringKeys(obj)) {
-                ProcessLogger.dbg("The provided object is not a map. Cannot set fields values for " + type + ", an empty instance will be used.");
+            if (!Utility.isAMapWithStringKeys(obj))
                 return validate(obj, instance(type.getTypeClass()), type);
-            }
+
 
             Map<String, Object> checkedMap = (Map<String, Object>) obj;
             Object instance = instance(type.getTypeClass(), checkedMap);
@@ -152,10 +146,8 @@ public class Deserializer extends Process {
 
     protected Object deserializeFromMap(Object obj, Map<String, Object> map,
                                         Deque<ProcessTaskContainer> tasks) {
-        if (obj == null || map == null) {
-            getLogger().throwable(new NullPointerException("Object or Map is null!"));
-            return null;
-        }
+        if (obj == null || map == null)
+            throw new NullPointerException("Object or Map is null!");
 
         getMethodsExecutor().executeStartMethods(obj);
 
@@ -178,14 +170,12 @@ public class Deserializer extends Process {
         field.setAccessible(true);
 
         try {
-            String fieldName = field.getName();
             Object fieldValue = field.get(obj);
 
             // Skip fields already set by @Initialize entry point.
-            if (fieldValue != null) {
-                ProcessLogger.dbg("Field " + fieldName + " in class " + Utility.getClassName(clazz) + " is already set " + fieldValue);
+            if (fieldValue != null)
                 return;
-            }
+
 
             if (!getProcessValidator().isValid(field).isSuccess())
                 return;
@@ -204,28 +194,25 @@ public class Deserializer extends Process {
 
             result(field, valueFromMap, obj, type, values, tasks).ifPresent(DesResult::accept);
         } catch (IllegalAccessException e) {
-            getLogger().throwable(new RuntimeException("An error occurs while setting value for " + field.getName() + " in class " + Utility.getClassName(clazz), e));
+            throw new ProcessError("An error occurs while setting value for " + field.getName() + " in class " + Utility.getClassName(clazz), e);
         }
     }
 
     protected Optional<? extends RDesResult> result(Object... obj) {
         if (isParamsOfResultInvalid(obj)) {
-            getLogger().throwable(new TypeMissMatched("Params for result building are not valid."));
-            return Optional.empty();
+            throw new TypeMissMatched("Params for result building are not valid.");
         }
         if (!(obj[0] instanceof Field field)) {
-            getLogger().throwable(new TypeMissMatched("The param at index 0 is not the processing field."));
-            return Optional.empty();
+            throw new TypeMissMatched("The param at index 0 is not the processing field.");
         }
         if (!(obj[3] instanceof GenericType<?> type)) {
-            getLogger().throwable(new TypeMissMatched("The param at index 3 is not the value type."));
-            return Optional.empty();
+            throw new TypeMissMatched("The param at index 3 is not the value type.");
         }
         Object uncheckedResultMap = obj[4];
         if (!Utility.isAMapWithStringKeys(uncheckedResultMap, true)) {
-            getLogger().throwable(new TypeMissMatched("The param at index 3 is not the map result."));
-            return Optional.empty();
+            throw new TypeMissMatched("The param at index 3 is not the map result.");
         }
+
         return Optional.of(new RDesResult(this, field, obj[1], obj[2], type, (Map<String, Object>) uncheckedResultMap));
     }
 

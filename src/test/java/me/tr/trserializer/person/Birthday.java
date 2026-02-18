@@ -13,6 +13,7 @@ import java.time.LocalDate;
 public class Birthday {
     @Unwrap
     @Format(format = "dd.MM.yyyy")
+    @Getter
     private LocalDate date;
     private int age;
 

@@ -1,16 +1,18 @@
 plugins {
     id 'java-library'
     id 'maven-publish'
+    id "me.champeau.jmh" version "0.7.3"
 }
 
-
-group = 'me.tr'
-version = '2.0.1'
 
 publishing {
     publications {
         maven(MavenPublication) {
             from components.java
+
+            groupId = 'me.tr.trserializer'
+            artifactId = 'serializer'
+            version = '2.2.1'
         }
     }
 }
@@ -21,12 +23,20 @@ repositories {
 }
 
 dependencies {
-    implementation('me.tr:logger:2.2.1')
-    implementation('me.tr:formatter:2.0.0')
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
+    implementation('me.tr.trformatter:formatter:3.2.5')
+
+    testImplementation('org.junit.jupiter:junit-jupiter:5.10.0')
     testRuntimeOnly('org.junit.platform:junit-platform-launcher')
 }
 
 test {
     useJUnitPlatform()
+}
+
+jmh {
+    benchmarkMode = ['thrpt', 'avgt']
+    iterations = 5
+    warmupIterations = 3
+    fork = 2
+    resultFormat = 'JSON'
 }

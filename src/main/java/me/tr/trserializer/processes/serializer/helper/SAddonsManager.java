@@ -1,5 +1,6 @@
 package me.tr.trserializer.processes.serializer.helper;
 
+import me.tr.trserializer.exceptions.ProcessError;
 import me.tr.trserializer.processes.deserializer.Deserializer;
 import me.tr.trserializer.processes.process.addons.PAddon;
 import me.tr.trserializer.processes.process.helper.AddonsManager;
@@ -17,7 +18,7 @@ public class SAddonsManager extends AddonsManager {
         super(serializer);
     }
 
-    public Optional<Map.Entry<SAddon, ?>> getValidAddon(Object obj, GenericType<?> type, Field field) {
+    public Optional<Map.Entry<SAddon, ?>> getValidAddon(Object obj, GenericType<?> type, Field field) throws ProcessError {
         Optional<Map.Entry<PAddon, ?>> addon = super.getFirstValidAddon(obj, type, field);
 
         if (addon.isPresent()) {
@@ -32,7 +33,7 @@ public class SAddonsManager extends AddonsManager {
         return Optional.empty();
     }
 
-    public Optional<Map.Entry<SAddon, ?>> getValidAddon(Object obj, GenericType<?> type) {
+    public Optional<Map.Entry<SAddon, ?>> getValidAddon(Object obj, GenericType<?> type) throws ProcessError {
         return getValidAddon(obj, type, null);
     }
 

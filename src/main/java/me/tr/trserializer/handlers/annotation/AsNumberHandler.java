@@ -1,6 +1,7 @@
 package me.tr.trserializer.handlers.annotation;
 
 import me.tr.trserializer.annotations.AsNumber;
+import me.tr.trserializer.exceptions.ProcessError;
 import me.tr.trserializer.handlers.TypeHandler;
 import me.tr.trserializer.instancers.ProcessInstancer;
 import me.tr.trserializer.processes.deserializer.Deserializer;
@@ -25,11 +26,7 @@ public class AsNumberHandler implements TypeHandler {
         Class<?> clazz = type.getTypeClass();
         if (clazz.isAnnotationPresent(AsNumber.class)) {
             AsNumber asNumber = clazz.getAnnotation(AsNumber.class);
-
             Field field = getField(asNumber, clazz);
-
-            if (field == null)
-                return null;
 
             Object newValue = getDeserializer().deserialize(obj, field.getType());
 
@@ -45,7 +42,7 @@ public class AsNumberHandler implements TypeHandler {
 
                 return instance;
             } catch (Exception e) {
-                getProcess().getLogger().throwable(new RuntimeException("An error occurs while setting the value of field " + field.getName() + " in class " + Utility.getClassName(clazz), e));
+                throw new ProcessError("An error occurs while setting the value of field " + field.getName() + " in class " + Utility.getClassName(clazz), e);
             }
         }
 
@@ -59,16 +56,13 @@ public class AsNumberHandler implements TypeHandler {
             AsNumber asNumber = clazz.getAnnotation(AsNumber.class);
             Field field = getField(asNumber, clazz);
 
-            if (field == null)
-                return null;
-
             try {
                 field.setAccessible(true);
                 Object value = field.get(obj);
 
                 return getSerializer().serialize(value, asNumber.type());
             } catch (Exception e) {
-                getProcess().getLogger().throwable(new RuntimeException("An error occurs while retrieving the value of field " + field.getName() + " in class " + Utility.getClassName(clazz), e));
+                throw new ProcessError("An error occurs while retrieving the value of field " + field.getName() + " in class " + Utility.getClassName(clazz), e);
             }
         }
 
@@ -84,10 +78,8 @@ public class AsNumberHandler implements TypeHandler {
         String paramName = ann.field();
 
         if (paramName.isEmpty()) {
-            getProcess().getLogger().throwable(
-                    new NullPointerException("The class " + Utility.getClassName(clazz) + " contains more than 1 field and no fields is specified " +
-                            "in @AsNumber annotation. Please specify the field to working on in annotation param."));
-            return null;
+            throw new ProcessError("The class " + Utility.getClassName(clazz) + " contains more than 1 field and no fields is specified " +
+                    "in @AsNumber annotation. Please specify the field to working on in annotation param.");
         }
 
         for (Field field : fields) {
@@ -96,10 +88,7 @@ public class AsNumberHandler implements TypeHandler {
             }
         }
 
-        getProcess().getLogger().throwable(new NullPointerException("The field with name " + paramName + " is not found in class " + Utility.getClassName(clazz) + ". Make sure that the name is correct (case-sensitive)."));
-
-
-        return null;
+        throw new ProcessError("The field with name " + paramName + " is not found in class " + Utility.getClassName(clazz) + ". Make sure that the name is correct (case-sensitive).");
     }
 
     public Process getProcess() {

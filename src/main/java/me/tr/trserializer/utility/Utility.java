@@ -1,8 +1,5 @@
 package me.tr.trserializer.utility;
 
-import me.tr.trserializer.exceptions.TypeMissMatched;
-import me.tr.trserializer.logger.Logger;
-
 import java.lang.reflect.Array;
 import java.util.*;
 
@@ -55,6 +52,7 @@ public class Utility {
             boolean.class, Boolean.class
     );
 
+
     private Utility() throws InstantiationException {
         throw new InstantiationException("Cannot instantiate utility classes.");
     }
@@ -73,7 +71,6 @@ public class Utility {
         if (PRIMITIVE_WRAPPERS.containsKey(clazz)) {
             return PRIMITIVE_WRAPPERS.get(clazz);
         }
-        Logger.dbg("The class name " + clazz + " doesn't have a wrapper.");
         return clazz;
     }
 
@@ -93,17 +90,11 @@ public class Utility {
 
     public static boolean isAMapWithStringKeys(Object obj, boolean ignoreIfEmpty) {
         if (!(obj instanceof Map<?, ?> unsafeSubMap)) {
-            Logger.exception(new TypeMissMatched("The provided object is not a map but " + (obj == null ? "null" : Utility.getClassName(obj.getClass()))));
             return false;
         }
 
-        if ((ignoreIfEmpty && !unsafeSubMap.isEmpty()) &&
-                !String.class.isAssignableFrom(Utility.getKeyType(unsafeSubMap))) {
-            Logger.exception(new TypeMissMatched("The provided map keys type is not String.class"));
-            return false;
-        }
-
-        return true;
+        return (!ignoreIfEmpty || unsafeSubMap.isEmpty()) ||
+                String.class.isAssignableFrom(Utility.getKeyType(unsafeSubMap));
     }
 
     /**
@@ -114,7 +105,6 @@ public class Utility {
      */
     public static Class<?> getKeyType(Map<?, ?> map) {
         if (map == null || map.isEmpty()) {
-            Logger.dbg("Map is empty, cannot retrieve key type.");
             return Object.class;
         }
         return map.keySet().iterator().next().getClass();
@@ -132,7 +122,6 @@ public class Utility {
 
     public static String removeGeneric(String name) {
         if (!hasGeneric(name)) {
-            Logger.dbg("The class name " + name + " doesn't have generics, cannot remove them.");
             return "";
         }
 
@@ -149,7 +138,6 @@ public class Utility {
      */
     public static String retrieveGeneric(String name) {
         if (!hasGeneric(name)) {
-            Logger.dbg("The class name " + name + " doesn't have generics, cannot retrieve them.");
             return "";
         }
 

@@ -1,5 +1,6 @@
 package me.tr.trserializer.processes.serializer.addons;
 
+import me.tr.trserializer.exceptions.ProcessError;
 import me.tr.trserializer.processes.process.Process;
 import me.tr.trserializer.processes.serializer.helper.insert.InsertMethod;
 import me.tr.trserializer.processes.process.addons.PAddon;
@@ -30,10 +31,10 @@ public abstract class SAddon extends PAddon {
         return insert;
     }
 
-    public abstract Optional<Object> process(Serializer process, Object obj, GenericType<?> type, Field field) throws Exception;
+    public abstract Optional<Object> process(Serializer process, Object obj, GenericType<?> type, Field field) throws ProcessError;
 
     @Override
-    public Optional<Object> process(Process process, Object obj, GenericType<?> type, Field field) throws Exception {
+    public Optional<Object> process(Process process, Object obj, GenericType<?> type, Field field) throws ProcessError {
         return process((Serializer) process, obj, type, field);
     }
 

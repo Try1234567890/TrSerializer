@@ -1,6 +1,7 @@
 package me.tr.trserializer.processes.serializer.addons;
 
 import me.tr.trserializer.annotations.wrap.Wrapped;
+import me.tr.trserializer.exceptions.ProcessError;
 import me.tr.trserializer.handlers.annotation.WrappedHandler;
 import me.tr.trserializer.processes.process.Process;
 import me.tr.trserializer.processes.process.addons.Priority;
@@ -19,7 +20,7 @@ public class SWrapAddon extends SAddon {
     }
 
     public Optional<Object> process(Serializer serializer, Object obj, GenericType<?> type, Field field)
-            throws Exception {
+            throws ProcessError {
         if (field == null)
             return Optional.empty();
 
@@ -36,7 +37,7 @@ public class SWrapAddon extends SAddon {
     }
 
     @Override
-    public Optional<Object> process(Process process, Object obj, GenericType<?> type, Field field) throws Exception {
+    public Optional<Object> process(Process process, Object obj, GenericType<?> type, Field field) throws ProcessError {
         return process((Serializer) process, obj, type, field);
     }
 }

@@ -1,7 +1,6 @@
 package me.tr.trserializer.processes.serializer.helper;
 
-import me.tr.trformatter.strings.format.formats.CamelCase;
-import me.tr.trformatter.strings.format.formats.PascalCase;
+import me.tr.trformatter.strings.CString;
 import me.tr.trserializer.annotations.Getter;
 import me.tr.trserializer.processes.serializer.Serializer;
 import me.tr.trserializer.processes.serializer.SerializerOptions;
@@ -38,14 +37,14 @@ public class SValueRetriever {
         return getSerializer().getNamingStrategyApplier().applyNamingStrategy(field);
     }
 
-    public Object getValueOf(Field field, Object instance) throws IllegalAccessException, InvocationTargetException {
+    public Object getValueOf(Field field, Object instance) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
         if (field.isAnnotationPresent(Getter.class)) {
             Class<?> instanceClass = instance.getClass();
             Getter ann = field.getAnnotation(Getter.class);
             String fieldName = field.getName();
             String[] methodNames = {
                     ann.name(),
-                    "get" + new PascalCase(fieldName).toCaseFrom(CamelCase.class).getResult(),
+                    "get" + CString.of(fieldName).toPascalCase(),
                     fieldName
             };
 
@@ -58,7 +57,7 @@ public class SValueRetriever {
                 } catch (NoSuchMethodException ignore) {
                 }
             }
-            getSerializer().getLogger().throwable(new NoSuchMethodException("No methods found in class " + Utility.getClassName(instanceClass) + " with names " + Arrays.toString(methodNames) + ". Retrieving value from the field directly..."));
+            throw new NoSuchMethodException("No methods found in class " + Utility.getClassName(instanceClass) + " with names " + Arrays.toString(methodNames));
         }
 
         return field.get(instance);

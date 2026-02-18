@@ -1,6 +1,8 @@
 package me.tr.trserializer.processes.process.helper;
 
+import me.tr.trserializer.exceptions.ProcessError;
 import me.tr.trserializer.processes.process.Process;
+import me.tr.trserializer.processes.process.cache.ProcessCache;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -8,6 +10,7 @@ import java.util.Map;
 
 public class MethodsExecutor {
     private final Process process;
+    private ProcessCache.MethodsCache cache;
 
     public MethodsExecutor(Process process) {
         this.process = process;
@@ -17,16 +20,21 @@ public class MethodsExecutor {
         return process;
     }
 
+    public ProcessCache.MethodsCache getCache() {
+        if (cache == null) {
+            this.cache = getProcess().getCache().getMethodsCache();
+        }
+        return cache;
+    }
+
     /**
      * Invokes all registered 'end methods' (cleanup or finalization) for a given instance.
      *
      * @param instance the object instance on which to invoke the methods.
      */
     public void executeEndMethods(Object instance) {
-        if (instance == null) {
-            getProcess().getLogger().throwable(new NullPointerException("Instance is null."));
-            return;
-        }
+        if (instance == null) return;
+
         executeMethods(instance, getMethods(instance.getClass(), getProcess().getOptions().getEndMethods()));
     }
 
@@ -36,10 +44,8 @@ public class MethodsExecutor {
      * @param instance the object instance on which to invoke the methods.
      */
     public void executeStartMethods(Object instance) {
-        if (instance == null) {
-            getProcess().getLogger().throwable(new NullPointerException("Instance is null."));
-            return;
-        }
+        if (instance == null) return;
+
         executeMethods(instance, getMethods(instance.getClass(), getProcess().getOptions().getStartMethods()));
     }
 
@@ -50,22 +56,18 @@ public class MethodsExecutor {
      * @param methods  the methods to be invoked.
      */
     public void executeMethods(Object instance, Method[] methods) {
-        if (instance == null) {
-            getProcess().getLogger().throwable(new NullPointerException("Instance is null."));
-            return;
-        }
+        if (instance == null) return;
 
-        if (methods == null) {
-            getProcess().getLogger().throwable(new NullPointerException("Methods is null."));
-            return;
-        }
+
+        if (methods == null) return;
+
 
         for (Method method : methods) {
             try {
                 method.setAccessible(true);
                 method.invoke(instance);
             } catch (IllegalAccessException | InvocationTargetException e) {
-                getProcess().getLogger().throwable(new RuntimeException("An error occurs while invoking method " + method.getName() + " in class " + instance.getClass().getSimpleName(), e));
+                throw new ProcessError("An error occurs while invoking method " + method.getName() + " in class " + instance.getClass().getSimpleName(), e);
             }
         }
     }
@@ -79,13 +81,16 @@ public class MethodsExecutor {
      */
     private Method[] getMethods(Class<?> clazz, Map<Class<?>, String[]> methodsMap) {
         if (clazz == null) {
-            getProcess().getLogger().throwable(new NullPointerException("Class is null"));
-            return new Method[0];
+            throw new NullPointerException("Class is null");
         }
 
         if (methodsMap == null || methodsMap.isEmpty() ||
                 !methodsMap.containsKey(clazz)) {
             return new Method[0];
+        }
+
+        if (getCache().has(clazz)) {
+            return getCache().get(clazz);
         }
 
         String[] methodNames = methodsMap.get(clazz);
@@ -94,15 +99,10 @@ public class MethodsExecutor {
         for (int i = 0; i < methodNames.length; i++) {
             String name = methodNames[i];
             Method method = getMethod(clazz, name);
-
-            if (method == null) {
-                getProcess().getLogger().throwable(new NoSuchMethodException("No method founds in class " + clazz + " with name: " + name));
-                continue;
-            }
-
             methods[i] = method;
         }
 
+        getCache().put(clazz, methods);
         return methods;
     }
 
@@ -115,13 +115,11 @@ public class MethodsExecutor {
      */
     private Method getMethod(Class<?> clazz, String name) {
         if (clazz == null) {
-            getProcess().getLogger().throwable(new NullPointerException("The provided class is null."));
-            return null;
+            throw new NullPointerException("The provided class is null.");
         }
 
         if (name == null || name.isEmpty()) {
-            getProcess().getLogger().throwable(new NullPointerException("The provided method name is null."));
-            return null;
+            throw new NullPointerException("The provided method name is null.");
         }
 
         Class<?> current = clazz;
@@ -134,7 +132,6 @@ public class MethodsExecutor {
             }
         }
 
-        getProcess().getLogger().throwable(new NoSuchMethodException("No method found in class " + clazz + " with name: " + name));
-        return null;
+        throw new ProcessError("No method found in class " + clazz + " with name: " + name);
     }
 }

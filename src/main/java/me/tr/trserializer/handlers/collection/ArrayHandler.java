@@ -19,9 +19,8 @@ public class ArrayHandler implements TypeHandler {
 
     @Override
     public Object deserialize(Object obj, GenericType<?> type) {
-        if (obj == null || obj.getClass().isArray()) {
-            getProcess().getLogger().throwable(new TypeMissMatched("The provided object is not an array but " + (obj == null ? "null" : Utility.getClassName(obj.getClass()))));
-            return null;
+        if (obj == null || !obj.getClass().isArray()) {
+            throw new TypeMissMatched("The provided object is not an array but " + (obj == null ? "null" : Utility.getClassName(obj.getClass())));
         }
 
         Class<?> component = type.getFirstArgumentType();
@@ -43,17 +42,14 @@ public class ArrayHandler implements TypeHandler {
 
     @Override
     public Object serialize(Object obj, GenericType<?> type) {
-        if (obj == null || obj.getClass().isArray()) {
-            getProcess().getLogger().throwable(new TypeMissMatched("The provided object is not an array but " + (obj == null ? "null" : Utility.getClassName(obj.getClass()))));
-            return null;
+        if (obj == null || !obj.getClass().isArray()) {
+            throw new TypeMissMatched("The provided object is not an array but " + (obj == null ? "null" : Utility.getClassName(obj.getClass())));
         }
 
         int length = Array.getLength(obj);
 
-        if (length == 0) {
-            getProcess().getLogger().debug("The provided array is empty.");
-            return obj;
-        }
+        if (length == 0) return obj;
+
 
 
         boolean checked = false;

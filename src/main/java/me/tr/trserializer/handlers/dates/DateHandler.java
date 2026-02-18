@@ -1,8 +1,7 @@
 package me.tr.trserializer.handlers.dates;
 
+import me.tr.trserializer.exceptions.ProcessError;
 import me.tr.trserializer.exceptions.TypeMissMatched;
-import me.tr.trserializer.logger.Logger;
-import me.tr.trserializer.logger.ProcessLogger;
 import me.tr.trserializer.types.GenericType;
 import me.tr.trserializer.utility.Utility;
 
@@ -25,16 +24,11 @@ public class DateHandler extends DateHandlerContainer {
                 SimpleDateFormat formatter = new SimpleDateFormat(getFormat());
                 return formatter.parse(date);
             } catch (ParseException e) {
-                Logger.exception(new IllegalArgumentException(
-                                "An error occurs while parsing " + date + " with format " + getFormat(), e));
-                return null;
+                throw new ProcessError("An error occurs while parsing " + date + " with format " + getFormat(), e);
             }
         }
 
-        Logger.exception(new TypeMissMatched(
-                        "The provided object (" + Utility.getClassName(obj.getClass()) +
-                                ") is not a valid type to deserialize it as Date."));
-        return null;
+        throw new TypeMissMatched("The provided object (" + Utility.getClassName(obj.getClass()) + ") is not a valid type to deserialize it as Date.");
     }
 
     @Override
@@ -47,6 +41,6 @@ public class DateHandler extends DateHandlerContainer {
             return formatter.format(date);
         }
 
-        return obj;
+        throw new TypeMissMatched("The provided object (" + Utility.getClassName(obj.getClass()) + ") is not a date.");
     }
 }

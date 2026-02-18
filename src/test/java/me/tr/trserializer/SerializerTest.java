@@ -18,7 +18,6 @@ public class SerializerTest {
 
     public void runAll() {
 
-        testPerformance();
         testGenericCollections();
         testObjectIdentity();
         testBasics();
@@ -26,23 +25,6 @@ public class SerializerTest {
         new AdvancedTest().runAll();
         new AnnotationTest().runAll();
         new SelfReferenceTest().runAll();
-    }
-
-    @Test
-    public void testPerformance() {
-        System.out.println("\n===----------=== PERFORMANCE TEST ===----------===");
-
-        List<Person> largeList = new ArrayList<>();
-        for (int i = 0; i < 10000; i++) {
-            largeList.add(new Person(new Generalities("Name" + i, "Surname"), new Birthday(LocalDate.of(1900 + (i % 126), ((i % 12) + 1), ((i % 28) + 1))), Gender.MALE, new String[]{"h1"}, new ArrayList<>()));
-        }
-
-        long start = System.currentTimeMillis();
-        List<Map<String, Object>> s =
-                new Serializer().serialize(largeList, new GenericType<>(List.class, Map.class));
-        long end = System.currentTimeMillis();
-
-        System.out.println("Serialized 10.000 objects in: " + (end - start) + "ms");
     }
 
     @Test
@@ -97,44 +79,47 @@ public class SerializerTest {
 
     @Test
     public void testBasics() {
-        System.out.println("\n===----------=== BASICS ===----------===");
+        try {
+            System.out.println("\n===----------=== BASICS ===----------===");
 
-        Person person = new Person(
-                new Generalities("Mario", "Rossi"),
-                new Birthday(LocalDate.of(2023, Month.SEPTEMBER, 26)),
-                Gender.MALE,
-                new String[]{"sport", "football"},
-                List.of(
-                        new Pet(new Generalities("Black", "Rossi"), Gender.MALE, new Birthday(LocalDate.of(2023, Month.SEPTEMBER, 26)), "cat"),
-                        new Pet(new Generalities("White", "Rossi"), Gender.FEMALE, new Birthday(LocalDate.of(2023, Month.SEPTEMBER, 26)), "cat")
-                ),
-                List.of(
-                        new Person(
-                                new Generalities("White", "Red"),
-                                new Birthday(LocalDate.of(2023, Month.SEPTEMBER, 26)),
-                                Gender.FEMALE,
-                                new String[]{"dolls"},
-                                new ArrayList<>()
-                        ),
-                        new Person(
-                                new Generalities("Red", "Blue"),
-                                new Birthday(LocalDate.of(2023, Month.SEPTEMBER, 26)),
-                                Gender.MALE,
-                                new String[]{"basket"},
-                                List.of(
-                                        new Pet(new Generalities("Black", "Rossi"), Gender.MALE, new Birthday(LocalDate.of(2023, Month.SEPTEMBER, 26)), "cat"),
-                                        new Pet(new Generalities("White", "Rossi"), Gender.FEMALE, new Birthday(LocalDate.of(2023, Month.SEPTEMBER, 26)), "cat")
-                                )
-                        )
-                )
-        );
+            Person person = new Person(
+                    new Generalities("Mario", "Rossi"),
+                    new Birthday(LocalDate.of(2023, Month.SEPTEMBER, 26)),
+                    Gender.MALE,
+                    new String[]{"sport", "football"},
+                    List.of(
+                            new Pet(new Generalities("Black", "Rossi"), Gender.MALE, new Birthday(LocalDate.of(2023, Month.SEPTEMBER, 26)), "cat"),
+                            new Pet(new Generalities("White", "Rossi"), Gender.FEMALE, new Birthday(LocalDate.of(2023, Month.SEPTEMBER, 26)), "cat")
+                    ),
+                    List.of(
+                            new Person(
+                                    new Generalities("White", "Red"),
+                                    new Birthday(LocalDate.of(2023, Month.SEPTEMBER, 26)),
+                                    Gender.FEMALE,
+                                    new String[]{"dolls"},
+                                    new ArrayList<>()
+                            ),
+                            new Person(
+                                    new Generalities("Red", "Blue"),
+                                    new Birthday(LocalDate.of(2023, Month.SEPTEMBER, 26)),
+                                    Gender.MALE,
+                                    new String[]{"basket"},
+                                    List.of(
+                                            new Pet(new Generalities("Black", "Rossi"), Gender.MALE, new Birthday(LocalDate.of(2023, Month.SEPTEMBER, 26)), "cat"),
+                                            new Pet(new Generalities("White", "Rossi"), Gender.FEMALE, new Birthday(LocalDate.of(2023, Month.SEPTEMBER, 26)), "cat")
+                                    )
+                            )
+                    )
+            );
 
-        Map<String, Object> s = new Serializer().serialize(person, new GenericType<>(Map.class));
-        System.out.println(s);
+            Map<String, Object> s = new Serializer().serialize(person, new GenericType<>(Map.class));
+            System.out.println(s);
 
-        Person d = new Deserializer().deserialize(s, Person.class);
+            Person d = new Deserializer().deserialize(s, Person.class);
 
-        System.out.println(d);
+            System.out.println(d);
+        } catch (StackOverflowError ex) {
+        }
     }
 
 

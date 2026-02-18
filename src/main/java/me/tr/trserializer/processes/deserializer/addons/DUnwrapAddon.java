@@ -1,6 +1,7 @@
 package me.tr.trserializer.processes.deserializer.addons;
 
 import me.tr.trserializer.annotations.unwrap.Unwrapped;
+import me.tr.trserializer.exceptions.ProcessError;
 import me.tr.trserializer.handlers.annotation.UnwrappedHandler;
 import me.tr.trserializer.processes.deserializer.Deserializer;
 import me.tr.trserializer.processes.process.Process;
@@ -21,7 +22,7 @@ public class DUnwrapAddon extends DAddon {
     }
 
     public Optional<Object> process(Deserializer deserializer, Object obj, GenericType<?> type, Field field)
-            throws Exception {
+            throws ProcessError {
         if (field == null)
             return Optional.empty();
 
@@ -45,7 +46,7 @@ public class DUnwrapAddon extends DAddon {
     }
 
     @Override
-    public Optional<Object> process(Process process, Object obj, GenericType<?> type, Field field) throws Exception {
+    public Optional<Object> process(Process process, Object obj, GenericType<?> type, Field field) throws ProcessError {
         return process((Deserializer) process, obj, type, field);
     }
 }

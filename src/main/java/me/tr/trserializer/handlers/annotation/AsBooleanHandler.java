@@ -1,7 +1,7 @@
 package me.tr.trserializer.handlers.annotation;
 
 import me.tr.trserializer.annotations.AsBoolean;
-import me.tr.trserializer.logger.ProcessLogger;
+import me.tr.trserializer.exceptions.ProcessError;
 import me.tr.trserializer.processes.process.Process;
 import me.tr.trserializer.types.GenericType;
 import me.tr.trserializer.utility.Utility;
@@ -20,17 +20,13 @@ public class AsBooleanHandler extends AsStringHandler {
         Class<?> clazz = obj.getClass();
         Field field = getField(clazz);
 
-        if (field == null)
-            return null;
-
         try {
             field.setAccessible(true);
             Object value = field.get(obj);
 
             return getSerializer().serialize(value, Boolean.class);
         } catch (Exception e) {
-            getProcess().getLogger().throwable(new RuntimeException("An error occurs while retrieving the value of field " + field.getName() + " in class " + Utility.getClassName(clazz), e));
-            return null;
+            throw new ProcessError("An error occurs while retrieving the value of field " + field.getName() + " in class " + Utility.getClassName(clazz), e);
         }
     }
 
@@ -45,10 +41,8 @@ public class AsBooleanHandler extends AsStringHandler {
             String paramName = asString.field();
 
             if (paramName.isEmpty()) {
-                getProcess().getLogger().throwable(
-                        new NullPointerException("The class " + Utility.getClassName(clazz) + " contains more than 1 field and no fields is specified " +
-                                "in @AsBoolean annotation. Please specify the field to working on in annotation param."));
-                return null;
+                throw new ProcessError("The class " + Utility.getClassName(clazz) + " contains more than 1 field and no fields is specified " +
+                        "in @AsBoolean annotation. Please specify the field to working on in annotation param.");
             }
 
             for (Field field : fields) {
@@ -57,9 +51,9 @@ public class AsBooleanHandler extends AsStringHandler {
                 }
             }
 
-            getProcess().getLogger().throwable(new NullPointerException("The field with name " + paramName + " is not found in class " + Utility.getClassName(clazz) + ". Make sure that the name is correct (case-sensitive)."));
+            throw new ProcessError("The field with name " + paramName + " is not found in class " + Utility.getClassName(clazz) + ". Make sure that the name is correct (case-sensitive).");
         }
 
-        return null;
+        throw new ProcessError("Class " + Utility.getClassName(clazz) + " is not annotated with @AsBoolean");
     }
 }

@@ -35,10 +35,8 @@ public class DeserializerOptions extends ProcessOptions {
     }
 
     public boolean hasAlternatives(Class<?> clazz) {
-        if (clazz == null) {
-            getProcess().getLogger().throwable(new NullPointerException("The class is null."));
-            return false;
-        }
+        if (clazz == null) return false;
+
         return getAlternatives().containsKey(clazz);
     }
 
@@ -52,8 +50,7 @@ public class DeserializerOptions extends ProcessOptions {
      */
     public Function<Object, Optional<Class<?>>> getAlternatives(Class<?> clazz) {
         if (clazz == null) {
-            getProcess().getLogger().throwable(new NullPointerException("The class is null."));
-            return null;
+            throw new NullPointerException("The class is null.");
         }
         return getAlternatives().get(clazz);
     }
@@ -65,15 +62,11 @@ public class DeserializerOptions extends ProcessOptions {
      * @param function The function that contains logic to determinate which alternative use.
      */
     public DeserializerOptions addAlternatives(Class<?> clazz, Function<Object, Optional<Class<?>>> function) {
-        if (clazz == null) {
-            getProcess().getLogger().throwable(new NullPointerException("The class is null."));
-            return this;
-        }
+        if (clazz == null) return this;
 
-        if (function == null) {
-            getProcess().getLogger().throwable(new NullPointerException("The function is null."));
-            return this;
-        }
+
+        if (function == null) return this;
+
         getAlternatives().put(clazz, function);
         return this;
     }
@@ -113,14 +106,9 @@ public class DeserializerOptions extends ProcessOptions {
      */
     @Deprecated(forRemoval = true)
     public DeserializerOptions addAlias(Class<?> declaringClazz, String fieldName, String... aliases) {
-        if (fieldName == null) {
-            getProcess().getLogger().throwable(new NullPointerException("The field name is null."));
-            return this;
-        }
-        if (aliases == null || aliases.length == 0) {
-            getProcess().getLogger().throwable(new NullPointerException("The aliases are null."));
-            return this;
-        }
+        if (fieldName == null) return this;
+        if (aliases == null || aliases.length == 0) return this;
+
         getAliasesOption().getValue().add(new Three<>(declaringClazz, fieldName, aliases));
         return this;
     }
@@ -134,10 +122,8 @@ public class DeserializerOptions extends ProcessOptions {
      */
     @Deprecated(forRemoval = true)
     public DeserializerOptions addAlias(Three<Class<?>, String, String[]> alias) {
-        if (alias == null) {
-            getProcess().getLogger().throwable(new NullPointerException("The alias is null."));
-            return this;
-        }
+        if (alias == null) return this;
+
         getAliasesOption().getValue().add(alias);
         return this;
     }
@@ -151,10 +137,7 @@ public class DeserializerOptions extends ProcessOptions {
      */
     @Deprecated(forRemoval = true)
     public boolean hasAliases(Class<?> clazz) {
-        if (clazz == null) {
-            getProcess().getLogger().throwable(new NullPointerException("The class is null."));
-            return false;
-        }
+        if (clazz == null) return false;
 
         return getAliases().stream().anyMatch(alias -> alias.key().equals(clazz));
     }
@@ -169,15 +152,9 @@ public class DeserializerOptions extends ProcessOptions {
      */
     @Deprecated(forRemoval = true)
     public boolean hasAliases(Class<?> clazz, String fieldName) {
-        if (clazz == null) {
-            getProcess().getLogger().throwable(new NullPointerException("The class is null."));
-            return false;
-        }
+        if (clazz == null) return false;
+        if (fieldName == null || fieldName.isEmpty()) return false;
 
-        if (fieldName == null || fieldName.isEmpty()) {
-            getProcess().getLogger().throwable(new NullPointerException("The field name is null."));
-            return false;
-        }
 
         return hasAliases(clazz) && getAliases().stream().anyMatch(alias -> compare(alias.value(), fieldName));
     }
@@ -191,10 +168,8 @@ public class DeserializerOptions extends ProcessOptions {
      */
     @Deprecated(forRemoval = true)
     public boolean hasAliases(Field field) {
-        if (field == null) {
-            getProcess().getLogger().throwable(new NullPointerException("The field is null."));
-            return false;
-        }
+        if (field == null) return false;
+
 
         return hasAliases(field.getDeclaringClass(), field.getName());
     }
