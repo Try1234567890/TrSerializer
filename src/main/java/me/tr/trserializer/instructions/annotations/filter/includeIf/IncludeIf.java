@@ -1,4 +1,4 @@
-package me.tr.trserializer.annotations;
+package me.tr.trserializer.instructions.annotations.includeIf;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -7,5 +7,8 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
-public @interface Essential {
+public @interface IncludeIf {
+
+    IncludeStrategy strategy();
+
 }
