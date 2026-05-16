@@ -11,6 +11,6 @@ public interface SerializerHandler {
 
     boolean canHandle(SerializerTask task);
 
-    DeserializerHandler getDeserializerVersion();
+    DeserializerHandler getDeserializerHandler();
 
 }

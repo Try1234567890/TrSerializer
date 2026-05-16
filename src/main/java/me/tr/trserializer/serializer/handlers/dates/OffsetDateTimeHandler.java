@@ -6,22 +6,22 @@ import me.tr.trserializer.exceptions.TypeMissMatched;
 import me.tr.trserializer.serializer.SerializerTask;
 import me.tr.trserializer.serializer.handlers.SerializerHandler;
 
-import java.time.Instant;
+import java.time.OffsetDateTime;
 
-public class InstantHandler implements SerializerHandler {
-    public static final InstantHandler INSTANCE = new InstantHandler();
+public class OffsetDateTimeHandler implements SerializerHandler {
+    public static final OffsetDateTimeHandler INSTANCE = new OffsetDateTimeHandler();
 
     @Override
     public void serialize(SerializerTask task) throws TranslationError, TypeMissMatched {
-        if (!(task.getObject() instanceof Instant instant)) return;
+        if (!(task.getObject() instanceof OffsetDateTime offsetDateTime)) return;
 
-        task.getResult().accept(instant.toEpochMilli());
+        task.getResult().accept(offsetDateTime.toString());
     }
 
     @Override
     public boolean canHandle(SerializerTask task) {
         Object obj = task.getObject();
-        return obj instanceof Instant;
+        return obj instanceof OffsetDateTime;
     }
 
     @Override

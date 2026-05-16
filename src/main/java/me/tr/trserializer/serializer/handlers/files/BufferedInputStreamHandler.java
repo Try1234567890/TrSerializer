@@ -7,35 +7,30 @@ import me.tr.trserializer.exceptions.TypeMissMatched;
 import me.tr.trserializer.serializer.SerializerTask;
 import me.tr.trserializer.serializer.handlers.SerializerHandler;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.io.Reader;
-import java.util.ArrayList;
-import java.util.List;
 
-public class ReaderHandler implements SerializerHandler {
-    public static final ReaderHandler INSTANCE = new ReaderHandler();
+public class BufferedInputStreamHandler implements SerializerHandler {
+    public static final BufferedInputStreamHandler INSTANCE = new BufferedInputStreamHandler();
 
     @Override
     public void serialize(SerializerTask task) throws TranslationError, TypeMissMatched {
-        if (!(task.getObject() instanceof Reader reader)) return;
+        if (!(task.getObject() instanceof BufferedInputStream bis)) return;
 
-        List<Byte> bytes = new ArrayList<>();
-        int current;
         try {
-            while ((current = reader.read()) != -1) {
-                bytes.add((byte) current);
-            }
-
+            bis.mark(0);
+            bis.reset();
+            byte[] bytes = bis.readAllBytes();
             task.getResult().accept(bytes);
         } catch (IOException e) {
-            throw new HandlerError("An error occurs while reading from the provided reader.", e);
+            throw new HandlerError("An error occurs while reading the buffered input stream.", e);
         }
     }
 
     @Override
     public boolean canHandle(SerializerTask task) {
         Object obj = task.getObject();
-        return obj instanceof Reader;
+        return obj instanceof BufferedInputStream;
     }
 
     @Override

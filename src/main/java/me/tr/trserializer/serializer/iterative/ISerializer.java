@@ -43,7 +43,6 @@ public class ISerializer implements Serializer<ISerializerTask> {
             throw new SerializationError("Serializer cannot serialize " + task + ". Unknown object type, create a custom handler.");
     }
 
-
     @Override
     public Map<String, Object> serializeAsMap(ISerializerTask task) throws SerializationError, TypeMissMatched {
         Map<String, Object> result = new HashMap<>();

@@ -6,22 +6,22 @@ import me.tr.trserializer.exceptions.TypeMissMatched;
 import me.tr.trserializer.serializer.SerializerTask;
 import me.tr.trserializer.serializer.handlers.SerializerHandler;
 
-import java.time.Instant;
+import java.util.Calendar;
 
-public class InstantHandler implements SerializerHandler {
-    public static final InstantHandler INSTANCE = new InstantHandler();
+public class CalendarHandler implements SerializerHandler {
+    public static final CalendarHandler INSTANCE = new CalendarHandler();
 
     @Override
     public void serialize(SerializerTask task) throws TranslationError, TypeMissMatched {
-        if (!(task.getObject() instanceof Instant instant)) return;
+        if (!(task.getObject() instanceof Calendar calendar)) return;
 
-        task.getResult().accept(instant.toEpochMilli());
+        task.getResult().accept(calendar.toInstant().toEpochMilli());
     }
 
     @Override
     public boolean canHandle(SerializerTask task) {
         Object obj = task.getObject();
-        return obj instanceof Instant;
+        return obj instanceof Calendar;
     }
 
     @Override

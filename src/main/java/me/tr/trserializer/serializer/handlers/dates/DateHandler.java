@@ -1,4 +1,31 @@
 package me.tr.trserializer.serializer.handlers.dates;
 
-public class DateHandler {
+import me.tr.trserializer.deserializer.handlers.DeserializerHandler;
+import me.tr.trserializer.exceptions.TranslationError;
+import me.tr.trserializer.exceptions.TypeMissMatched;
+import me.tr.trserializer.serializer.SerializerTask;
+import me.tr.trserializer.serializer.handlers.SerializerHandler;
+
+import java.util.Date;
+
+public class DateHandler implements SerializerHandler {
+    public static final DateHandler INSTANCE = new DateHandler();
+
+    @Override
+    public void serialize(SerializerTask task) throws TranslationError, TypeMissMatched {
+        if (!(task.getObject() instanceof Date date)) return;
+
+        task.getResult().accept(date.toInstant().toEpochMilli());
+    }
+
+    @Override
+    public boolean canHandle(SerializerTask task) {
+        Object obj = task.getObject();
+        return obj instanceof Date;
+    }
+
+    @Override
+    public DeserializerHandler getDeserializerHandler() {
+        return null;
+    }
 }

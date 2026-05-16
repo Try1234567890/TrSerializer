@@ -60,6 +60,10 @@ public abstract class SerializerTask implements TranslatorTask {
         serialize(object, StaticObjectSerializerTypeResolver.resolve(object), result);
     }
 
+    public void serialize(Object object) {
+        serialize(object, StaticObjectSerializerTypeResolver.resolve(object), getResult());
+    }
+
     @Override
     public UUID getID() {
         return id;
