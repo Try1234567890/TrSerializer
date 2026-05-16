@@ -1,0 +1,16 @@
+Capire automaticamente il generic type di un serializer:
+
+Generic Object:
+    - Se l'oggetto é un wrapper o un primitivo:
+        -> é il tipo primitivo dell'oggetto.
+    - Continua con la Collection Object
+    - Ritorna una mappa String-Object come fallback (é un oggetto complesso/custom)
+
+
+Collection Object:
+    - Se l'oggetto é una collezione o un array:
+        -> Esegue la GenericObject su il component type.
+    - Se l'oggetto é una mappa:
+        -> Esegue la GenericObject sulle keys e values.
+    - Se é un Optional o una Reference o un'atomic value:
+        -> Esegue la GenericObject sull'oggetto contenuto.

@@ -1,0 +1,4 @@
+package me.tr.trserializer.serializer.handlers.containers;
+
+public class OptionalHandler {
+}
