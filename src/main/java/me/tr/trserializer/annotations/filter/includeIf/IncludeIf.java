@@ -1,4 +1,4 @@
-package me.tr.trserializer.instructions.annotations.includeIf;
+package me.tr.trserializer.annotations.filter.includeIf;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

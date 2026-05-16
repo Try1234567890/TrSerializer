@@ -23,7 +23,7 @@ repositories {
 }
 
 dependencies {
-    implementation('me.tr.trformatter:formatter:3.2.5')
+    implementation('me.tr.trlogger:logger:2.2.5-fix')
 
     testImplementation('org.junit.jupiter:junit-jupiter:5.10.0')
     testRuntimeOnly('org.junit.platform:junit-platform-launcher')
