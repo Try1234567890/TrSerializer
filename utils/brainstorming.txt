@@ -14,3 +14,12 @@ Collection Object:
         -> Esegue la GenericObject sulle keys e values.
     - Se é un Optional o una Reference o un'atomic value:
         -> Esegue la GenericObject sull'oggetto contenuto.
+
+byte: -128 : 127
+short: -32768 : 32767
+integer: -2^31 : 2^31-1
+long: -2^63 : 2^63-1
+float: 2^127 : 2^127-1 : .0000000 (6/7 decimal)
+double: 2^1023 : 2^1023-1 : .0000000000000000 (15/17 decimal)
+biginteger: no limit
+bigdecimal: no limit : no limit : (2,147,483,647 decimal)
