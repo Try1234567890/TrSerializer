@@ -14,6 +14,4 @@ public @interface Initialize {
 
     boolean isSingleton() default false;
 
-    boolean forceNames() default false;
-
 }

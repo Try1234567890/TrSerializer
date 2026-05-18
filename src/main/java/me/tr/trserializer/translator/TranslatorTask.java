@@ -2,6 +2,7 @@ package me.tr.trserializer.translator;
 
 import me.tr.trserializer.instancer.TranslatorInstancer;
 import me.tr.trserializer.types.GenericType;
+import me.tr.trserializer.utility.Utility;
 
 import java.util.UUID;
 
@@ -26,6 +27,20 @@ public interface TranslatorTask {
      * @return The object to work on.
      */
     Object getObject();
+
+    /**
+     * @return the {@code object} class elegant name.
+     */
+    default String getObjectClassName() {
+        return Utility.getClassName(getObject());
+    }
+
+    /**
+     * @return the {@code object} class. If the {@code object} is null returns {@code Object.class}
+     */
+    default Class<?> getObjectClass() {
+        return getObject() == null ? Object.class : getObject().getClass();
+    }
 
     /**
      * @return The expected final object type.

@@ -1,6 +1,7 @@
 package me.tr.trserializer.serializer.handlers.dates;
 
 import me.tr.trserializer.deserializer.handlers.DeserializerHandler;
+import me.tr.trserializer.deserializer.handlers.dates.SQLDateDeserializerHandler;
 import me.tr.trserializer.exceptions.TranslationError;
 import me.tr.trserializer.exceptions.TypeMissMatched;
 import me.tr.trserializer.serializer.SerializerTask;
@@ -8,8 +9,8 @@ import me.tr.trserializer.serializer.handlers.SerializerHandler;
 
 import java.sql.Date;
 
-public class SQLDateHandler implements SerializerHandler {
-    public static final SQLDateHandler INSTANCE = new SQLDateHandler();
+public class SQLDateSerializerHandler implements SerializerHandler {
+    public static final SQLDateSerializerHandler INSTANCE = new SQLDateSerializerHandler();
 
     @Override
     public void serialize(SerializerTask task) throws TranslationError, TypeMissMatched {
@@ -26,6 +27,6 @@ public class SQLDateHandler implements SerializerHandler {
 
     @Override
     public DeserializerHandler getDeserializerHandler() {
-        return me.tr.trserializer.deserializer.handlers.dates.SQLDateHandler.INSTANCE;
+        return SQLDateDeserializerHandler.INSTANCE;
     }
 }

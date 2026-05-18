@@ -1,11 +1,14 @@
 package me.tr.trserializer.deserializer.handlers;
 
+import me.tr.trserializer.deserializer.DeserializerTask;
 import me.tr.trserializer.serializer.handlers.SerializerHandler;
 
 public interface DeserializerHandler {
 
-    // TODO: Object deserialize();
+    void deserialize(DeserializerTask task);
 
-    SerializerHandler getSerializerVersion();
+    boolean canHandle(DeserializerTask task);
+
+    SerializerHandler getSerializerHandler();
 
 }

@@ -2,17 +2,15 @@ package me.tr.trserializer.types;
 
 import me.tr.trserializer.utility.SLogger;
 import me.tr.trserializer.utility.Utility;
+import me.tr.trserializer.utility.Wrappers;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.util.Arrays;
+import java.lang.reflect.*;
 import java.util.Collection;
 import java.util.Map;
 
 /**
  * Represents a generic type at runtime, encapsulating both the raw class
- * and its associated type arguments.
+ * and its associated type arguments or component types.
  * <p>
  * This class implements {@link ParameterizedType} to ensure full compatibility
  * with the standard Java Reflection API.
@@ -26,15 +24,21 @@ public class GenericType<T> implements ParameterizedType {
 
     /**
      * Constructs a new GenericType using a raw type and optional type arguments.
+     * If no type arguments are provided, it attempts to extract them automatically from the raw type.
      *
-     * @param rawType       The base type (e.g., {@code List.class}).
+     * @param rawType       The base type (e.g., {@code List.class} or {@code List<String>}).
      * @param typeArguments The generic arguments (e.g., {@code String.class}).
-     * @throws IllegalArgumentException If the raw type cannot be resolved to a class.
      */
     @SuppressWarnings("unchecked")
     public GenericType(Type rawType, Type... typeArguments) {
         this.typeClass = (Class<T>) resolveClass(rawType);
-        this.typeArguments = (typeArguments != null) ? typeArguments.clone() : new Type[0];
+
+        // If explicit type arguments are provided, use them; otherwise, attempt auto-extraction
+        if (typeArguments != null && typeArguments.length > 0) {
+            this.typeArguments = typeArguments.clone();
+        } else {
+            this.typeArguments = extractTypeArguments(rawType);
+        }
     }
 
     /**
@@ -44,7 +48,8 @@ public class GenericType<T> implements ParameterizedType {
      */
     @SuppressWarnings("unchecked")
     public GenericType(Field field) {
-        this.typeClass = (Class<T>) field.getType();
+        // Use the field's generic type to avoid losing nested type arguments (e.g., generic arrays)
+        this.typeClass = (Class<T>) resolveClass(field.getGenericType());
         this.typeArguments = resolveTypeArguments(field);
     }
 
@@ -52,23 +57,14 @@ public class GenericType<T> implements ParameterizedType {
     // Factory Methods
     // -------------------------------------------------------------------------
 
-    /**
-     * Creates a GenericType for a simple class with type arguments.
-     */
     public static <T> GenericType<T> of(Class<T> clazz, Type... typeArguments) {
         return new GenericType<>(clazz, typeArguments);
     }
 
-    /**
-     * Creates a GenericType for a simple class without type arguments.
-     */
     public static <T> GenericType<T> of(Class<T> clazz) {
         return new GenericType<>(clazz);
     }
 
-    /**
-     * Creates a GenericType by inspecting the given field.
-     */
     public static <T> GenericType<T> of(Field field) {
         return new GenericType<>(field);
     }
@@ -77,30 +73,17 @@ public class GenericType<T> implements ParameterizedType {
     // ParameterizedType Implementation
     // -------------------------------------------------------------------------
 
-    /**
-     * Returns the raw type (e.g., List, Map, or a custom class).
-     *
-     * @return The {@link Class} representing the raw type.
-     */
     @Override
     public Type getRawType() {
         return typeClass;
     }
 
-    /**
-     * Returns the owner type for member classes (e.g., {@code Map} for {@code Map.Entry}).
-     * Returns {@code null} for top-level classes.
-     */
     @Override
     public Type getOwnerType() {
+        // Return the enclosing class if it's an inner/member class; otherwise null
         return typeClass.isMemberClass() ? typeClass.getEnclosingClass() : null;
     }
 
-    /**
-     * Returns a copy of the actual type arguments.
-     *
-     * @return An array of {@link Type} objects.
-     */
     @Override
     public Type[] getActualTypeArguments() {
         return typeArguments.clone();
@@ -110,115 +93,135 @@ public class GenericType<T> implements ParameterizedType {
     // Additional API
     // -------------------------------------------------------------------------
 
-    /**
-     * Returns the {@link Class} object associated with the raw type.
-     */
     public Class<T> getTypeClass() {
         return typeClass;
     }
 
-    /**
-     * Returns the class of the first type argument.
-     * * @return The first argument's class, or {@code Object.class} if none exist.
-     */
     public Class<?> getFirstArgumentClass() {
         return getArgumentClass(0);
     }
 
-    /**
-     * Returns the class of the type argument at the specified index.
-     *
-     * @param index The 0-based index of the argument.
-     * @return The argument's class, or {@code Object.class} if the index is out of bounds.
-     */
     public Class<?> getArgumentClass(int index) {
         if (index < 0 || index >= typeArguments.length) {
             SLogger.LOGGER.debug("Requested type at index " + index + " is out of bounds. Returning Object.class");
             return Object.class;
         }
-        return rawTypeOf(typeArguments[index]);
+        return resolveClass(typeArguments[index]);
     }
 
     // -------------------------------------------------------------------------
-    // Static Utilities
+    // Static Utilities (The Core Engine)
     // -------------------------------------------------------------------------
 
     /**
-     * Resolves a {@link Type} into its corresponding {@link Class}.
-     *
-     * @param type The type to resolve.
-     * @return The resolved class.
-     * @throws IllegalArgumentException If the type name is not found or is unresolvable.
+     * Resolves ANY {@link Type} into its closest corresponding {@link Class}.
+     * Recursively unwraps Classes, Parameterized Types, Generic Arrays, Type Variables, and Wildcards.
      */
     public static Class<?> resolveClass(Type type) {
-        SLogger.LOGGER.debug("Resolving class for " + type);
+        if (type == null) return Object.class;
+
+        // 1. Direct Class instance
         if (type instanceof Class<?> cls) {
-            SLogger.LOGGER.debug("   The type is already a class.");
             return cls;
         }
+        // 2. Parameterized Type (e.g., List<String> -> List.class)
         if (type instanceof ParameterizedType pt) {
-            SLogger.LOGGER.debug("   The type is parameterized, retrieving the raw type.");
-            return (Class<?>) pt.getRawType();
+            return resolveClass(pt.getRawType());
+        }
+        // 3. Generic Array Type (e.g., T[] or List<String>[])
+        if (type instanceof GenericArrayType gat) {
+            // Dynamically instantiate a mirror array class using the resolved component type
+            Class<?> componentClass = resolveClass(gat.getGenericComponentType());
+            return Array.newInstance(componentClass, 0).getClass();
+        }
+        // 4. Type Variable (e.g., T extends Number -> Number.class)
+        if (type instanceof TypeVariable<?> tv) {
+            if (tv.getBounds().length > 0) {
+                return resolveClass(tv.getBounds()[0]);
+            }
+            return Object.class;
+        }
+        // 5. Wildcard Type (e.g., ? extends String -> String.class)
+        if (type instanceof WildcardType wt) {
+            if (wt.getUpperBounds().length > 0) {
+                return resolveClass(wt.getUpperBounds()[0]);
+            }
+            return Object.class;
         }
 
-        // Fallback: resolution via name (useful for TypeVariables or generic descriptors)
+        // Extreme fallback: String-based resolution via standard ClassLoader
         String name = Utility.removeGeneric(type.getTypeName());
         try {
-            SLogger.LOGGER.debug("   Trying to retrieve from class name: " + name);
             return Class.forName(name, true, ClassLoader.getSystemClassLoader());
         } catch (ClassNotFoundException e) {
-            throw new IllegalArgumentException("Unable to resolve type: " + type.getTypeName(), e);
+            SLogger.LOGGER.debug("Unable to resolve class name for: " + type.getTypeName() + ". Falling back to Object.class");
+            return Object.class;
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Private Helpers
-    // -------------------------------------------------------------------------
-
     /**
-     * Extracts generic type arguments from a field, handling arrays and parameterized types.
+     * Extract type arguments aggressively from a Field by looking up its Generic Type structure.
      */
     private static Type[] resolveTypeArguments(Field field) {
-        SLogger.LOGGER.debug("Resolving arguments of " + field);
-
-        // Handle Arrays: the only "argument" is the component type
-        Class<?> component = field.getType().getComponentType();
-        if (component != null) {
-            SLogger.LOGGER.debug("   Is an array, arguments: " + component);
-            return new Type[]{component};
-        }
-
-        // Handle Generic Types (e.g., List<String>, Map<K, V>)
-        Type generic = field.getGenericType();
-        if (generic instanceof ParameterizedType pt) {
-            Type[] arguments = pt.getActualTypeArguments();
-            SLogger.LOGGER.debug("   Has generics, arguments: " + Arrays.toString(arguments));
-            return arguments;
-        }
-
-        // Simple types have no type arguments
-        SLogger.LOGGER.debug("   Simple object, no arguments.");
-        return new Type[0];
+        SLogger.LOGGER.debug("Resolving arguments of field: " + field.getName());
+        return extractTypeArguments(field.getGenericType());
     }
 
     /**
-     * Maps a Type to a Class, defaulting to Object if the mapping is complex.
+     * Internal recursive logic to dive into generic hierarchies and retrieve type definitions.
      */
-    private static Class<?> rawTypeOf(Type type) {
-        return switch (type) {
-            case Class<?> cls -> cls;
-            case ParameterizedType pt -> (Class<?>) pt.getRawType();
-            default -> Object.class;
-        };
+    private static Type[] extractTypeArguments(Type type) {
+        // Handle standard generics (e.g., Collection<String> -> [String.class])
+        if (type instanceof ParameterizedType pt) {
+            return pt.getActualTypeArguments();
+        }
+
+        // Handle Generic Arrays (e.g., List<String>[])
+        if (type instanceof GenericArrayType gat) {
+            Type componentType = gat.getGenericComponentType();
+            // If the component is parameterized, extract its arguments (e.g., String from List<String>)
+            if (componentType instanceof ParameterizedType ptComponent) {
+                return ptComponent.getActualTypeArguments();
+            }
+            return new Type[]{componentType};
+        }
+
+        // Handle standard Class references and standard arrays
+        if (type instanceof Class<?> cls) {
+            if (cls.isArray()) {
+                // For regular arrays (e.g., String[]), the component type acts as the single type argument
+                return new Type[]{cls.getComponentType()};
+            }
+        }
+
+        // Return empty array for raw types and unhandled structures
+        return new Type[0];
     }
 
     // -------------------------------------------------------------------------
     // Utility methods for Serializer
     // -------------------------------------------------------------------------
+
+    /**
+     * Checks if the type represents a Map implementation where keys are Strings.
+     */
     public boolean isKeyObjectMap() {
-        return getTypeClass().isAssignableFrom(Map.class) && getArgumentClass(0).isAssignableFrom(String.class);
+        return Map.class.isAssignableFrom(typeClass)
+                && typeArguments.length > 0
+                && String.class.isAssignableFrom(getArgumentClass(0));
     }
 
+    public boolean is(Class<?> clazz) {
+        return Wrappers.isAssignable(typeClass, clazz);
+    }
+
+    public boolean isEnum() {
+        return typeClass.isEnum();
+    }
+
+    public boolean isRecord() {
+        return typeClass.isRecord();
+    }
 
     // -------------------------------------------------------------------------
     // Overrides
@@ -226,13 +229,17 @@ public class GenericType<T> implements ParameterizedType {
 
     @Override
     public String toString() {
-        String name = typeClass.getName().replace("class ", "");
+        String name = typeClass.getName();
 
         if (typeClass.isArray()) {
             return "Array of " + typeClass.getComponentType().getName();
-        } else if (typeClass.isAssignableFrom(Collection.class)) {
+        }
+
+        if (Collection.class.isAssignableFrom(typeClass) && typeArguments.length > 0) {
             return "Collection of " + typeArguments[0].getTypeName();
-        } else if (typeClass.isAssignableFrom(Map.class)) {
+        }
+
+        if (Map.class.isAssignableFrom(typeClass) && typeArguments.length >= 2) {
             return "Map of " + typeArguments[0].getTypeName() + " - " + typeArguments[1].getTypeName();
         }
 

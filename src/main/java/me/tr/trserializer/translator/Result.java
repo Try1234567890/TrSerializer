@@ -2,6 +2,16 @@ package me.tr.trserializer.translator;
 
 import java.util.function.Consumer;
 
+/**
+ * This class represent the final result of a {@link TranslatorTask}.
+ * This class contains a {@link Consumer} to support special implementation
+ * where the final result is not guarantee too (like the Iterative version).
+ * <p>
+ * This class contains an Object {@link #result} field that is filled with the
+ * {@code Object result} provided to the {@link Consumer} when the {@link Consumer#accept(Object)}
+ * method is called.
+ * If the {@code result field} is {@code not null} the {@link Consumer#accept(Object)} cannot be executed.
+ */
 public class Result implements Consumer<Object> {
     private final TranslatorTask task;
     private final Consumer<Object> consumer;
@@ -30,23 +40,35 @@ public class Result implements Consumer<Object> {
         return result;
     }
 
+    /**
+     * @return the task that owns this result.
+     */
     public TranslatorTask getTask() {
         return task;
     }
 
+    /**
+     * @return the consumer of this result
+     */
     public Consumer<Object> getConsumer() {
         return consumer;
     }
 
+    /**
+     * @return the object provided to the consumer, or {@code null} if {@link #accept(Object)} has not already called.
+     * @see #hasResult()
+     */
     public Object getResult() {
         return result;
     }
 
+    /**
+     * Checks if the result has been filled with some value.
+     *
+     * @return {@code true} if has been filled, otherwise {@code false}.
+     * @see #getResult()
+     */
     public boolean hasResult() {
         return result != null;
-    }
-
-    public void setResult(Object result) {
-        this.result = result;
     }
 }

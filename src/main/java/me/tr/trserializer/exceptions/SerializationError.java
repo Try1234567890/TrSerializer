@@ -1,6 +1,9 @@
 package me.tr.trserializer.exceptions;
 
-public class SerializationError extends ProcessError {
+/**
+ * Thrown when an error occurs while a serializer is processing.
+ */
+public class SerializationError extends TranslationError {
 
     public SerializationError(String message) {
         super(message);

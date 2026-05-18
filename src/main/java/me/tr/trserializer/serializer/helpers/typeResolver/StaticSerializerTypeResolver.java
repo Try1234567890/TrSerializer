@@ -2,34 +2,73 @@ package me.tr.trserializer.serializer.helpers.typeResolver;
 
 import me.tr.trserializer.types.GenericType;
 import me.tr.trserializer.utility.Utility;
+import me.tr.trserializer.utility.Wrappers;
 
 import java.lang.ref.Reference;
+import java.lang.reflect.Array;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.*;
+/**
+ * A serializer type resolver is a system that automatically
+ * resolve the output file of a serializing process.
+ * <p>
+ * This implementation follow the singleton pattern and provide
+ * an output type based only on the object that the serializer
+ * is processing.
+ */
+public final class StaticSerializerTypeResolver implements SerializerTypeResolver {
+    public static final StaticSerializerTypeResolver INSTANCE = new StaticSerializerTypeResolver();
 
-public final class StaticObjectSerializerTypeResolver implements SerializerTypeResolver {
-    public static final StaticObjectSerializerTypeResolver INSTANCE = new StaticObjectSerializerTypeResolver();
-
-    private StaticObjectSerializerTypeResolver() {
+    private StaticSerializerTypeResolver() {
     }
 
-    public static GenericType<?> resolve(Object o) {
-        return INSTANCE.getType(o);
+
+    /**
+     * Retrieve the output object type in the serialization context.
+     *
+     * @param obj The object.
+     * @return the output object type in the serialization context
+     */
+    public static GenericType<?> resolve(Object obj) {
+        return INSTANCE.getType(obj);
     }
 
+    /**
+     * Retrieve the output object type in the serialization context.
+     *
+     * @param obj The object.
+     * @return the output object type in the serialization context
+     */
     @Override
     public GenericType<?> getType(Object obj) {
         if (obj == null) return GenericType.of(Object.class);
 
-        Class<?> cls = obj.getClass();
+        Class<?> cls = obj instanceof Class<?> cl ? cl : obj.getClass();
 
-        if ((cls.isPrimitive() || cls.isAssignableFrom(CharSequence.class)) || Utility.isWrapper(cls))
+        if (Wrappers.isPrimitiveOrWrapper(cls))
             return GenericType.of(cls);
 
+
+        if (cls.isArray()) {
+            // TODO: A small performance-fix to skip the creation of a new array
+            //       if the original array is already an array of
+            //       savable objects (String, Primitives and Wrappers).
+
+            GenericType<?> componentType = getType(cls.getComponentType());
+            Object newArray = Array.newInstance(componentType.getTypeClass(), 1);
+            Class<?> newArrayClass = newArray.getClass();
+
+            return GenericType.of(newArrayClass, componentType);
+        }
+
+        if (cls.isEnum()) {
+            // TODO: Adding a way to serialize it as another type.
+            return new GenericType<>(String.class);
+        }
+
         return switch (obj) {
-            case Object[] arr -> getType(arr);
             case Collection<?> coll -> getType(coll);
             case Map<?, ?> map -> getType(map);
             case Optional<?> opt -> getType(opt);
@@ -45,47 +84,74 @@ public final class StaticObjectSerializerTypeResolver implements SerializerTypeR
         };
     }
 
+    /**
+     * Retrieve the output type of the {@code map} in the serialization context.
+     *
+     * @param map The map.
+     * @return the output type of the {@code map} in the serialization context
+     */
     private GenericType<?> getType(Map<?, ?> map) {
         if (map.isEmpty()) return GenericType.of(Map.class, Object.class, Object.class);
-        Object firstK = Utility.getFirstKeyNonNull(map);
-        Object firstV = Utility.getFirstValueNonNull(map);
-        Class<?> firstKCls = firstK == null ? Object.class : firstK.getClass();
-        Class<?> firstVCls = firstV == null ? Object.class : firstV.getClass();
+        Object firstK = getType(Utility.getFirstKeyNonNull(map));
+        Object firstV = getType(Utility.getFirstValueNonNull(map));
 
-        return GenericType.of(Map.class, firstKCls, firstVCls);
+        return GenericType.of(Map.class, firstK.getClass(), firstV.getClass());
     }
 
+    /**
+     * Retrieve the output type of the {@code collection} in the serialization context.
+     *
+     * @param coll The collection.
+     * @return the output type of the {@code collection} in the serialization context
+     */
     private GenericType<?> getType(Collection<?> coll) {
-        if (coll.isEmpty()) return GenericType.of(Object.class);
+        if (coll.isEmpty()) return GenericType.of(Collection.class, Object.class);
         Object firstNonNull = Utility.getFirstValueNonNull(coll);
 
         return getType(firstNonNull);
     }
 
-    private GenericType<?> getType(Object[] arr) {
-        if (arr.length == 0) return GenericType.of(Object.class);
-        Object firstNonNull = Utility.getFirstValueNonNull(arr);
-
-        return getType(firstNonNull);
-    }
-
+    /**
+     * Retrieve the output type of the {@code optional} in the serialization context.
+     *
+     * @param opt The optional.
+     * @return the output type of the {@code optional} in the serialization context
+     */
     private GenericType<?> getType(Optional<?> opt) {
         if (opt.isPresent()) return getType(opt.get());
         else return GenericType.of(Object.class);
     }
 
+    /**
+     * Retrieve the output type of the {@code ref} in the serialization context.
+     *
+     * @param ref The ref.
+     * @return the output type of the {@code ref} in the serialization context
+     */
     private GenericType<?> getType(Reference<?> ref) {
         Object value = ref.get();
         if (value == null) return GenericType.of(Object.class);
         else return getType(value);
     }
 
+    /**
+     * Retrieve the output type of the {@code atomic} in the serialization context.
+     *
+     * @param atomic The atomic.
+     * @return the output type of the {@code atomic} in the serialization context
+     */
     private GenericType<?> getType(AtomicReference<?> atomic) {
         Object value = atomic.get();
         if (value == null) return GenericType.of(Object.class);
         else return getType(value);
     }
 
+    /**
+     * Retrieve the output type of the {@code atomic} in the serialization context.
+     *
+     * @param atomic The atomic.
+     * @return the output type of the {@code atomic} in the serialization context
+     */
     private GenericType<?> getType(AtomicReferenceArray<?> atomic) {
         Object value = atomic.get(0);
         if (value == null) return GenericType.of(Object.class);

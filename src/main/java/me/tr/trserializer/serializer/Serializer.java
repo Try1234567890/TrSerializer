@@ -53,7 +53,7 @@ import java.util.Map;
  *     }
  * </pre>
  */
-public interface Serializer<ST extends SerializerTask> extends Translator {
+public interface Serializer extends Translator {
 
     /**
      * Serialize the provided object as the provided {@link GenericType}
@@ -66,8 +66,6 @@ public interface Serializer<ST extends SerializerTask> extends Translator {
      * @throws TypeMissMatched    if the final result is not assignable from the {@code type}.
      */
     <T> T serialize(Object object, GenericType<T> type) throws SerializationError, TypeMissMatched;
-
-    Map<String, Object> serializeAsMap(ST task) throws SerializationError, TypeMissMatched;
 
     @Override
     default <T> T translate(Object object, GenericType<T> type) throws TranslationError, TypeMissMatched {
@@ -95,7 +93,10 @@ public interface Serializer<ST extends SerializerTask> extends Translator {
      * @return The result type.
      * @throws SerializationError if some error occurs while serializing the object.
      */
-    default Object serialize(Object object) throws SerializationError {
-        return serialize(object, new GenericType<>(Object.class));
+    default Map<String, Object> serialize(Object object) throws SerializationError {
+        return serialize(object, new GenericType<>(Map.class, String.class, Object.class));
     }
+
+    @Override
+    SerializerContext getContext();
 }

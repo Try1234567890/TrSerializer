@@ -1,38 +1,87 @@
 package me.tr.trserializer.serializer.iterative;
 
+import me.tr.trserializer.exceptions.HandlerError;
 import me.tr.trserializer.exceptions.SerializationError;
 import me.tr.trserializer.exceptions.TypeMissMatched;
+import me.tr.trserializer.registries.SerializerHandlers;
 import me.tr.trserializer.serializer.Serializer;
-import me.tr.trserializer.serializer.SerializerTask;
+import me.tr.trserializer.serializer.SerializerContext;
+import me.tr.trserializer.serializer.handlers.SerializerHandler;
+import me.tr.trserializer.translator.resultVerifier.ResultVerifier;
 import me.tr.trserializer.types.GenericType;
-import me.tr.trserializer.utility.Utility;
 
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
-public class ISerializer implements Serializer<ISerializerTask> {
+/**
+ * This class represent the iterative implementation
+ * of the serializer.
+ * An iterative serialize works by managing the stack
+ * of tasks manually.
+ * With that the iterative serializer has many advantages:
+ * Is faster, is more flexible and the only limitation on
+ * how many items can serialize or the max deep level
+ * is the RAM assigned to the program.
+ * <p>
+ * At the moment (17/03/2026) this is the only default implementation.
+ */
+public class ISerializer implements Serializer {
+    private final SerializerContext context;
 
+    public ISerializer(SerializerContext context) {
+        this.context = context;
+    }
+
+    public ISerializer() {
+        this.context = new SerializerContext(this);
+    }
+
+    /**
+     * Serialize the provided object.
+     *
+     * @param object The object to serialize.
+     * @param type   The expected result type.
+     * @param <T>    The final object type
+     * @return The object serialized.
+     * @throws SerializationError If any error occurs while serializing the task as a map.
+     * @throws HandlerError       If any error occurs while execution of a handler.
+     * @throws TypeMissMatched    If the verification of the final result fails.
+     */
     @Override
     public <T> T serialize(Object object, GenericType<T> type) throws SerializationError, TypeMissMatched {
         AtomicReference<Object> result = new AtomicReference<>();
-        Stack<SerializerTask> tasks = createStack(object, type, result::set);
+        Stack<ISerializerTask> tasks = createStack(object, type, result::set);
 
         while (!tasks.isEmpty()) {
-            SerializerTask task = tasks.pop();
+            ISerializerTask task = tasks.pop();
             serialize(task);
         }
 
         return verifyResult(result, type);
     }
 
-    public void serialize(ISerializerTask task) throws SerializationError, TypeMissMatched {
+    /**
+     * Serialize the {@code task} by handling in order:
+     * <ol>
+     *     <li>If any handler can process the object</li>
+     *     <li>If the object is savable</li>
+     *     <li>If the object is serializable as map</li>
+     *     <li>Otherwise thrown a Serialization error</li>
+     * </ol>
+     *
+     * @param task The task to handler.
+     * @throws SerializationError If any error occurs while serializing the task as a map.
+     * @throws HandlerError       If any error occurs while execution of a handler.
+     * @throws TypeMissMatched    If the verification process on the final result fails.
+     */
+    public void serialize(ISerializerTask task) throws SerializationError, HandlerError, TypeMissMatched {
         if (task == null) return;
-
-        if (task.getResult().hasResult()) {
-            Object result = task.getResult().getResult();
-            task.getResult().accept(result);
+        Optional<SerializerHandler> handler = SerializerHandlers.getHandlerFor(task);
+        if (handler.isPresent()) {
+            SerializerHandler handlerInstance = handler.get();
+            handlerInstance.serialize(task);
         } else if (task.getSavabilityChecker().isSavable()) {
             Object result = task.getObject();
             task.getResult().accept(result);
@@ -43,11 +92,20 @@ public class ISerializer implements Serializer<ISerializerTask> {
             throw new SerializationError("Serializer cannot serialize " + task + ". Unknown object type, create a custom handler.");
     }
 
-    @Override
-    public Map<String, Object> serializeAsMap(ISerializerTask task) throws SerializationError, TypeMissMatched {
+    /**
+     * Serialize the {@code task} as a String-Object map.
+     * <p>
+     * The result map contains as keys the fields name and
+     * as values the fields value.
+     *
+     * @param task The task to handle.
+     * @return The mapped fields as described above.
+     * @throws SerializationError If an error occurs while serializing.
+     */
+    public Map<String, Object> serializeAsMap(ISerializerTask task) throws SerializationError {
         Map<String, Object> result = new HashMap<>();
         Object instance = task.getObject();
-        List<Field> fields = task.getFieldsRetriever().getFields();
+        List<Field> fields = task.getFieldsRetriever().getObjectFields();
 
         for (Field field : fields) {
             String name = field.getName();
@@ -64,31 +122,36 @@ public class ISerializer implements Serializer<ISerializerTask> {
         return result;
     }
 
-    private Stack<SerializerTask> createStack(Object object, GenericType<?> type, Consumer<Object> root) {
-        Stack<SerializerTask> stack = new Stack<>();
-        ISerializerTask task = new ISerializerTask(UUID.randomUUID(), this, object, type, root, stack);
+    /**
+     * Create the initial stack of the main process
+     *
+     * @param object The root object.
+     * @param type   The expected type of the final result.
+     * @param result The of the root task.
+     * @return a new {@link Stack} of {@link ISerializerTask} with the root task.
+     */
+    private Stack<ISerializerTask> createStack(Object object, GenericType<?> type, Consumer<Object> result) {
+        Stack<ISerializerTask> stack = new Stack<>();
+        ISerializerTask task = new ISerializerTask(this, object, type, result, stack);
         stack.push(task);
         return stack;
     }
 
-    @SuppressWarnings("unchecked")
-    private <T> T verifyResult(AtomicReference<Object> result, GenericType<T> type) throws SerializationError, TypeMissMatched {
-        Object value = result.get();
+    /**
+     * Verify the result via the {@link ResultVerifier#verify(Object, GenericType)}.
+     *
+     * @param result The result of the main process.
+     * @param type   The excepted type of final result.
+     * @param <T>    The type of the final result.
+     * @return The verified and cast the final result.
+     * @throws TypeMissMatched If the {@code result} is not assignable from the {@code type}
+     */
+    private <T> T verifyResult(AtomicReference<Object> result, GenericType<T> type) throws TypeMissMatched {
+        return getContext().getResultVerifier().verify(result.get(), type);
+    }
 
-        if (value == null) {
-            // TODO: Option to allow returning null.
-            throw new TypeMissMatched("The found value is null. Expected: " + type);
-        }
-
-        Class<?> cls = value.getClass();
-        Class<T> expected = type.getTypeClass();
-
-        if (!expected.isAssignableFrom(cls)) {
-            throw new TypeMissMatched("The found value is not convertible to the expected type! Expected: " + type + "; " +
-                    "Received: " + Utility.getClassName(value));
-        }
-
-        // Safe to cast
-        return (T) value;
+    @Override
+    public SerializerContext getContext() {
+        return context;
     }
 }
