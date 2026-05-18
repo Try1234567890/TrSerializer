@@ -1,6 +1,7 @@
 package me.tr.trserializer.serializer.handlers.numbers;
 
 import me.tr.trserializer.deserializer.handlers.DeserializerHandler;
+import me.tr.trserializer.deserializer.handlers.numbers.BigDecimalDeserializerHandler;
 import me.tr.trserializer.exceptions.TranslationError;
 import me.tr.trserializer.exceptions.TypeMissMatched;
 import me.tr.trserializer.serializer.SerializerTask;
@@ -8,8 +9,8 @@ import me.tr.trserializer.serializer.handlers.SerializerHandler;
 
 import java.math.BigDecimal;
 
-public class BigDecimalHandler implements SerializerHandler {
-    public static final BigDecimalHandler INSTANCE = new BigDecimalHandler();
+public class BigDecimalSerializerHandler implements SerializerHandler {
+    public static final BigDecimalSerializerHandler INSTANCE = new BigDecimalSerializerHandler();
 
     @Override
     public void serialize(SerializerTask task) throws TranslationError, TypeMissMatched {
@@ -26,6 +27,6 @@ public class BigDecimalHandler implements SerializerHandler {
 
     @Override
     public DeserializerHandler getDeserializerHandler() {
-        return me.tr.trserializer.deserializer.handlers.numbers.BigDecimalHandler.INSTANCE;
+        return BigDecimalDeserializerHandler.INSTANCE;
     }
 }

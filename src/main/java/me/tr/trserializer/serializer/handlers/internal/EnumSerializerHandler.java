@@ -1,13 +1,14 @@
 package me.tr.trserializer.serializer.handlers.internal;
 
 import me.tr.trserializer.deserializer.handlers.DeserializerHandler;
+import me.tr.trserializer.deserializer.handlers.internal.EnumDeserializerHandler;
 import me.tr.trserializer.exceptions.TranslationError;
 import me.tr.trserializer.exceptions.TypeMissMatched;
 import me.tr.trserializer.serializer.SerializerTask;
 import me.tr.trserializer.serializer.handlers.SerializerHandler;
 
-public class EnumHandler implements SerializerHandler {
-    public static final EnumHandler INSTANCE = new EnumHandler();
+public class EnumSerializerHandler implements SerializerHandler {
+    public static final EnumSerializerHandler INSTANCE = new EnumSerializerHandler();
 
     @Override
     public void serialize(SerializerTask task) throws TranslationError, TypeMissMatched {
@@ -26,6 +27,6 @@ public class EnumHandler implements SerializerHandler {
 
     @Override
     public DeserializerHandler getDeserializerHandler() {
-        return me.tr.trserializer.deserializer.handlers.internal.EnumHandler.INSTANCE;
+        return EnumDeserializerHandler.INSTANCE;
     }
 }

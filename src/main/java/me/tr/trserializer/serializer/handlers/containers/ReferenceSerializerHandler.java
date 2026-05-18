@@ -1,6 +1,7 @@
 package me.tr.trserializer.serializer.handlers.containers;
 
 import me.tr.trserializer.deserializer.handlers.DeserializerHandler;
+import me.tr.trserializer.deserializer.handlers.containers.ReferenceDeserializerHandler;
 import me.tr.trserializer.exceptions.TranslationError;
 import me.tr.trserializer.exceptions.TypeMissMatched;
 import me.tr.trserializer.serializer.SerializerTask;
@@ -9,8 +10,8 @@ import me.tr.trserializer.utility.SLogger;
 
 import java.lang.ref.Reference;
 
-public class ReferenceHandler implements SerializerHandler {
-    public static final ReferenceHandler INSTANCE = new ReferenceHandler();
+public class ReferenceSerializerHandler implements SerializerHandler {
+    public static final ReferenceSerializerHandler INSTANCE = new ReferenceSerializerHandler();
 
     @Override
     public void serialize(SerializerTask task) throws TranslationError, TypeMissMatched {
@@ -35,6 +36,6 @@ public class ReferenceHandler implements SerializerHandler {
 
     @Override
     public DeserializerHandler getDeserializerHandler() {
-        return me.tr.trserializer.deserializer.handlers.containers.ReferenceHandler.INSTANCE;
+        return ReferenceDeserializerHandler.INSTANCE;
     }
 }

@@ -1,6 +1,7 @@
 package me.tr.trserializer.serializer.handlers.files;
 
 import me.tr.trserializer.deserializer.handlers.DeserializerHandler;
+import me.tr.trserializer.deserializer.handlers.files.InputStreamDeserializerHandler;
 import me.tr.trserializer.exceptions.HandlerError;
 import me.tr.trserializer.exceptions.TranslationError;
 import me.tr.trserializer.exceptions.TypeMissMatched;
@@ -15,14 +16,14 @@ import java.io.InputStream;
  * This handler serialize an InputStream as an array of byte.
  * Obviously if the input stream has been read, the read bytes
  * will be ignored.
- * To avoid this issue {@link BufferedInputStreamHandler} can be used.
+ * To avoid this issue {@link BufferedInputStreamSerializerHandler} can be used.
  * <p>
  * Also, the serialization of InputStreams can be disabled via annotation
  * or serializer options, in this case the handler respectively:
  * ignore the InputStream or thrown an {@link HandlerError}.
  */
-public class InputStreamHandler implements SerializerHandler {
-    public static final InputStreamHandler INSTANCE = new InputStreamHandler();
+public class InputStreamSerializerHandler implements SerializerHandler {
+    public static final InputStreamSerializerHandler INSTANCE = new InputStreamSerializerHandler();
 
     @Override
     public void serialize(SerializerTask task) throws TranslationError, TypeMissMatched {
@@ -44,6 +45,6 @@ public class InputStreamHandler implements SerializerHandler {
 
     @Override
     public DeserializerHandler getDeserializerHandler() {
-        return me.tr.trserializer.deserializer.handlers.files.InputStreamHandler.INSTANCE;
+        return InputStreamDeserializerHandler.INSTANCE;
     }
 }

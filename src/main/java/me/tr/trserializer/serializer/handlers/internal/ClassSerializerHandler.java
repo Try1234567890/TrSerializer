@@ -1,13 +1,14 @@
 package me.tr.trserializer.serializer.handlers.internal;
 
 import me.tr.trserializer.deserializer.handlers.DeserializerHandler;
+import me.tr.trserializer.deserializer.handlers.internal.ClassDeserializerHandler;
 import me.tr.trserializer.exceptions.TranslationError;
 import me.tr.trserializer.exceptions.TypeMissMatched;
 import me.tr.trserializer.serializer.SerializerTask;
 import me.tr.trserializer.serializer.handlers.SerializerHandler;
 
-public class ClassHandler implements SerializerHandler {
-    public static final ClassHandler INSTANCE = new ClassHandler();
+public class ClassSerializerHandler implements SerializerHandler {
+    public static final ClassSerializerHandler INSTANCE = new ClassSerializerHandler();
 
     @Override
     public void serialize(SerializerTask task) throws TranslationError, TypeMissMatched {
@@ -24,6 +25,6 @@ public class ClassHandler implements SerializerHandler {
 
     @Override
     public DeserializerHandler getDeserializerHandler() {
-        return me.tr.trserializer.deserializer.handlers.internal.ClassHandler.INSTANCE;
+        return ClassDeserializerHandler.INSTANCE;
     }
 }

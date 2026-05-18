@@ -1,6 +1,7 @@
 package me.tr.trserializer.serializer.handlers.dates;
 
 import me.tr.trserializer.deserializer.handlers.DeserializerHandler;
+import me.tr.trserializer.deserializer.handlers.dates.OffsetDateTimeDeserializerHandler;
 import me.tr.trserializer.exceptions.TranslationError;
 import me.tr.trserializer.exceptions.TypeMissMatched;
 import me.tr.trserializer.serializer.SerializerTask;
@@ -9,10 +10,10 @@ import me.tr.trserializer.serializer.handlers.SerializerHandler;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 
-public class OffsetDateTimeHandler implements SerializerHandler {
+public class OffsetDateTimeSerializerHandler implements SerializerHandler {
     public static final String DEFAULT_FORMAT = "uuuu-MM-dd'T'HH:mmXXXXX";
     public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern(DEFAULT_FORMAT);
-    public static final OffsetDateTimeHandler INSTANCE = new OffsetDateTimeHandler();
+    public static final OffsetDateTimeSerializerHandler INSTANCE = new OffsetDateTimeSerializerHandler();
 
     @Override
     public void serialize(SerializerTask task) throws TranslationError, TypeMissMatched {
@@ -30,6 +31,6 @@ public class OffsetDateTimeHandler implements SerializerHandler {
 
     @Override
     public DeserializerHandler getDeserializerHandler() {
-        return me.tr.trserializer.deserializer.handlers.dates.OffsetDateTimeHandler.INSTANCE;
+        return OffsetDateTimeDeserializerHandler.INSTANCE;
     }
 }

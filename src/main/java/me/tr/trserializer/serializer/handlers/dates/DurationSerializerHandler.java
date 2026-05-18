@@ -1,6 +1,7 @@
 package me.tr.trserializer.serializer.handlers.dates;
 
 import me.tr.trserializer.deserializer.handlers.DeserializerHandler;
+import me.tr.trserializer.deserializer.handlers.dates.DurationDeserializerHandler;
 import me.tr.trserializer.exceptions.TranslationError;
 import me.tr.trserializer.exceptions.TypeMissMatched;
 import me.tr.trserializer.serializer.SerializerTask;
@@ -8,8 +9,8 @@ import me.tr.trserializer.serializer.handlers.SerializerHandler;
 
 import java.time.Duration;
 
-public class DurationHandler implements SerializerHandler {
-    public static final  DurationHandler INSTANCE = new DurationHandler();
+public class DurationSerializerHandler implements SerializerHandler {
+    public static final DurationSerializerHandler INSTANCE = new DurationSerializerHandler();
 
     @Override
     public void serialize(SerializerTask task) throws TranslationError, TypeMissMatched {
@@ -26,6 +27,6 @@ public class DurationHandler implements SerializerHandler {
 
     @Override
     public DeserializerHandler getDeserializerHandler() {
-        return me.tr.trserializer.deserializer.handlers.dates.DurationHandler.INSTANCE;
+        return DurationDeserializerHandler.INSTANCE;
     }
 }

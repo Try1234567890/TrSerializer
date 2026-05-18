@@ -1,6 +1,7 @@
 package me.tr.trserializer.serializer.handlers.files;
 
 import me.tr.trserializer.deserializer.handlers.DeserializerHandler;
+import me.tr.trserializer.deserializer.handlers.files.BufferedInputStreamDeserializerHandler;
 import me.tr.trserializer.exceptions.HandlerError;
 import me.tr.trserializer.exceptions.TranslationError;
 import me.tr.trserializer.exceptions.TypeMissMatched;
@@ -10,8 +11,8 @@ import me.tr.trserializer.serializer.handlers.SerializerHandler;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 
-public class BufferedInputStreamHandler implements SerializerHandler {
-    public static final BufferedInputStreamHandler INSTANCE = new BufferedInputStreamHandler();
+public class BufferedInputStreamSerializerHandler implements SerializerHandler {
+    public static final BufferedInputStreamSerializerHandler INSTANCE = new BufferedInputStreamSerializerHandler();
 
     @Override
     public void serialize(SerializerTask task) throws TranslationError, TypeMissMatched {
@@ -35,6 +36,6 @@ public class BufferedInputStreamHandler implements SerializerHandler {
 
     @Override
     public DeserializerHandler getDeserializerHandler() {
-        return me.tr.trserializer.deserializer.handlers.files.BufferedInputStreamHandler.INSTANCE;
+        return BufferedInputStreamDeserializerHandler.INSTANCE;
     }
 }

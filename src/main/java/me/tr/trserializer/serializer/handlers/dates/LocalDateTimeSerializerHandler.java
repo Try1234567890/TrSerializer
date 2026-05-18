@@ -1,19 +1,19 @@
 package me.tr.trserializer.serializer.handlers.dates;
 
 import me.tr.trserializer.deserializer.handlers.DeserializerHandler;
+import me.tr.trserializer.deserializer.handlers.dates.LocalDateTimeDeserializerHandler;
 import me.tr.trserializer.exceptions.TranslationError;
 import me.tr.trserializer.exceptions.TypeMissMatched;
 import me.tr.trserializer.serializer.SerializerTask;
 import me.tr.trserializer.serializer.handlers.SerializerHandler;
 
-import javax.print.StreamPrintServiceFactory;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-public class LocalDateTimeHandler implements SerializerHandler {
+public class LocalDateTimeSerializerHandler implements SerializerHandler {
     public static final String DEFAULT_FORMAT = "yyyy-MM-dd'T'HH:mm:ss";
     public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern(DEFAULT_FORMAT);
-    public static final LocalDateTimeHandler INSTANCE = new LocalDateTimeHandler();
+    public static final LocalDateTimeSerializerHandler INSTANCE = new LocalDateTimeSerializerHandler();
 
     @Override
     public void serialize(SerializerTask task) throws TranslationError, TypeMissMatched {
@@ -30,6 +30,6 @@ public class LocalDateTimeHandler implements SerializerHandler {
 
     @Override
     public DeserializerHandler getDeserializerHandler() {
-        return me.tr.trserializer.deserializer.handlers.dates.LocalDateTimeHandler.INSTANCE;
+        return LocalDateTimeDeserializerHandler.INSTANCE;
     }
 }

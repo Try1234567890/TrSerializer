@@ -1,6 +1,7 @@
 package me.tr.trserializer.serializer.handlers.containers;
 
 import me.tr.trserializer.deserializer.handlers.DeserializerHandler;
+import me.tr.trserializer.deserializer.handlers.containers.AtomicDeserializerHandler;
 import me.tr.trserializer.exceptions.TranslationError;
 import me.tr.trserializer.exceptions.TypeMissMatched;
 import me.tr.trserializer.serializer.SerializerTask;
@@ -9,8 +10,8 @@ import me.tr.trserializer.serializer.handlers.SerializerHandler;
 import java.lang.reflect.Array;
 import java.util.concurrent.atomic.*;
 
-public class AtomicHandler implements SerializerHandler {
-    public static final AtomicHandler INSTANCE = new AtomicHandler();
+public class AtomicSerializerHandler implements SerializerHandler {
+    public static final AtomicSerializerHandler INSTANCE = new AtomicSerializerHandler();
 
     @Override
     public void serialize(SerializerTask task) throws TranslationError, TypeMissMatched {
@@ -76,6 +77,6 @@ public class AtomicHandler implements SerializerHandler {
 
     @Override
     public DeserializerHandler getDeserializerHandler() {
-        return me.tr.trserializer.deserializer.handlers.containers.AtomicHandler.INSTANCE;
+        return AtomicDeserializerHandler.INSTANCE;
     }
 }

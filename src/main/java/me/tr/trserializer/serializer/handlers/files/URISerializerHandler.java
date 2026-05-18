@@ -1,6 +1,7 @@
 package me.tr.trserializer.serializer.handlers.files;
 
 import me.tr.trserializer.deserializer.handlers.DeserializerHandler;
+import me.tr.trserializer.deserializer.handlers.files.URIDeserializerHandler;
 import me.tr.trserializer.exceptions.TranslationError;
 import me.tr.trserializer.exceptions.TypeMissMatched;
 import me.tr.trserializer.serializer.SerializerTask;
@@ -8,8 +9,8 @@ import me.tr.trserializer.serializer.handlers.SerializerHandler;
 
 import java.net.URI;
 
-public class URIHandler implements SerializerHandler {
-    public static final URIHandler INSTANCE = new URIHandler();
+public class URISerializerHandler implements SerializerHandler {
+    public static final URISerializerHandler INSTANCE = new URISerializerHandler();
 
     @Override
     public void serialize(SerializerTask task) throws TranslationError, TypeMissMatched {
@@ -26,6 +27,6 @@ public class URIHandler implements SerializerHandler {
 
     @Override
     public DeserializerHandler getDeserializerHandler() {
-        return me.tr.trserializer.deserializer.handlers.files.URIHandler.INSTANCE;
+        return URIDeserializerHandler.INSTANCE;
     }
 }

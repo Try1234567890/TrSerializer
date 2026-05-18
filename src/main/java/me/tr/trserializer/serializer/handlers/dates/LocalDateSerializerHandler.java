@@ -1,6 +1,7 @@
 package me.tr.trserializer.serializer.handlers.dates;
 
 import me.tr.trserializer.deserializer.handlers.DeserializerHandler;
+import me.tr.trserializer.deserializer.handlers.dates.LocalDateDeserializerHandler;
 import me.tr.trserializer.exceptions.TranslationError;
 import me.tr.trserializer.exceptions.TypeMissMatched;
 import me.tr.trserializer.serializer.SerializerTask;
@@ -9,10 +10,10 @@ import me.tr.trserializer.serializer.handlers.SerializerHandler;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
-public class LocalDateHandler implements SerializerHandler {
+public class LocalDateSerializerHandler implements SerializerHandler {
     public static final String DEFUALT_FORMAT = "yyyy-MM-dd";
     public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern(DEFUALT_FORMAT);
-    public static final LocalDateHandler INSTANCE = new LocalDateHandler();
+    public static final LocalDateSerializerHandler INSTANCE = new LocalDateSerializerHandler();
 
     @Override
     public void serialize(SerializerTask task) throws TranslationError, TypeMissMatched {
@@ -29,6 +30,6 @@ public class LocalDateHandler implements SerializerHandler {
 
     @Override
     public DeserializerHandler getDeserializerHandler() {
-        return me.tr.trserializer.deserializer.handlers.dates.LocalDateHandler.INSTANCE;
+        return LocalDateDeserializerHandler.INSTANCE;
     }
 }
