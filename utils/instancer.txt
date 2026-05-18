@@ -1,0 +1,20 @@
+Methods that can be used to instance a class:
+- Annotated Method/Constructor with @Initialize(params) OK
+- Annotated Method/Constructor with @Initialize and by retrieving params automatically. (Only if params name are visible) OK
+    - Retrieve method/constructor that has same params name as provided parameters (Only if params name are visible) OK
+    - Retrieve method/constructor that has same params type as provided parameters (Must be unique) OK
+            [If more than one constructor has same param type but in different order is not applicable]
+- Class extend Instantiable (Call instance method)
+- Empty Constructor
+- First Constructor with default values
+- JVM Unsafe class as last fallback.
+
+Default values:
+    Integer/Byte/Long: -1
+    Float/Double: -1.0
+    Character: \000
+    String: ""
+    Collection<?>: new ArrayList()
+    Map<?, ?>: new HashMap()
+    Object: null
+

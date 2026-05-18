@@ -1,0 +1,4 @@
+- Add log message for debugging, warning.
+- Add nullability check in methods
+- Complete all TO-DOs
+- Make the Annotations Addon
