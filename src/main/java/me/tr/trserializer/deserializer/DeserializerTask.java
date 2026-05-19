@@ -12,6 +12,25 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+/**
+ * This class represent a task for a generic deserializer.
+ * This is a minor level of abstraction of the {@link TranslatorTask}
+ * but is still an abstract class.
+ * Various deserializer effective implementation should extend this
+ * class for code integrity.
+ * <p>
+ * A serializer task contains various fields:
+ * <ul>
+ *     <li>UUID -> The task ID defined in TranslatorTask.</li>
+ *     <li>Deserializer -> The deserializer reference that creates it.</li>
+ *     <li>Object -> The object to serialize.</li>
+ *     <li>GenericType -> The expected type of the final result.</li>
+ *     <li>Result -> The result of this task; remains empty until task finished for implementation that does not guarantee immediate result.</li>
+ *     <li>DeserializerTaskAssignabilityChecker -> Assignability checker system. (Verify the final result)</li>
+ *     <li>TranslatorTaskFieldsRetriever -> Fields retriever system. (Retrieve and set accessible the fields)</li>
+ * </ul>
+ */
+
 public abstract class DeserializerTask implements TranslatorTask {
     private final UUID id;
     private final Deserializer deserializer;
@@ -75,12 +94,23 @@ public abstract class DeserializerTask implements TranslatorTask {
         return getObject() == null ? Object.class : getObject().getClass();
     }
 
+    /**
+     * Instance the final result expect type class, obtained via {@link GenericType#getTypeClass()}
+     *
+     * @return the final result expect type class instance.
+     */
     public Object instance() {
         if (instance == null) return instance = getInstancer().instance(getGenericType().getTypeClass());
         return instance;
     }
 
-    public boolean isObjectAMapStringObject() {
+    /**
+     * Checks if the provided object is a {@link Map} with {@link String} keys.
+     * (This means that is a map that represents the serialized final object)
+     *
+     * @return {@code true} if is a {@link Map} with {@link String} key.
+     */
+    public boolean isAMapWithStringKeys() {
         if (!(getObject() instanceof Map<?, ?> map)) return false;
 
         Object firstKeyNonNull = Utility.getFirstKeyNonNull(map);
@@ -89,10 +119,16 @@ public abstract class DeserializerTask implements TranslatorTask {
         return Wrappers.isAssignable(keyCls, String.class);
     }
 
+    /**
+     * @return the assignability checker system.
+     */
     public DeserializerTaskAssignabilityChecker getAssignabilityChecker() {
         return assignabilityChecker;
     }
 
+    /**
+     * @return the fields retriever system.
+     */
     public TranslatorTaskFieldsRetriever getFieldsRetriever() {
         return fieldsRetriever;
     }

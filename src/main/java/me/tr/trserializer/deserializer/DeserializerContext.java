@@ -5,6 +5,15 @@ import me.tr.trserializer.translator.Translator;
 import me.tr.trserializer.translator.TranslatorContext;
 import me.tr.trserializer.translator.resultVerifier.TranslatorResultVerifier;
 
+
+/**
+ * This class represent the context situation of a generic deserializer.
+ * The context of a deserializer contains all system that can
+ * be useful while deserializing an object,
+ * like: {@code result verifier} (to verify the final result)
+ * or {@code instancer} (to instance classes)
+ */
+
 public class DeserializerContext extends TranslatorContext {
 
 

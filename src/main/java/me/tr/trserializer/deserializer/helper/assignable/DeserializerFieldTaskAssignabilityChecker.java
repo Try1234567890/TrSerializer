@@ -1,17 +1,17 @@
 package me.tr.trserializer.deserializer.helper.assignable;
 
-import me.tr.trserializer.deserializer.DeserializerFieldTask;
+import me.tr.trserializer.translator.FieldTask;
 
 import java.lang.reflect.Field;
 
 public class DeserializerFieldTaskAssignabilityChecker implements AssignabilityChecker {
-    private final DeserializerFieldTask task;
+    private final FieldTask task;
 
-    public DeserializerFieldTaskAssignabilityChecker(DeserializerFieldTask task) {
+    public DeserializerFieldTaskAssignabilityChecker(FieldTask task) {
         this.task = task;
     }
 
-    public DeserializerFieldTask getTask() {
+    public FieldTask getTask() {
         return task;
     }
 

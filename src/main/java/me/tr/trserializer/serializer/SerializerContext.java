@@ -6,8 +6,7 @@ import me.tr.trserializer.translator.TranslatorContext;
 import me.tr.trserializer.translator.resultVerifier.TranslatorResultVerifier;
 
 /**
- * This class represent the context situation
- * of a generic serializer.
+ * This class represent the context situation of a generic serializer.
  * The context of a serializer contains all system that can
  * be useful while serializing an object,
  * like: {@code result verifier} (to verify the final result)

@@ -49,7 +49,7 @@ public class IDeserializer implements Deserializer {
         } else if (task.getAssignabilityChecker().isAssignable()) {
             Object result = task.getObject();
             task.getResult().accept(result);
-        } else if (task.isObjectAMapStringObject()) {
+        } else if (task.isAMapWithStringKeys()) {
             Object result = deserializeFromMap(task);
             task.getResult().accept(result);
         } else

@@ -158,4 +158,9 @@ public abstract class SerializerTask implements TranslatorTask {
     public TranslatorTaskFieldsRetriever getFieldsRetriever() {
         return fieldsRetriever;
     }
+
+    @Override
+    public String toString() {
+        return "SerializerTask[ID=" + id + ", Object=" + object + ", Type=" + type + ", Result=" + result + ']';
+    }
 }
