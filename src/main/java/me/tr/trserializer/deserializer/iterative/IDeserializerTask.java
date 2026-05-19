@@ -8,6 +8,12 @@ import java.util.Stack;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+/**
+ * This class represent a task for the iterative implementation
+ * of the serializer. Indeed, extend the {@link DeserializerTask}
+ * abstract class and implement the reference to the {@link Stack}
+ * of {@link IDeserializerTask} that wait to be serialized.
+ */
 public class IDeserializerTask extends DeserializerTask {
     private final Stack<IDeserializerTask> tasks;
     private final DeserializerTaskTypeResolver typeResolver;

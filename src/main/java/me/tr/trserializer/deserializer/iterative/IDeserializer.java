@@ -16,6 +16,19 @@ import java.util.Stack;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
+/**
+ * This class represent the iterative implementation
+ * of the deserializer.
+ * An iterative deserialize works by managing the stack
+ * of tasks manually.
+ * With that the iterative deserializer has many advantages:
+ * Is faster, is more flexible and the only limitation on
+ * how many items can serialize or the max deep level
+ * is the RAM assigned to the program.
+ * <p>
+ * At the moment (17/03/2026) this is the only default implementation.
+ */
+
 public class IDeserializer implements Deserializer {
     private final DeserializerContext context;
 

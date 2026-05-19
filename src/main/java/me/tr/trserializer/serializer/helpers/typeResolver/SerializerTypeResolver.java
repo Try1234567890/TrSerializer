@@ -4,7 +4,7 @@ import me.tr.trserializer.types.GenericType;
 
 /**
  * A serializer type resolver is a system that automatically
- * resolve the output file of a serializing process.
+ * resolve the output object of a serializing process.
  */
 public interface SerializerTypeResolver {
 

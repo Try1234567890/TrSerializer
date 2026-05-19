@@ -10,9 +10,10 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.*;
+
 /**
  * A serializer type resolver is a system that automatically
- * resolve the output file of a serializing process.
+ * resolve the output object of a serializing process.
  * <p>
  * This implementation follow the singleton pattern and provide
  * an output type based only on the object that the serializer

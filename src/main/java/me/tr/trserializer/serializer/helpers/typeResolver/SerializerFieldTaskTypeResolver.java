@@ -5,7 +5,7 @@ import me.tr.trserializer.types.GenericType;
 
 /**
  * A serializer type resolver is a system that automatically
- * resolve the output file of a serializing process.
+ * resolve the output object of a serializing process.
  * <p>
  * This implementation uses the provided {@link FieldTask} to
  * and provide an output type based not only on the object that

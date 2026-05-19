@@ -4,6 +4,14 @@ import me.tr.trserializer.types.GenericType;
 
 import java.lang.reflect.Field;
 
+/**
+ * A deserializer type resolver is a system that automatically
+ * resolve the output object of a serializing process.
+ * <p>
+ * This implementation follow the singleton pattern and provide
+ * an output type based only on the object that the deserializer
+ * is processing.
+ */
 public class StaticDeserializerTypeResolver implements DeserializerTypeResolver {
     public static final StaticDeserializerTypeResolver INSTANCE = new StaticDeserializerTypeResolver();
 
@@ -15,6 +23,12 @@ public class StaticDeserializerTypeResolver implements DeserializerTypeResolver 
         return INSTANCE.getType(field);
     }
 
+    /**
+     * Get the generic type of the {@code object} output in deserialization context.
+     *
+     * @param field The field to get type from.
+     * @return The output generic type.
+     */
     @Override
     public GenericType<?> getType(Field field) {
         // TODO: Adding options to annotate
