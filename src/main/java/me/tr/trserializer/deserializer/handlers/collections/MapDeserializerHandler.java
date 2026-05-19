@@ -11,7 +11,6 @@ import me.tr.trserializer.utility.Wrappers;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class MapDeserializerHandler implements DeserializerHandler {
     public static final MapDeserializerHandler INSTANCE = new MapDeserializerHandler();

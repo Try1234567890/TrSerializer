@@ -1,7 +1,6 @@
 package me.tr.trserializer.serializer.helpers.savable;
 
 import me.tr.trserializer.serializer.SerializerTask;
-import me.tr.trserializer.translator.FieldTask;
 
 /**
  * The savability checker is a system that checks if

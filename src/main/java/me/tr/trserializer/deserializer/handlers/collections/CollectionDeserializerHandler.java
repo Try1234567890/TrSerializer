@@ -8,7 +8,6 @@ import me.tr.trserializer.types.GenericType;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 public class CollectionDeserializerHandler implements DeserializerHandler {
     public static final CollectionDeserializerHandler INSTANCE = new CollectionDeserializerHandler();

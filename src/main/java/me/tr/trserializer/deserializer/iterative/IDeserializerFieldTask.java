@@ -1,6 +1,5 @@
 package me.tr.trserializer.deserializer.iterative;
 
-import me.tr.trserializer.deserializer.DeserializerTask;
 import me.tr.trserializer.deserializer.helper.typeResolver.StaticDeserializerTypeResolver;
 import me.tr.trserializer.translator.FieldTask;
 import me.tr.trserializer.types.GenericType;
