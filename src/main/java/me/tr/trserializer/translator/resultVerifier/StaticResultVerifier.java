@@ -2,6 +2,7 @@ package me.tr.trserializer.translator.resultVerifier;
 
 import me.tr.trserializer.exceptions.TypeMissMatched;
 import me.tr.trserializer.types.GenericType;
+import me.tr.trserializer.utility.SLogger;
 import me.tr.trserializer.utility.Utility;
 import me.tr.trserializer.utility.Wrappers;
 
@@ -41,7 +42,6 @@ public class StaticResultVerifier implements ResultVerifier {
     @SuppressWarnings("unchecked")
     @Override
     public <T> T verify(Object result, GenericType<T> type) throws TypeMissMatched {
-
         if (result == null) {
             // TODO: Option to allow returning null.
             throw new TypeMissMatched("The found value is null. Expected: " + type);
@@ -49,6 +49,8 @@ public class StaticResultVerifier implements ResultVerifier {
 
         Class<?> cls = result.getClass();
         Class<T> expected = type.getTypeClass();
+
+        SLogger.LOGGER.debug("Verifying " + cls.getName() + " and " + expected.getName());
 
         if (!Wrappers.isAssignable(expected, cls)) {
             throw new TypeMissMatched("The found value is not convertible to the expected type! Expected: " + type + "; " +

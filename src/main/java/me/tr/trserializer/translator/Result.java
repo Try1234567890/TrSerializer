@@ -1,5 +1,7 @@
 package me.tr.trserializer.translator;
 
+import me.tr.trserializer.utility.SLogger;
+
 import java.util.function.Consumer;
 
 /**
@@ -24,7 +26,10 @@ public class Result implements Consumer<Object> {
 
     @Override
     public final void accept(Object initialResult) {
-        if (hasResult()) return;
+        if (hasResult()) {
+            SLogger.LOGGER.warn(this + " has already been set! Cannot accept another result.");
+            return;
+        }
         Object processedResult = initialResult;
 
         // TODO: Add the addons & filter execution
@@ -35,7 +40,10 @@ public class Result implements Consumer<Object> {
     }
 
     public final Object acceptAndReturn(Object initialResult) {
-        if (hasResult()) return result;
+        if (hasResult()) {
+            SLogger.LOGGER.warn(this + " has already been set! Returning current result.");
+            return result;
+        }
         accept(initialResult);
         return result;
     }
@@ -70,5 +78,10 @@ public class Result implements Consumer<Object> {
      */
     public boolean hasResult() {
         return result != null;
+    }
+
+    @Override
+    public String toString() {
+        return "Result[Task=" + task + ", Result=" + result + ']';
     }
 }

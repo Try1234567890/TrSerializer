@@ -1,5 +1,7 @@
 package me.tr.trserializer.translator.fieldsRetriever;
 
+import me.tr.trserializer.utility.SLogger;
+
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,10 +36,16 @@ public class ObjectFieldsRetriever implements FieldsRetriever {
      * @return The list of retrieved fields.
      */
     public List<Field> getFields() {
-        if (!fields.isEmpty()) return fields;
+        if (!fields.isEmpty()) {
+            SLogger.LOGGER.debug("Fields already retrieved, returning them.");
+            return fields;
+        }
 
         Object object = getObject();
-        if (object == null) return new ArrayList<>();
+        if (object == null) {
+            SLogger.LOGGER.error("Object is null, cannot retrieve fields. Returning empty list.");
+            return new ArrayList<>();
+        }
 
         List<Field> result = getFields(object.getClass());
         fields.addAll(result);

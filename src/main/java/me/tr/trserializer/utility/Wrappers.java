@@ -160,10 +160,7 @@ public class Wrappers {
      * @return The wrapper class if found, otherwise the provided class.
      */
     public static Class<?> getWrapper(Class<?> cls) {
-        if (cls == null || !cls.isPrimitive()) {
-            SLogger.LOGGER.debug("The " + Utility.getClassName(cls) + " is null or not a primitive. Cannot get wrapper...");
-            return cls;
-        }
+        if (cls == null || !cls.isPrimitive()) return cls;
         return PRIMITIVE_WRAPPERS.get(cls);
     }
 
@@ -176,10 +173,7 @@ public class Wrappers {
      * @return The primitive class if found, otherwise the provided class.
      */
     public static Class<?> getPrimitive(Class<?> cls) {
-        if (cls == null || !isWrapper(cls)) {
-            SLogger.LOGGER.debug("The " + Utility.getClassName(cls) + " is null or not a wrapper. Cannot get primitive...");
-            return cls;
-        }
+        if (cls == null || !isWrapper(cls)) return cls;
         return WRAPPERS_PRIMITIVE.get(cls);
     }
 }

@@ -57,6 +57,18 @@ public abstract class DeserializerTask implements TranslatorTask {
 
     public abstract void deserialize(Object object, GenericType<?> type, Consumer<Object> result);
 
+    public void deserialize(Object object, Consumer<Object> result) {
+        deserialize(object, getGenericType(), result);
+    }
+
+    public void deserialize(Object object, GenericType<?> type) {
+        deserialize(object, type, getResult());
+    }
+
+    public void deserialize(Object object) {
+        deserialize(object, getGenericType(), getResult());
+    }
+
     @Override
     public UUID getID() {
         return id;

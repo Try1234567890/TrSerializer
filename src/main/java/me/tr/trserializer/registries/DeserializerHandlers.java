@@ -2,6 +2,8 @@ package me.tr.trserializer.registries;
 
 import me.tr.trserializer.deserializer.DeserializerTask;
 import me.tr.trserializer.deserializer.handlers.DeserializerHandler;
+import me.tr.trserializer.deserializer.handlers.annotations.as.AsNumberAnnotationDeserializerHandler;
+import me.tr.trserializer.deserializer.handlers.annotations.as.AsStringAnnotationDeserializerHandler;
 import me.tr.trserializer.deserializer.handlers.collections.ArrayDeserializerHandler;
 import me.tr.trserializer.deserializer.handlers.collections.CollectionDeserializerHandler;
 import me.tr.trserializer.deserializer.handlers.collections.MapDeserializerHandler;
@@ -31,32 +33,34 @@ public class DeserializerHandlers extends CollectionRegistry<DeserializerHandler
 
     private DeserializerHandlers() {
         // Register default deserializer handler
-        register(new ArrayDeserializerHandler());
-        register(new CollectionDeserializerHandler());
-        register(new MapDeserializerHandler());
-        register(new MapEntryDeserializerHandler());
-        register(new AtomicDeserializerHandler());
-        register(new OptionalDeserializerHandler());
-        register(new ReferenceDeserializerHandler());
-        register(new CalendarDeserializerHandler());
-        register(new DateDeserializerHandler());
-        register(new DurationDeserializerHandler());
-        register(new InstantDeserializerHandler());
-        register(new LocalDateDeserializerHandler());
-        register(new OffsetDateTimeDeserializerHandler());
-        register(new SQLDateDeserializerHandler());
-        register(new ZonedDateTimeDeserializerHandler());
-        register(new BufferedInputStreamDeserializerHandler());
-        register(new FileDeserializerHandler());
-        register(new InputStreamDeserializerHandler());
-        register(new PathDeserializerHandler());
-        register(new URIDeserializerHandler());
-        register(new URLDeserializerHandler());
-        register(new ClassDeserializerHandler());
-        register(new EnumDeserializerHandler());
-        register(new BigDecimalDeserializerHandler());
-        register(new BigIntegerDeserializerHandler());
-        register(new UUIDDeserializerHandler());
+        register(AsStringAnnotationDeserializerHandler.INSTANCE);
+        register(AsNumberAnnotationDeserializerHandler.INSTANCE);
+        register(ArrayDeserializerHandler.INSTANCE);
+        register(CollectionDeserializerHandler.INSTANCE);
+        register(MapDeserializerHandler.INSTANCE);
+        register(MapEntryDeserializerHandler.INSTANCE);
+        register(AtomicDeserializerHandler.INSTANCE);
+        register(OptionalDeserializerHandler.INSTANCE);
+        register(ReferenceDeserializerHandler.INSTANCE);
+        register(CalendarDeserializerHandler.INSTANCE);
+        register(DateDeserializerHandler.INSTANCE);
+        register(DurationDeserializerHandler.INSTANCE);
+        register(InstantDeserializerHandler.INSTANCE);
+        register(LocalDateDeserializerHandler.INSTANCE);
+        register(OffsetDateTimeDeserializerHandler.INSTANCE);
+        register(SQLDateDeserializerHandler.INSTANCE);
+        register(ZonedDateTimeDeserializerHandler.INSTANCE);
+        register(BufferedInputStreamDeserializerHandler.INSTANCE);
+        register(FileDeserializerHandler.INSTANCE);
+        register(InputStreamDeserializerHandler.INSTANCE);
+        register(PathDeserializerHandler.INSTANCE);
+        register(URIDeserializerHandler.INSTANCE);
+        register(URLDeserializerHandler.INSTANCE);
+        register(ClassDeserializerHandler.INSTANCE);
+        register(EnumDeserializerHandler.INSTANCE);
+        register(BigDecimalDeserializerHandler.INSTANCE);
+        register(BigIntegerDeserializerHandler.INSTANCE);
+        register(UUIDDeserializerHandler.INSTANCE);
     }
 
     public static DeserializerHandlers getInstance() {

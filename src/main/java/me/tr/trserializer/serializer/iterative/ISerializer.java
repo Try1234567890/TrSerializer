@@ -9,6 +9,7 @@ import me.tr.trserializer.serializer.SerializerContext;
 import me.tr.trserializer.serializer.handlers.SerializerHandler;
 import me.tr.trserializer.translator.resultVerifier.ResultVerifier;
 import me.tr.trserializer.types.GenericType;
+import me.tr.trserializer.utility.SLogger;
 
 import java.lang.reflect.Field;
 import java.util.*;
@@ -56,6 +57,7 @@ public class ISerializer implements Serializer {
 
         while (!tasks.isEmpty()) {
             ISerializerTask task = tasks.pop();
+            SLogger.LOGGER.debug("Processing: " + task);
             serialize(task);
         }
 
@@ -81,11 +83,14 @@ public class ISerializer implements Serializer {
         Optional<SerializerHandler> handler = SerializerHandlers.getHandlerFor(task);
         if (handler.isPresent()) {
             SerializerHandler handlerInstance = handler.get();
+            SLogger.LOGGER.debug("  Using the found handler: " + handlerInstance + " to serialize it.");
             handlerInstance.serialize(task);
         } else if (task.getSavabilityChecker().isSavable()) {
+            SLogger.LOGGER.debug("  The object is already savable. Saving it.");
             Object result = task.getObject();
             task.getResult().accept(result);
         } else if (task.getGenericType().isKeyObjectMap()) {
+            SLogger.LOGGER.debug("  The requested type is a Map. Serializing the object as a Map.");
             Map<String, Object> result = serializeAsMap(task);
             task.getResult().accept(result);
         } else
@@ -106,6 +111,7 @@ public class ISerializer implements Serializer {
         Map<String, Object> result = new HashMap<>();
         Object instance = task.getObject();
         List<Field> fields = task.getFieldsRetriever().getObjectFields();
+        SLogger.LOGGER.debug("      Creating a map with " + fields.size() + " fields.");
 
         for (Field field : fields) {
             String name = field.getName();
@@ -114,6 +120,7 @@ public class ISerializer implements Serializer {
 
                 new ISerializerFieldTask(task.getSerializer(), value, (o) -> result.put(name, o), task.getTasks(), field)
                         .schedule();
+                SLogger.LOGGER.debug("      Serializer task scheduled for field " + name);
             } catch (IllegalAccessException | ExceptionInInitializerError e) {
                 throw new SerializationError("An error occurs while accessing to field " + name + " in class " + task.getObjectClassName(), e);
             }

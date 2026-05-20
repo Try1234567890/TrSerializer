@@ -91,30 +91,48 @@ public class StaticInstancer implements Instancer {
     public <T> T instance(Class<T> cls, Map<String, Object> params) throws InstancerError {
         try {
             if (SingletonInstances.isSingleton(cls)) {
-                SLogger.LOGGER.info("The class " + Utility.getClassName(cls) + " is singleton. Using the saved instance.");
-                return (T) SingletonInstances.getInstance(cls);
+                SLogger.LOGGER.debug("The class " + Utility.getClassName(cls) + " is singleton. Using the saved instance.");
+                return SingletonInstances.getInstance(cls);
             }
 
             Optional<T> asInstantiable = instanceAsInstantiable(cls, params);
-            if (asInstantiable.isPresent()) return asInstantiable.get();
+            if (asInstantiable.isPresent()) {
+                SLogger.LOGGER.debug("The class " + Utility.getClassName(cls) + " has been instanced with Instantiable interface.");
+                return asInstantiable.get();
+            }
 
             Optional<T> withMethod = instanceWithMethods(cls, params);
-            if (withMethod.isPresent()) return withMethod.get();
+            if (withMethod.isPresent()) {
+                SLogger.LOGGER.debug("The class " + Utility.getClassName(cls) + " has been instanced with static a method.");
+                return withMethod.get();
+            }
 
             Optional<T> withOptionsMethod = getOptions().getInstanceMethod(cls);
-            if (withOptionsMethod.isPresent()) return withOptionsMethod.get();
+            if (withOptionsMethod.isPresent()) {
+                SLogger.LOGGER.debug("The class " + Utility.getClassName(cls) + " has been instanced with a provided instance method.");
+                return withOptionsMethod.get();
+            }
 
             if (!isAnInstantiableClass(cls))
                 throw new InstancerError("The provided class " + Utility.getClassName(cls) + " is not instantiable.");
 
             Optional<T> withConstructor = instanceWithConstructor(cls, params);
-            if (withConstructor.isPresent()) return withConstructor.get();
+            if (withConstructor.isPresent()) {
+                SLogger.LOGGER.debug("The class " + Utility.getClassName(cls) + " has been instanced with a constructor.");
+                return withConstructor.get();
+            }
 
             Optional<T> withEmptyConstructor = instanceWithEmptyConstructor(cls);
-            if (withEmptyConstructor.isPresent()) return withEmptyConstructor.get();
+            if (withEmptyConstructor.isPresent()) {
+                SLogger.LOGGER.debug("The class " + Utility.getClassName(cls) + " has been instanced with the empty constructor.");
+                return withEmptyConstructor.get();
+            }
 
             Optional<T> withUnsafe = instanceWithUnsafe(cls);
-            if (withUnsafe.isPresent()) return withUnsafe.get();
+            if (withUnsafe.isPresent()) {
+                SLogger.LOGGER.debug("The class " + Utility.getClassName(cls) + " has been instanced with sun.misc.Unsafe internal class.");
+                return withUnsafe.get();
+            }
         } catch (Exception e) {
             throw new InstancerError("An error occurs while instancing " + Utility.getClassName(cls), e);
         }

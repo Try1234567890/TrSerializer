@@ -2,6 +2,8 @@ package me.tr.trserializer.registries;
 
 import me.tr.trserializer.serializer.SerializerTask;
 import me.tr.trserializer.serializer.handlers.SerializerHandler;
+import me.tr.trserializer.serializer.handlers.annotations.as.AsNumberAnnotationSerializerHandler;
+import me.tr.trserializer.serializer.handlers.annotations.as.AsStringAnnotationSerializerHandler;
 import me.tr.trserializer.serializer.handlers.collections.ArraySerializerHandler;
 import me.tr.trserializer.serializer.handlers.collections.CollectionSerializerHandler;
 import me.tr.trserializer.serializer.handlers.collections.MapEntrySerializerHandler;
@@ -33,32 +35,34 @@ public class SerializerHandlers extends CollectionRegistry<SerializerHandler> {
 
     private SerializerHandlers() {
         // Register default serializer handler
-        register(new ArraySerializerHandler());
-        register(new CollectionSerializerHandler());
-        register(new MapSerializerHandler());
-        register(new MapEntrySerializerHandler());
-        register(new AtomicSerializerHandler());
-        register(new OptionalSerializerHandler());
-        register(new ReferenceSerializerHandler());
-        register(new CalendarSerializerHandler());
-        register(new DateSerializerHandler());
-        register(new DurationSerializerHandler());
-        register(new InstantSerializerHandler());
-        register(new LocalDateSerializerHandler());
-        register(new OffsetDateTimeSerializerHandler());
-        register(new SQLDateSerializerHandler());
-        register(new ZonedDateTimeSerializerHandler());
-        register(new BufferedInputStreamSerializerHandler());
-        register(new FileSerializerHandler());
-        register(new InputStreamSerializerHandler());
-        register(new PathSerializerHandler());
-        register(new URISerializerHandler());
-        register(new URLSerializerHandler());
-        register(new ClassSerializerHandler());
-        register(new EnumSerializerHandler());
-        register(new BigDecimalSerializerHandler());
-        register(new BigIntegerSerializerHandler());
-        register(new UUIDSerializerHandler());
+        register(AsStringAnnotationSerializerHandler.INSTANCE);
+        register(AsNumberAnnotationSerializerHandler.INSTANCE);
+        register(ArraySerializerHandler.INSTANCE);
+        register(CollectionSerializerHandler.INSTANCE);
+        register(MapSerializerHandler.INSTANCE);
+        register(MapEntrySerializerHandler.INSTANCE);
+        register(AtomicSerializerHandler.INSTANCE);
+        register(OptionalSerializerHandler.INSTANCE);
+        register(ReferenceSerializerHandler.INSTANCE);
+        register(CalendarSerializerHandler.INSTANCE);
+        register(DateSerializerHandler.INSTANCE);
+        register(DurationSerializerHandler.INSTANCE);
+        register(InstantSerializerHandler.INSTANCE);
+        register(LocalDateSerializerHandler.INSTANCE);
+        register(OffsetDateTimeSerializerHandler.INSTANCE);
+        register(SQLDateSerializerHandler.INSTANCE);
+        register(ZonedDateTimeSerializerHandler.INSTANCE);
+        register(BufferedInputStreamSerializerHandler.INSTANCE);
+        register(FileSerializerHandler.INSTANCE);
+        register(InputStreamSerializerHandler.INSTANCE);
+        register(PathSerializerHandler.INSTANCE);
+        register(URISerializerHandler.INSTANCE);
+        register(URLSerializerHandler.INSTANCE);
+        register(ClassSerializerHandler.INSTANCE);
+        register(EnumSerializerHandler.INSTANCE);
+        register(BigDecimalSerializerHandler.INSTANCE);
+        register(BigIntegerSerializerHandler.INSTANCE);
+        register(UUIDSerializerHandler.INSTANCE);
     }
 
     public static SerializerHandlers getInstance() {

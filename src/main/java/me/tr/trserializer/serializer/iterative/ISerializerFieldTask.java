@@ -4,6 +4,7 @@ import me.tr.trserializer.serializer.helpers.savable.SerializerTaskSavabilityChe
 import me.tr.trserializer.translator.FieldTask;
 import me.tr.trserializer.translator.TranslatorTask;
 import me.tr.trserializer.types.GenericType;
+import me.tr.trserializer.utility.SLogger;
 
 import java.lang.reflect.Field;
 import java.util.Stack;
@@ -55,11 +56,7 @@ public class ISerializerFieldTask extends ISerializerTask implements FieldTask {
     public void serialize(Object object, GenericType<?> type, Consumer<Object> result) {
         ISerializerFieldTask subtask = new ISerializerFieldTask(getSerializer(), object, type, result, getTasks(), field);
         getTasks().push(subtask);
-    }
-
-    public void serialize(Object object, Consumer<Object> result) {
-        ISerializerFieldTask subtask = new ISerializerFieldTask(getSerializer(), object, result, getTasks(), field);
-        getTasks().push(subtask);
+        SLogger.LOGGER.debug("Subtask of " + this + " submitted to the tasks stack: " + subtask);
     }
 
     /**

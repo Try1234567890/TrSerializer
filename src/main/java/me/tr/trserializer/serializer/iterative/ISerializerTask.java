@@ -3,6 +3,7 @@ package me.tr.trserializer.serializer.iterative;
 import me.tr.trserializer.serializer.SerializerTask;
 import me.tr.trserializer.serializer.helpers.savable.SerializerTaskSavabilityChecker;
 import me.tr.trserializer.types.GenericType;
+import me.tr.trserializer.utility.SLogger;
 
 import java.util.Stack;
 import java.util.UUID;
@@ -51,11 +52,7 @@ public class ISerializerTask extends SerializerTask {
     public void serialize(Object object, GenericType<?> type, Consumer<Object> result) {
         ISerializerTask subtask = new ISerializerTask(getSerializer(), object, type, result, getSavabilityChecker(), getTasks());
         getTasks().push(subtask);
-    }
-
-    public void serialize(Object object, Consumer<Object> result) {
-        ISerializerTask subtask = new ISerializerTask(getSerializer(), object, result, getTasks());
-        getTasks().push(subtask);
+        SLogger.LOGGER.debug("Subtask of " + this + " submitted to the tasks stack: " + subtask);
     }
 
     /**
