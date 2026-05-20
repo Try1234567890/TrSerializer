@@ -1,16 +1,14 @@
-package me.tr.trserializer.annotations.process;
+package me.tr.trserializer.annotations.translator.serializer;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface AsNumber {
+@Target(ElementType.FIELD)
+public @interface Getter {
 
-    String field() default "";
-
-    Class<? extends Number> type() default Integer.class;
+    String name() default "";
 
 }

@@ -1,4 +1,5 @@
-package me.tr.trserializer.annotations.process;
+package me.tr.trserializer.annotations.translator.unwrap;
+
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -6,9 +7,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-public @interface AsBoolean {
+@Target({ElementType.FIELD})
+public @interface Unwrapped {
 
-    String field() default "";
+    String[] fields() default {};
 
 }

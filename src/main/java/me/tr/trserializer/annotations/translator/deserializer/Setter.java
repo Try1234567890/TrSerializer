@@ -1,5 +1,4 @@
-package me.tr.trserializer.annotations.process.unwrap;
-
+package me.tr.trserializer.annotations.translator.deserializer;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -7,6 +6,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.FIELD})
-public @interface Unwrap {
+@Target(ElementType.FIELD)
+public @interface Setter {
+
+    String name() default "";
+
 }

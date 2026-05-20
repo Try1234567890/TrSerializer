@@ -1,14 +1,14 @@
-package me.tr.trserializer.annotations.process;
+package me.tr.trserializer.annotations.translator.deserializer;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface AsString {
+@Target(ElementType.FIELD)
+public @interface Aliases {
 
-    String field() default "";
+    String[] aliases() default {};
 
 }

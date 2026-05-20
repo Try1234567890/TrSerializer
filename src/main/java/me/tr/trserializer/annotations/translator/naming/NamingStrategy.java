@@ -1,4 +1,4 @@
-package me.tr.trserializer.annotations.process.serializer.naming;
+package me.tr.trserializer.annotations.translator.naming;
 
 
 import me.tr.trformatter.strings.CString;

@@ -1,4 +1,4 @@
-package me.tr.trserializer.annotations.process.serializer.naming;
+package me.tr.trserializer.annotations.translator.naming;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

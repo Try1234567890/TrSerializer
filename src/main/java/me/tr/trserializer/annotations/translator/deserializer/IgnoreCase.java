@@ -1,4 +1,4 @@
-package me.tr.trserializer.annotations.process.deserializer;
+package me.tr.trserializer.annotations.translator.deserializer;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

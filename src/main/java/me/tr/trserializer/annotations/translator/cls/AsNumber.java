@@ -1,14 +1,16 @@
-package me.tr.trserializer.annotations.process.wrap;
+package me.tr.trserializer.annotations.translator.cls;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+@Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.FIELD)
-public @interface Wrapped {
+public @interface AsNumber {
 
-    String key();
+    String field() default "";
+
+    Class<? extends Number> type() default Integer.class;
 
 }

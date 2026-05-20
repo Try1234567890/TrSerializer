@@ -1,4 +1,4 @@
-package me.tr.trserializer.annotations.process;
+package me.tr.trserializer.annotations.translator;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -7,7 +7,7 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
-public @interface Format {
+public @interface DateFormat {
 
     String format() default "dd-MM-yyyy";
 

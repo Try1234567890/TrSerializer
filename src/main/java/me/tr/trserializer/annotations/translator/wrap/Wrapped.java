@@ -1,4 +1,4 @@
-package me.tr.trserializer.annotations.process.deserializer;
+package me.tr.trserializer.annotations.translator.wrap;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -7,8 +7,8 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
-public @interface Aliases {
+public @interface Wrapped {
 
-    String[] aliases() default {};
+    String key();
 
 }
