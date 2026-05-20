@@ -12,7 +12,7 @@ publishing {
 
             groupId = 'me.tr.trserializer'
             artifactId = 'serializer'
-            version = '2.2.1'
+            version = '3.0.1-alpha'
         }
     }
 }
