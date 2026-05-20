@@ -7,4 +7,8 @@ public class AddonError extends RuntimeException {
     public AddonError(String message) {
         super(message);
     }
+
+    public AddonError(String message, Throwable cause) {
+        super(message, cause);
+    }
 }
